@@ -1,0 +1,5 @@
+src/MafiaPickem.Api/bin/
+src/MafiaPickem.Api/obj/
+src/MafiaPickem.Api.Tests/bin/
+src/MafiaPickem.Api.Tests/obj/
+src/MafiaPickem.Api/local.settings.json
