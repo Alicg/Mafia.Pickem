@@ -14,22 +14,6 @@ export function getThemeParams() {
   return getTelegramWebApp()?.themeParams;
 }
 
-export function showMainButton(text: string, onClick: () => void): void {
-  const btn = getTelegramWebApp()?.MainButton;
-  if (btn) {
-    btn.setText(text);
-    btn.onClick(onClick);
-    btn.show();
-  }
-}
-
-export function hideMainButton(): void {
-  const btn = getTelegramWebApp()?.MainButton;
-  if (btn) {
-      btn.hide();
-  }
-}
-
 export type HapticType = 
   | 'light' | 'medium' | 'heavy' | 'rigid' | 'soft' 
   | 'error' | 'success' | 'warning' 

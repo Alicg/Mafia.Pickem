@@ -6,7 +6,7 @@ import { PredictionForm } from './PredictionForm';
 import { CrowdStats } from './CrowdStats';
 import { MatchStateControls } from './admin/MatchStateControls';
 import { submitPrediction } from '../lib/api';
-import { showMainButton, hideMainButton, hapticFeedback } from '../lib/telegram';
+import { hapticFeedback } from '../lib/telegram';
 
 interface MatchCardProps {
   match: MatchDto;
@@ -54,41 +54,6 @@ export const MatchCard: React.FC<MatchCardProps> = ({
     }
   }, [prediction, hasChanges]);
 
-  // Handle Telegram MainButton for prediction submission
-  useEffect(() => {
-    if (!isExpanded || currentState !== MatchState.Open) {
-      hideMainButton();
-      return;
-    }
-
-    if (hasChanges && selectedWinner !== null && selectedVotedOut !== null) {
-      showMainButton('Сохранить прогноз', async () => {
-        try {
-          setIsSubmitting(true);
-          hapticFeedback('soft');
-          await submitPrediction(match.id, selectedWinner, selectedVotedOut);
-          setPrediction({
-            predictedWinner: selectedWinner,
-            predictedVotedOut: selectedVotedOut,
-            winnerPoints: null,
-            votedOutPoints: null,
-            totalPoints: null
-          });
-          setHasChanges(false);
-          hapticFeedback('success');
-          hideMainButton();
-        } catch (err) {
-          console.error('Failed to submit prediction:', err);
-          hapticFeedback('error');
-        } finally {
-          setIsSubmitting(false);
-        }
-      });
-    } else {
-      hideMainButton();
-    }
-  }, [isExpanded, currentState, hasChanges, selectedWinner, selectedVotedOut, match.id]);
-
   const handleWinnerChange = (val: number) => {
     setSelectedWinner(val);
     setHasChanges(true);
@@ -112,6 +77,30 @@ export const MatchCard: React.FC<MatchCardProps> = ({
   };
 
   const isFormDisabled = currentState !== MatchState.Open || isSubmitting;
+  const showInlineSubmit = hasChanges && selectedWinner !== null && selectedVotedOut !== null && currentState === MatchState.Open;
+
+  const handleInlineSubmit = async () => {
+    if (selectedWinner === null || selectedVotedOut === null) return;
+    try {
+      setIsSubmitting(true);
+      hapticFeedback('soft');
+      await submitPrediction(match.id, selectedWinner, selectedVotedOut);
+      setPrediction({
+        predictedWinner: selectedWinner,
+        predictedVotedOut: selectedVotedOut,
+        winnerPoints: null,
+        votedOutPoints: null,
+        totalPoints: null
+      });
+      setHasChanges(false);
+      hapticFeedback('success');
+    } catch (err) {
+      console.error('Failed to submit prediction:', err);
+      hapticFeedback('error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className={`match-card state-${MatchState[currentState].toLowerCase()} ${isExpanded ? 'expanded' : ''}`}>
@@ -144,6 +133,15 @@ export const MatchCard: React.FC<MatchCardProps> = ({
                 onVotedOutChange={handleVotedOutChange}
                 disabled={isFormDisabled}
               />
+              {showInlineSubmit && (
+                <button
+                  className="inline-submit-btn"
+                  onClick={handleInlineSubmit}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Сохраняем...' : 'Сохранить прогноз'}
+                </button>
+              )}
               <CrowdStats apiStats={match.voteStats} blobState={blobState} prediction={prediction} />
             </>
           )}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { updateNickname } from '../lib/api';
-import { showMainButton, hideMainButton, hapticFeedback } from '../lib/telegram';
+import { hapticFeedback } from '../lib/telegram';
 import '../App.css';
 
 interface RegisterPageProps {
@@ -25,11 +25,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
     const validationError = validateNickname(val);
     setError(validationError);
 
-    if (!validationError && val.length > 0) {
-      showMainButton('НАЧАТЬ', handleSubmit);
-    } else {
-      hideMainButton();
-    }
+
   };
 
   const handleSubmit = async () => {
@@ -71,6 +67,14 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
         />
         {error && <div className="error-message">{error}</div>}
       </div>
+
+      <button
+        className="inline-submit-btn"
+        onClick={handleSubmit}
+        disabled={isSubmitting || !!error || nickname.length === 0}
+      >
+        {isSubmitting ? 'Регистрация...' : 'НАЧАТЬ'}
+      </button>
 
       <div style={{ marginTop: '20px', fontSize: '0.9em', color: 'var(--tg-theme-hint-color)' }}>
         Никнейм будет виден в таблице лидеров.
