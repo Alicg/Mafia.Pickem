@@ -69,23 +69,33 @@ export const CrowdStats: React.FC<CrowdStatsProps> = ({ apiStats, blobState }) =
         </div>
       </div>
 
-      {/* Voted Out Stats */}
+      {/* Voted Out Stats — vertical column chart */}
       <div className="stats-group">
         <label>Первый отстрел</label>
-        <div className="slots-grid">
-           {stats.slots.map((s) => (
-             <div key={s.slot} className="slot-stat">
-               <span className="slot-num">{s.slot === 0 ? 'Никто' : s.slot}</span>
-               <div className="slot-bar-bg">
-                 <div 
-                    className="slot-bar-fill" 
-                    style={{ width: `${formatPct(s.percent)}%` }}
-                 />
-               </div>
-               <span className="slot-pct">{formatPct(s.percent).toFixed(0)}%</span>
-             </div>
-           ))}
-        </div>
+        {(() => {
+          const pcts = stats.slots.map(s => formatPct(s.percent));
+          const maxPct = Math.max(...pcts, 1);
+          return (
+            <div className="slots-columns">
+              {stats.slots.map((s, i) => {
+                const pct = pcts[i];
+                const heightPct = (pct / maxPct) * 100;
+                return (
+                  <div key={s.slot} className="slot-col">
+                    <span className="slot-col-pct">{pct.toFixed(0)}%</span>
+                    <div className="slot-col-track">
+                      <div
+                        className="slot-col-fill"
+                        style={{ height: `${heightPct}%` }}
+                      />
+                    </div>
+                    <span className="slot-col-num">{s.slot === 0 ? '–' : s.slot}</span>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
