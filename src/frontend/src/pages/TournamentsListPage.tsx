@@ -58,6 +58,7 @@ export const TournamentsListPage: React.FC<TournamentsListPageProps> = ({ onSele
     <div className="tournaments-list-page">
       <header className="tournaments-header">
         <h1>Турниры</h1>
+        <div className="tournaments-header-sub">Делай прогнозы — зарабатывай очки</div>
       </header>
 
       <div className="tournaments-content">
@@ -71,6 +72,7 @@ export const TournamentsListPage: React.FC<TournamentsListPageProps> = ({ onSele
                 {t.description && (
                   <div className="tournament-card-desc">{t.description}</div>
                 )}
+                <span className="tournament-card-arrow">›</span>
               </button>
             ))}
           </div>

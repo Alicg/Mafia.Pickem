@@ -12,15 +12,15 @@
 }
 
 .player-slot-btn {
-  background: rgba(255, 255, 255, 0.04);
-  color: #7eb4ff80;
-  border: 1px solid rgba(100, 140, 255, 0.1);
-  border-radius: 10px;
-  padding: 12px 0;
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(126, 180, 255, 0.45);
+  border: 1px solid rgba(100, 140, 255, 0.08);
+  border-radius: 12px;
+  padding: 13px 0;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s var(--pm-ease-out);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -29,7 +29,7 @@
 }
 
 .player-slot-btn:active:not(:disabled) {
-  transform: scale(0.96);
+  transform: scale(0.93);
 }
 
 .player-slot-btn.selected {
@@ -37,13 +37,15 @@
   color: #ffffff;
   border-color: transparent;
   box-shadow: 0 4px 16px var(--pm-gradient-accent-shadow);
+  font-weight: 800;
 }
 
 .player-slot-btn:disabled {
   cursor: not-allowed;
-  opacity: 0.5;
+  opacity: 0.45;
 }
 
 .no-one-btn {
   width: 100%;
+  border-radius: 12px;
 }

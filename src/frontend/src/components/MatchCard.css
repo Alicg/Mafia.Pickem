@@ -2,47 +2,74 @@
   background: var(--pm-card-bg);
   backdrop-filter: var(--pm-glass-blur);
   border: 1px solid var(--pm-card-border);
-  border-left: 4px solid var(--pm-card-border);
-  border-radius: 14px;
+  border-radius: 16px;
   overflow: hidden;
   width: 100%;
-  transition: border-color 0.25s;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  animation: fadeSlideUp 0.45s var(--pm-ease-out) both;
+  position: relative;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* Status indicator — clean vertical bar inside the card */
+.match-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--pm-card-border);
+  transition: background 0.3s;
+}
+
+.match-card:nth-child(1) { animation-delay: 0.03s; }
+.match-card:nth-child(2) { animation-delay: 0.08s; }
+.match-card:nth-child(3) { animation-delay: 0.13s; }
+.match-card:nth-child(4) { animation-delay: 0.18s; }
+.match-card:nth-child(5) { animation-delay: 0.23s; }
+.match-card:nth-child(6) { animation-delay: 0.28s; }
+
+.match-card.expanded {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
 .match-card.state-upcoming {
-  border-left-color: var(--tg-theme-hint-color);
   opacity: 0.6;
 }
-
-.match-card.state-open {
-  border-left-color: #4ade80;
-  border-image: linear-gradient(180deg, #4ade80, #22c55e) 1;
-  border-image-slice: 0 0 0 4;
+.match-card.state-upcoming::before {
+  background: rgba(126, 180, 255, 0.25);
 }
 
-.match-card.state-locked {
-  border-left-color: #fb7185;
-  border-image: linear-gradient(180deg, #fb7185, #ef4444) 1;
-  border-image-slice: 0 0 0 4;
+.match-card.state-open::before {
+  background: #4ade80;
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.3);
 }
 
-.match-card.state-resolved {
-  border-left-color: #60a5fa;
-  border-image: linear-gradient(180deg, #60a5fa, #3b82f6) 1;
-  border-image-slice: 0 0 0 4;
+.match-card.state-locked::before {
+  background: #fb7185;
+  box-shadow: 0 0 8px rgba(251, 113, 133, 0.3);
+}
+
+.match-card.state-resolved::before {
+  background: #60a5fa;
+  box-shadow: 0 0 8px rgba(96, 165, 250, 0.2);
 }
 
 .match-card.state-canceled {
-  border-left-color: var(--tg-theme-hint-color);
-  filter: grayscale(1);
-  opacity: 0.4;
+  filter: grayscale(0.8);
+  opacity: 0.35;
+}
+.match-card.state-canceled::before {
+  background: rgba(126, 180, 255, 0.15);
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 16px;
+  padding: 14px 16px 14px 20px;
   border: none;
   background: none;
   width: 100%;
@@ -50,6 +77,7 @@
   color: inherit;
   font: inherit;
   text-align: left;
+  transition: background 0.2s;
 }
 
 .card-header.expandable {
@@ -63,12 +91,14 @@
 .game-info {
   display: flex;
   flex-direction: column;
+  gap: 1px;
 }
 
 .game-number {
   font-size: 16px;
   font-weight: 700;
   color: var(--tg-theme-text-color);
+  letter-spacing: -0.01em;
 }
 
 .table-number {
@@ -84,18 +114,18 @@
 
 .status-badge {
   padding: 5px 12px;
-  border-radius: 8px;
+  border-radius: 20px;
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   border: 1px solid;
 }
 
 .status-badge.upcoming {
   background: rgba(100, 140, 255, 0.06);
-  color: #7eb4ff80;
-  border-color: rgba(100, 140, 255, 0.15);
+  color: rgba(126, 180, 255, 0.45);
+  border-color: rgba(100, 140, 255, 0.12);
 }
 
 .status-badge.open {
@@ -117,25 +147,37 @@
 }
 
 .status-badge.canceled {
-  background: rgba(100, 140, 255, 0.06);
-  color: #7eb4ff60;
-  border-color: rgba(100, 140, 255, 0.12);
+  background: rgba(100, 140, 255, 0.04);
+  color: rgba(126, 180, 255, 0.3);
+  border-color: rgba(100, 140, 255, 0.08);
 }
 
 .expand-arrow {
   font-size: 10px;
   color: var(--tg-theme-hint-color);
-  transition: transform 0.25s;
+  transition: transform 0.3s var(--pm-ease-out);
 }
 
 .expand-arrow.open {
   transform: rotate(180deg);
 }
 
-/* Expanded body */
+/* Expanded body with smooth animation */
 .card-body {
-  padding: 0 16px 16px;
+  padding: 0 16px 16px 20px;
   border-top: 1px solid var(--pm-divider);
+  animation: cardBodyIn 0.35s var(--pm-ease-out);
+}
+
+@keyframes cardBodyIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .results-summary {
@@ -147,9 +189,10 @@
 .points-badge {
   background: linear-gradient(135deg, #f59e0b, #f97316);
   color: #fff;
-  padding: 6px 16px;
-  border-radius: 10px;
+  padding: 7px 18px;
+  border-radius: 20px;
   font-weight: 800;
   font-size: 13px;
-  box-shadow: 0 2px 12px rgba(245, 158, 11, 0.2);
+  box-shadow: 0 2px 16px rgba(245, 158, 11, 0.25);
+  letter-spacing: 0.02em;
 }

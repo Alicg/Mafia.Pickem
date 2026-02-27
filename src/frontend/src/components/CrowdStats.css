@@ -1,39 +1,47 @@
 .crowd-stats {
-  margin-top: 14px;
-  background: rgba(255, 255, 255, 0.03);
-  padding: 14px;
-  border-radius: 12px;
+  margin-top: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 16px;
+  border-radius: 14px;
   border: 1px solid var(--pm-card-border);
+  animation: fadeIn 0.4s ease-out;
 }
 
 .crowd-stats h3 {
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 16px;
-  color: var(--tg-theme-text-color);
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 18px;
+  color: var(--tg-theme-hint-color);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
 }
 
 .stats-group {
-  margin-bottom: 20px;
+  margin-bottom: 22px;
+}
+
+.stats-group:last-child {
+  margin-bottom: 0;
 }
 
 .stats-group label {
   display: block;
   font-size: 13px;
   color: var(--tg-theme-hint-color);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 /* Winner Bar - split bar */
 .winner-bar-container {
   display: flex;
   width: 100%;
-  height: 28px;
-  border-radius: 8px;
+  height: 32px;
+  border-radius: 10px;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.25);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .winner-bar {
@@ -41,28 +49,29 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  transition: width 0.5s ease-out;
+  transition: width 0.6s var(--pm-ease-out);
   position: relative;
   min-width: 0;
 }
 
 .winner-bar.town {
-  background: linear-gradient(90deg, #ef4444, #f87171);
+  background: linear-gradient(90deg, #dc2626, #ef4444);
   color: white;
 }
 
 .winner-bar.mafia {
-  background: rgba(100, 100, 100, 0.3);
+  background: rgba(80, 80, 80, 0.35);
   color: #ffffffa0;
 }
 
 .bar-label {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   white-space: nowrap;
-  padding: 0 8px;
+  padding: 0 10px;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 /* Slots — vertical column chart */
@@ -70,8 +79,8 @@
   display: flex;
   align-items: flex-end;
   gap: 4px;
-  height: 120px;
-  padding-top: 18px; /* space for pct labels */
+  height: 130px;
+  padding-top: 20px;
   position: relative;
 }
 
@@ -86,7 +95,7 @@
 
 .slot-col-pct {
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--tg-theme-hint-color);
   margin-bottom: 4px;
   line-height: 1;
@@ -95,9 +104,9 @@
 .slot-col-track {
   flex: 1;
   width: 100%;
-  max-width: 26px;
-  border-radius: 4px 4px 0 0;
-  background: rgba(255, 255, 255, 0.06);
+  max-width: 28px;
+  border-radius: 6px 6px 0 0;
+  background: rgba(255, 255, 255, 0.04);
   display: flex;
   align-items: flex-end;
   overflow: hidden;
@@ -106,15 +115,16 @@
 .slot-col-fill {
   width: 100%;
   background: var(--pm-gradient-accent);
-  border-radius: 4px 4px 0 0;
-  transition: height 0.5s ease;
+  border-radius: 6px 6px 0 0;
+  transition: height 0.6s var(--pm-ease-out);
   min-height: 2px;
+  box-shadow: 0 -2px 8px var(--pm-gradient-accent-shadow);
 }
 
 .slot-col-num {
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--tg-theme-hint-color);
-  margin-top: 4px;
+  margin-top: 6px;
   line-height: 1;
 }

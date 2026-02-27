@@ -5,3 +5,5 @@ src/MafiaPickem.Api.Tests/obj/
 src/MafiaPickem.Api/local.settings.json
 src/node_modules/
 .vite/deps/
+src/frontend/.playwright-cli/
+.playwright-cli/

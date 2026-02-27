@@ -23,14 +23,14 @@
 .header-top-row {
   display: flex;
   align-items: center;
-  padding: 14px 20px 8px;
+  padding: 14px 20px 10px;
   gap: 12px;
 }
 
 .back-btn {
-  background: rgba(100, 140, 255, 0.12);
-  border: 1px solid rgba(100, 140, 255, 0.2);
-  font-size: 16px;
+  background: rgba(100, 140, 255, 0.1);
+  border: 1px solid rgba(100, 140, 255, 0.15);
+  font-size: 18px;
   color: #7eb4ff;
   cursor: pointer;
   padding: 0;
@@ -42,29 +42,37 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.back-btn:active {
+  background: rgba(100, 140, 255, 0.2);
+  transform: scale(0.92);
 }
 
 .tournament-title {
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 800;
   margin: 0;
   color: var(--tg-theme-text-color);
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
 .user-badge {
   background: var(--pm-gradient-accent);
   color: #fff;
   padding: 6px 14px;
-  border-radius: 8px;
+  border-radius: 20px;
   font-size: 12px;
   font-weight: 700;
   white-space: nowrap;
   flex-shrink: 0;
+  letter-spacing: 0.01em;
+  box-shadow: 0 2px 12px var(--pm-gradient-accent-shadow);
 }
 
 /* Tabs */
@@ -73,11 +81,12 @@
   padding: 0 20px;
   gap: 0;
   border-top: 1px solid var(--pm-divider);
+  position: relative;
 }
 
 .tab-btn {
   flex: 1;
-  padding: 12px 0;
+  padding: 13px 0;
   background: none;
   border: none;
   border-bottom: 3px solid transparent;
@@ -85,9 +94,10 @@
   font-weight: 600;
   color: var(--tg-theme-hint-color);
   cursor: pointer;
-  transition: color 0.25s, border-color 0.25s;
+  transition: color 0.3s var(--pm-ease-out), border-color 0.3s var(--pm-ease-out);
   text-align: center;
   position: relative;
+  letter-spacing: -0.01em;
 }
 
 .tab-btn.active {
@@ -100,6 +110,7 @@
   padding: 16px 20px;
   flex: 1;
   padding-bottom: 40px;
+  animation: fadeIn 0.35s ease-out;
 }
 
 /* Games tab */
@@ -114,18 +125,20 @@
   color: #ffffff;
   border: none;
   padding: 14px;
-  border-radius: 12px;
+  border-radius: 14px;
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
   width: 100%;
-  transition: opacity 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s var(--pm-ease-out), opacity 0.2s, box-shadow 0.25s;
   box-shadow: 0 4px 24px var(--pm-gradient-accent-shadow);
   letter-spacing: 0.02em;
+  animation: fadeSlideUp 0.4s var(--pm-ease-out) both;
 }
 
 .create-match-btn:active {
-  opacity: 0.85;
+  transform: scale(0.97);
+  opacity: 0.9;
   box-shadow: 0 2px 12px var(--pm-gradient-accent-shadow);
 }
 
@@ -136,22 +149,25 @@
 }
 
 .no-matches-card {
-  background: var(--tg-theme-bg-color);
-  border-radius: 12px;
-  padding: 40px;
+  background: var(--pm-card-bg);
+  border: 1px solid var(--pm-card-border);
+  border-radius: 14px;
+  padding: 60px 20px;
   text-align: center;
   color: var(--tg-theme-hint-color);
   font-weight: 500;
+  font-size: 15px;
+  animation: fadeIn 0.5s ease-out;
 }
 
 /* Spinner */
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid rgba(0,0,0,0.1);
+  border: 3px solid rgba(79, 124, 255, 0.12);
   border-top-color: var(--tg-theme-button-color);
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.7s linear infinite;
 }
 
 @keyframes spin {

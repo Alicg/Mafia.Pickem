@@ -13,8 +13,10 @@ const LeaderboardRow: React.FC<{ entry: LeaderboardEntryDto }> = ({ entry }) => 
   if (entry.rank === 2) rankDisplay = '🥈';
   if (entry.rank === 3) rankDisplay = '🥉';
 
+  const rankClass = entry.rank <= 3 ? `rank-${entry.rank}` : '';
+
   return (
-    <div className={`lb-row ${entry.isCurrentUser ? 'current-user' : ''}`}>
+    <div className={`lb-row ${entry.isCurrentUser ? 'current-user' : ''} ${rankClass}`}>
       <span className="lb-rank">{rankDisplay}</span>
       <div className="lb-player">
         <div className="lb-avatar">

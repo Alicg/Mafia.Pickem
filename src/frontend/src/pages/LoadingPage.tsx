@@ -12,9 +12,26 @@ export const LoadingPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="center-container">
+    <div className="center-container" style={{ gap: '20px' }}>
+      <div style={{ 
+        fontSize: '32px', 
+        fontWeight: 800, 
+        letterSpacing: '-0.03em',
+        background: 'linear-gradient(135deg, #4f7cff, #7c5cff)',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        marginBottom: '4px'
+      }}>
+        Mafia Pick'em
+      </div>
       <div className="spinner"></div>
-      <p style={{ marginTop: '1rem' }}>Загрузка{dots}</p>
+      <p style={{ 
+        color: 'var(--tg-theme-hint-color)', 
+        fontSize: '14px',
+        fontWeight: 500 
+      }}>
+        Загрузка{dots}
+      </p>
     </div>
   );
 };
