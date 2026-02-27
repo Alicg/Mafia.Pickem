@@ -5,7 +5,7 @@ import { useMatchState } from '../hooks/useMatchState';
 import { PredictionForm } from './PredictionForm';
 import { CrowdStats } from './CrowdStats';
 import { MatchStateControls } from './admin/MatchStateControls';
-import { submitPrediction } from '../lib/api';
+import { submitPrediction, deletePrediction } from '../lib/api';
 import { hapticFeedback } from '../lib/telegram';
 
 interface MatchCardProps {
@@ -102,6 +102,24 @@ export const MatchCard: React.FC<MatchCardProps> = ({
     }
   };
 
+  const handleCancelVote = async () => {
+    try {
+      setIsSubmitting(true);
+      hapticFeedback('soft');
+      await deletePrediction(match.id);
+      setPrediction(null);
+      setSelectedWinner(null);
+      setSelectedVotedOut(null);
+      setHasChanges(false);
+      hapticFeedback('success');
+    } catch (err) {
+      console.error('Failed to cancel prediction:', err);
+      hapticFeedback('error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className={`match-card state-${MatchState[currentState].toLowerCase()} ${isExpanded ? 'expanded' : ''}`}>
       <button
@@ -123,8 +141,8 @@ export const MatchCard: React.FC<MatchCardProps> = ({
 
       {isExpanded && (
         <div className="card-body">
-          {/* Open: prediction form + stats */}
-          {currentState === MatchState.Open && (
+          {/* Open: show form OR stats depending on prediction */}
+          {currentState === MatchState.Open && !prediction && (
             <>
               <PredictionForm
                 selectedWinner={selectedWinner}
@@ -142,7 +160,18 @@ export const MatchCard: React.FC<MatchCardProps> = ({
                   {isSubmitting ? 'Сохраняем...' : 'Сохранить прогноз'}
                 </button>
               )}
+            </>
+          )}
+          {currentState === MatchState.Open && prediction && (
+            <>
               <CrowdStats apiStats={match.voteStats} blobState={blobState} prediction={prediction} />
+              <button
+                className="inline-submit-btn cancel-vote-btn"
+                onClick={handleCancelVote}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Отмена...' : 'Отменить голос'}
+              </button>
             </>
           )}
 

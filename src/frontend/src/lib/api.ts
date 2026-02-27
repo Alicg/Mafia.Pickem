@@ -105,6 +105,16 @@ export async function submitPrediction(matchId: number, predictedWinner: number,
   });
 }
 
+export async function deletePrediction(matchId: number): Promise<void> {
+  if (isDemoMode) {
+    console.log('[DEMO] deletePrediction', { matchId });
+    return;
+  }
+  await apiFetch(`/matches/${encodeURIComponent(matchId)}/predict`, {
+    method: 'DELETE',
+  });
+}
+
 export async function getLeaderboard(tournamentId: number): Promise<LeaderboardResponse> {
   if (isDemoMode) return demoLeaderboard;
   const result = await apiFetch<LeaderboardResponse>(`/tournaments/${encodeURIComponent(tournamentId)}/leaderboard`);

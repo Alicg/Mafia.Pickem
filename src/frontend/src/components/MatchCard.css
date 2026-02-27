@@ -206,6 +206,13 @@
   cursor: default;
 }
 
+.cancel-vote-btn {
+  background: transparent;
+  color: var(--tg-theme-hint-color, #999);
+  border: 1px solid var(--pm-card-border, rgba(100, 140, 255, 0.12));
+  margin-top: 12px;
+}
+
 .results-summary {
   margin-top: 16px;
   display: flex;
