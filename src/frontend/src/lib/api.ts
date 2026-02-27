@@ -5,6 +5,7 @@ import {
   MatchDto, 
   LeaderboardResponse,
   CreateMatchRequest,
+  CreateTournamentRequest,
   ResolveMatchRequest,
   TournamentStats
 } from '../types';
@@ -122,6 +123,17 @@ export async function getLeaderboard(tournamentId: number): Promise<LeaderboardR
 }
 
 // Admin API
+export async function adminCreateTournament(request: CreateTournamentRequest): Promise<TournamentDto> {
+  if (isDemoMode) {
+    console.log('[DEMO] adminCreateTournament', request);
+    return { id: 99, name: request.name, description: request.description ?? null, imageUrl: request.imageUrl ?? null, currentMatch: null };
+  }
+  return apiFetch('/admin/tournaments', {
+    method: 'POST',
+    body: JSON.stringify(request),
+  });
+}
+
 export async function adminCreateMatch(request: CreateMatchRequest): Promise<MatchDto> {
   if (isDemoMode) {
     console.log('[DEMO] adminCreateMatch', request);

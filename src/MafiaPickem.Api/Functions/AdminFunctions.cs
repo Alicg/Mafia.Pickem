@@ -13,6 +13,7 @@ namespace MafiaPickem.Api.Functions;
 public class AdminFunctions
 {
     private readonly IMatchRepository _matchRepository;
+    private readonly ITournamentRepository _tournamentRepository;
     private readonly IPredictionRepository _predictionRepository;
     private readonly IMatchStateService _matchStateService;
     private readonly IScoringService _scoringService;
@@ -21,6 +22,7 @@ public class AdminFunctions
 
     public AdminFunctions(
         IMatchRepository matchRepository,
+        ITournamentRepository tournamentRepository,
         IPredictionRepository predictionRepository,
         IMatchStateService matchStateService,
         IScoringService scoringService,
@@ -28,11 +30,49 @@ public class AdminFunctions
         IUserContext userContext)
     {
         _matchRepository = matchRepository;
+        _tournamentRepository = tournamentRepository;
         _predictionRepository = predictionRepository;
         _matchStateService = matchStateService;
         _scoringService = scoringService;
         _statePublishService = statePublishService;
         _userContext = userContext;
+    }
+
+    [Function("AdminCreateTournament")]
+    public async Task<HttpResponseData> CreateTournamentHttp(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "admin/tournaments")] HttpRequestData req)
+    {
+        if (!_userContext.IsAdmin)
+        {
+            var forbiddenResponse = req.CreateResponse(HttpStatusCode.Forbidden);
+            await forbiddenResponse.WriteStringAsync("Admin access required");
+            return forbiddenResponse;
+        }
+
+        var request = await req.ReadFromJsonAsync<CreateTournamentRequest>();
+        if (request == null || string.IsNullOrWhiteSpace(request.Name))
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteStringAsync("Tournament name is required");
+            return badRequestResponse;
+        }
+
+        var tournament = await _tournamentRepository.CreateAsync(
+            request.Name,
+            request.Description,
+            request.ImageUrl);
+
+        var dto = new TournamentDto
+        {
+            Id = tournament.Id,
+            Name = tournament.Name,
+            Description = tournament.Description,
+            ImageUrl = tournament.ImageUrl
+        };
+
+        var response = req.CreateResponse(HttpStatusCode.Created);
+        await response.WriteAsJsonAsync(dto);
+        return response;
     }
 
     [Function("AdminCreateMatch")]

@@ -50,7 +50,7 @@ function App() {
     );
   }
 
-  return <TournamentsListPage onSelect={setSelectedTournament} />;
+  return <TournamentsListPage onSelect={setSelectedTournament} isAdmin={user.isAdmin} />;
 }
 
 export default App;

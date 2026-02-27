@@ -81,6 +81,12 @@ export interface CreateMatchRequest {
   externalMatchRef?: string;
 }
 
+export interface CreateTournamentRequest {
+  name: string;
+  description?: string;
+  imageUrl?: string;
+}
+
 export interface ResolveMatchRequest {
   winningSide: number;  // 0=Town, 1=Mafia
   votedOutSlots: number[];  // [0]=Nobody, [3,7]=Players

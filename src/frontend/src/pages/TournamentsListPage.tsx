@@ -2,30 +2,34 @@ import React, { useEffect, useState } from 'react';
 import { getActiveTournaments } from '../lib/api';
 import { TournamentDto } from '../types';
 import { hapticFeedback } from '../lib/telegram';
+import { CreateTournamentForm } from '../components/admin/CreateTournamentForm';
 import './TournamentsListPage.css';
 
 interface TournamentsListPageProps {
   onSelect: (tournament: TournamentDto) => void;
+  isAdmin?: boolean;
 }
 
-export const TournamentsListPage: React.FC<TournamentsListPageProps> = ({ onSelect }) => {
+export const TournamentsListPage: React.FC<TournamentsListPageProps> = ({ onSelect, isAdmin }) => {
   const [tournaments, setTournaments] = useState<TournamentDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+
+  const loadTournaments = async () => {
+    try {
+      const data = await getActiveTournaments();
+      setTournaments(data);
+    } catch (err) {
+      console.error('Failed to load tournaments:', err);
+      setError('Не удалось загрузить турниры');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function load() {
-      try {
-        const data = await getActiveTournaments();
-        setTournaments(data);
-      } catch (err) {
-        console.error('Failed to load tournaments:', err);
-        setError('Не удалось загрузить турниры');
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    load();
+    loadTournaments();
   }, []);
 
   const handleSelect = (t: TournamentDto) => {
@@ -59,6 +63,15 @@ export const TournamentsListPage: React.FC<TournamentsListPageProps> = ({ onSele
       <header className="tournaments-header">
         <h1>Турниры</h1>
         <div className="tournaments-header-sub">Делай прогнозы — зарабатывай очки</div>
+        {isAdmin && (
+          <button
+            className="btn btn-primary"
+            style={{ marginTop: '12px' }}
+            onClick={() => { hapticFeedback('selection'); setShowCreateForm(true); }}
+          >
+            + Новый турнир
+          </button>
+        )}
       </header>
 
       <div className="tournaments-content">
@@ -78,6 +91,16 @@ export const TournamentsListPage: React.FC<TournamentsListPageProps> = ({ onSele
           </div>
         )}
       </div>
+
+      {showCreateForm && (
+        <CreateTournamentForm
+          onSuccess={() => {
+            setShowCreateForm(false);
+            loadTournaments();
+          }}
+          onCancel={() => setShowCreateForm(false)}
+        />
+      )}
     </div>
   );
 };

@@ -38,4 +38,19 @@ public class TournamentRepository : ITournamentRepository
 
         return await connection.QuerySingleOrDefaultAsync<Tournament>(sql, new { Id = id });
     }
+
+    public async Task<Tournament> CreateAsync(string name, string? description, string? imageUrl)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        const string sql = """
+            INSERT INTO Tournaments (Name, Description, ImageUrl)
+            VALUES (@Name, @Description, @ImageUrl);
+            SELECT CAST(SCOPE_IDENTITY() AS int);
+            """;
+
+        var id = await connection.QuerySingleAsync<int>(sql, new { Name = name, Description = description, ImageUrl = imageUrl });
+
+        return (await GetByIdAsync(id))!;
+    }
 }
