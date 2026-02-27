@@ -6,33 +6,11 @@
   box-sizing: border-box;
 }
 
-:root {
-  --tg-theme-bg-color: #ffffff;
-  --tg-theme-text-color: #000000;
-  --tg-theme-hint-color: #999999;
-  --tg-theme-link-color: #2481cc;
-  --tg-theme-button-color: #3390ec;
-  --tg-theme-button-text-color: #ffffff;
-  --tg-theme-secondary-bg-color: #f0f0f0;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --tg-theme-bg-color: #1c1c1d;
-    --tg-theme-text-color: #ffffff;
-    --tg-theme-hint-color: #8e8e93;
-    --tg-theme-link-color: #0a84ff;
-    --tg-theme-button-color: #0a84ff;
-    --tg-theme-button-text-color: #ffffff;
-    --tg-theme-secondary-bg-color: #2c2c2e;
-  }
-}
-
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--tg-theme-bg-color);
+  background: var(--tg-theme-bg-gradient);
   color: var(--tg-theme-text-color);
   line-height: 1.5;
   width: 100vw;
@@ -51,11 +29,14 @@ body {
 }
 
 .container {
-  padding: 20px;
+  padding: 24px 20px;
   max-width: 600px;
   margin: 0 auto;
   width: 100%;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .center-container {
@@ -68,13 +49,15 @@ body {
   padding: 20px;
 }
 
+/* Spinner with glow */
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid var(--tg-theme-secondary-bg-color);
+  border: 3px solid var(--pm-divider);
   border-top-color: var(--tg-theme-button-color);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin 0.8s linear infinite;
+  filter: drop-shadow(0 0 8px var(--pm-glow));
 }
 
 @keyframes spin {
@@ -82,14 +65,16 @@ body {
 }
 
 h1 {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
+  font-size: 1.6rem;
+  margin-bottom: 0.75rem;
   color: var(--tg-theme-text-color);
+  letter-spacing: -0.02em;
 }
 
 .description {
   margin-bottom: 2rem;
   color: var(--tg-theme-hint-color);
+  line-height: 1.6;
 }
 
 .form-group {
@@ -101,58 +86,71 @@ label {
   display: block;
   margin-bottom: 0.5rem;
   color: var(--tg-theme-hint-color);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
 }
 
 input[type="text"] {
   width: 100%;
-  padding: 12px;
+  padding: 14px 16px;
   font-size: 1rem;
-  border: 1px solid var(--tg-theme-secondary-bg-color); /* Updated to be more subtle */
+  border: 1px solid var(--pm-divider);
   border-radius: 12px;
-  background-color: var(--tg-theme-secondary-bg-color);
+  background-color: var(--pm-card-bg);
   color: var(--tg-theme-text-color);
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input[type="text"]::placeholder {
+  color: var(--tg-theme-hint-color);
+  opacity: 0.6;
 }
 
 input[type="text"]:focus {
   border-color: var(--tg-theme-button-color);
+  box-shadow: 0 0 0 3px var(--pm-glow);
   background-color: var(--tg-theme-bg-color);
 }
 
 input.error {
-  border-color: #ff3b30;
-  background-color: rgba(255, 59, 48, 0.1);
+  border-color: var(--pm-accent-red);
+  background-color: rgba(244, 63, 94, 0.08);
 }
 
 .error-message {
-  color: #ff3b30;
+  color: var(--pm-accent-red);
   font-size: 0.85rem;
   margin-top: 0.5rem;
 }
 
 .button-primary {
-  background-color: var(--tg-theme-button-color);
-  color: var(--tg-theme-button-text-color);
+  background: var(--pm-gradient-accent);
+  color: #ffffff;
   border: none;
   padding: 15px 20px;
   border-radius: 12px;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   width: 100%;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, box-shadow 0.2s;
   display: flex;
   justify-content: center;
   align-items: center;
+  box-shadow: 0 4px 24px var(--pm-gradient-accent-shadow);
+  letter-spacing: 0.02em;
 }
 
 .button-primary:active {
-  opacity: 0.8;
+  opacity: 0.85;
+  box-shadow: 0 2px 12px var(--pm-gradient-accent-shadow);
 }
 
 .button-primary:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
+  box-shadow: none;
 }

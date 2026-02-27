@@ -1,11 +1,15 @@
+import { useState } from 'react';
 import './App.css';
 import { useAuth } from './hooks/useAuth';
+import { TournamentDto } from './types';
 import { LoadingPage } from './pages/LoadingPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { TournamentsListPage } from './pages/TournamentsListPage';
 import { TournamentPage } from './pages/TournamentPage';
 
 function App() {
   const { user, isLoading, error, isAuthenticated, refreshAuth } = useAuth();
+  const [selectedTournament, setSelectedTournament] = useState<TournamentDto | null>(null);
 
   if (isLoading) {
     return <LoadingPage />;
@@ -30,7 +34,6 @@ function App() {
   }
 
   if (!isAuthenticated || !user) {
-    // Should be handled by error state ideally, but fallback
     return <div>Authentication failed.</div>;
   }
 
@@ -38,8 +41,16 @@ function App() {
     return <RegisterPage onSuccess={refreshAuth} />;
   }
 
-  // Main App Content
-  return <TournamentPage />;
+  if (selectedTournament) {
+    return (
+      <TournamentPage
+        tournament={selectedTournament}
+        onBack={() => setSelectedTournament(null)}
+      />
+    );
+  }
+
+  return <TournamentsListPage onSelect={setSelectedTournament} />;
 }
 
 export default App;

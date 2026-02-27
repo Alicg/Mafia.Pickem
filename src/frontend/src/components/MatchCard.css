@@ -1,28 +1,63 @@
 .match-card {
-  background: var(--tg-theme-bg-color);
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  margin-bottom: 30px;
+  background: var(--pm-card-bg);
+  backdrop-filter: var(--pm-glass-blur);
+  border: 1px solid var(--pm-card-border);
+  border-left: 4px solid var(--pm-card-border);
+  border-radius: 14px;
+  overflow: hidden;
   width: 100%;
+  transition: border-color 0.25s;
 }
 
 .match-card.state-upcoming {
-  opacity: 0.8;
+  border-left-color: var(--tg-theme-hint-color);
+  opacity: 0.6;
+}
+
+.match-card.state-open {
+  border-left-color: #4ade80;
+  border-image: linear-gradient(180deg, #4ade80, #22c55e) 1;
+  border-image-slice: 0 0 0 4;
+}
+
+.match-card.state-locked {
+  border-left-color: #fb7185;
+  border-image: linear-gradient(180deg, #fb7185, #ef4444) 1;
+  border-image-slice: 0 0 0 4;
+}
+
+.match-card.state-resolved {
+  border-left-color: #60a5fa;
+  border-image: linear-gradient(180deg, #60a5fa, #3b82f6) 1;
+  border-image-slice: 0 0 0 4;
 }
 
 .match-card.state-canceled {
+  border-left-color: var(--tg-theme-hint-color);
   filter: grayscale(1);
-  opacity: 0.6;
+  opacity: 0.4;
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--tg-theme-secondary-bg-color);
+  padding: 14px 16px;
+  border: none;
+  background: none;
+  width: 100%;
+  cursor: default;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.card-header.expandable {
+  cursor: pointer;
+}
+
+.card-header.expandable:active {
+  background-color: var(--pm-surface-hover);
 }
 
 .game-info {
@@ -31,46 +66,76 @@
 }
 
 .game-number {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
+  color: var(--tg-theme-text-color);
 }
 
 .table-number {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--tg-theme-hint-color);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .status-badge {
-  padding: 4px 10px;
-  border-radius: 20px;
+  padding: 5px 12px;
+  border-radius: 8px;
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid;
 }
 
 .status-badge.upcoming {
-  background-color: var(--tg-theme-secondary-bg-color);
-  color: var(--tg-theme-hint-color);
+  background: rgba(100, 140, 255, 0.06);
+  color: #7eb4ff80;
+  border-color: rgba(100, 140, 255, 0.15);
 }
 
 .status-badge.open {
-  background-color: #e6f4ea;
-  color: #1e8e3e;
+  background: rgba(34, 197, 94, 0.1);
+  color: #4ade80;
+  border-color: rgba(34, 197, 94, 0.25);
 }
 
 .status-badge.locked {
-  background-color: #fce8e6;
-  color: #d93025;
+  background: rgba(239, 68, 68, 0.1);
+  color: #fb7185;
+  border-color: rgba(239, 68, 68, 0.25);
 }
 
 .status-badge.resolved {
-  background-color: var(--tg-theme-button-color);
-  color: white;
+  background: rgba(59, 130, 246, 0.1);
+  color: #60a5fa;
+  border-color: rgba(59, 130, 246, 0.25);
 }
 
 .status-badge.canceled {
-  background-color: #3c4043;
-  color: white;
+  background: rgba(100, 140, 255, 0.06);
+  color: #7eb4ff60;
+  border-color: rgba(100, 140, 255, 0.12);
+}
+
+.expand-arrow {
+  font-size: 10px;
+  color: var(--tg-theme-hint-color);
+  transition: transform 0.25s;
+}
+
+.expand-arrow.open {
+  transform: rotate(180deg);
+}
+
+/* Expanded body */
+.card-body {
+  padding: 0 16px 16px;
+  border-top: 1px solid var(--pm-divider);
 }
 
 .results-summary {
@@ -80,11 +145,11 @@
 }
 
 .points-badge {
-  background-color: #fbbc04;
-  color: #202124;
-  padding: 6px 14px;
-  border-radius: 20px;
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  color: #fff;
+  padding: 6px 16px;
+  border-radius: 10px;
   font-weight: 800;
-  font-size: 14px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  font-size: 13px;
+  box-shadow: 0 2px 12px rgba(245, 158, 11, 0.2);
 }

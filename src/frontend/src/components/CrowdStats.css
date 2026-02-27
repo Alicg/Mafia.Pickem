@@ -1,16 +1,18 @@
 .crowd-stats {
-  margin-top: 24px;
-  background-color: var(--tg-theme-bg-color);
-  padding: 16px;
+  margin-top: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 14px;
   border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  border: 1px solid var(--pm-card-border);
 }
 
 .crowd-stats h3 {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   margin-bottom: 16px;
   color: var(--tg-theme-text-color);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .stats-group {
@@ -28,10 +30,10 @@
 .winner-bar-container {
   display: flex;
   width: 100%;
-  height: 32px;
+  height: 28px;
   border-radius: 8px;
   overflow: hidden;
-  background-color: #eee;
+  background: rgba(0, 0, 0, 0.3);
 }
 
 .winner-bar {
@@ -41,17 +43,17 @@
   height: 100%;
   transition: width 0.5s ease-out;
   position: relative;
-  min-width: 0; /* allows shrinking */
+  min-width: 0;
 }
 
 .winner-bar.town {
-  background-color: #ea4335;
+  background: linear-gradient(90deg, #ef4444, #f87171);
   color: white;
 }
 
 .winner-bar.mafia {
-  background-color: #202124;
-  color: white;
+  background: rgba(100, 100, 100, 0.3);
+  color: #ffffffa0;
 }
 
 .bar-label {
@@ -66,7 +68,7 @@
 /* Slots Grid */
 .slots-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* 2 columns for better readability */
+  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
 }
 
@@ -78,22 +80,23 @@
 
 .slot-num {
   width: 24px;
-  font-size: 13px; 
+  font-size: 13px;
   font-weight: 500;
   text-align: right;
+  color: var(--tg-theme-hint-color);
 }
 
 .slot-bar-bg {
   flex: 1;
   height: 8px;
-  background-color: #f0f0f0;
+  background-color: var(--pm-card-bg);
   border-radius: 4px;
   overflow: hidden;
 }
 
 .slot-bar-fill {
   height: 100%;
-  background-color: var(--tg-theme-button-color, #3390ec);
+  background: var(--pm-gradient-accent);
   border-radius: 4px;
   transition: width 0.5s ease;
 }

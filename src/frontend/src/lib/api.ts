@@ -9,7 +9,7 @@ import {
   TournamentStats
 } from '../types';
 import { isDemoMode } from '../mocks/demo-mode';
-import { demoUser, demoTournament, demoMatches, demoLeaderboard, demoStats } from '../mocks/demo-data';
+import { demoUser, demoTournament, demoTournaments, demoMatches, demoLeaderboard, demoStats } from '../mocks/demo-data';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -74,7 +74,7 @@ export async function updateNickname(gameNickname: string): Promise<AuthResponse
 
 // Tournaments
 export async function getActiveTournaments(): Promise<TournamentDto[]> {
-  if (isDemoMode) return [demoTournament];
+  if (isDemoMode) return [...demoTournaments];
   return apiFetch('/tournaments/active');
 }
 

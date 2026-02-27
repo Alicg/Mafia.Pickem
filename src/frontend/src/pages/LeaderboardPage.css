@@ -3,39 +3,44 @@
   flex-direction: column;
   height: 100vh;
   width: 100vw;
-  background-color: var(--tg-theme-bg-color);
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 100; /* Cover everything */
+  z-index: 100;
 }
 
 .leaderboard-header {
   display: flex;
   align-items: center;
-  padding: 16px;
-  background-color: var(--tg-theme-bg-color);
-  border-bottom: 1px solid var(--tg-theme-secondary-bg-color);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  padding: 16px 20px;
+  background: var(--pm-header-bg);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--pm-card-border);
   flex-shrink: 0;
   z-index: 10;
 }
 
 .back-icon-btn {
-  background: none;
-  border: none;
-  font-size: 24px;
-  color: var(--tg-theme-button-color);
+  background: rgba(100, 140, 255, 0.12);
+  border: 1px solid rgba(100, 140, 255, 0.2);
+  font-size: 16px;
+  color: #7eb4ff;
   cursor: pointer;
-  padding: 0 16px 0 0;
+  padding: 0;
+  margin-right: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 
 .leaderboard-header h2 {
   font-size: 18px;
   margin: 0;
   font-weight: 600;
+  color: var(--tg-theme-text-color);
 }
 
 .leaderboard-list-container {
@@ -47,28 +52,29 @@
 }
 
 .leaderboard-row.header {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--tg-theme-hint-color);
   text-transform: uppercase;
+  letter-spacing: 0.05em;
   font-weight: 600;
   background-color: var(--tg-theme-secondary-bg-color);
   padding: 10px 16px;
   flex-shrink: 0;
-  border-bottom: 1px solid rgba(0,0,0,0.05);
+  border-bottom: 1px solid var(--pm-divider);
 }
 
 .leaderboard-scroll-area {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 60px; /* Space for sticky footer inside scroll? No, separate */
+  padding-bottom: 60px;
 }
 
 .leaderboard-row {
   display: flex;
   align-items: center;
   padding: 12px 16px;
-  border-bottom: 1px solid var(--tg-theme-secondary-bg-color);
+  border-bottom: 1px solid var(--pm-divider);
   background: var(--tg-theme-bg-color);
 }
 
@@ -77,6 +83,7 @@
   text-align: center;
   font-weight: 600;
   font-size: 14px;
+  color: var(--tg-theme-hint-color);
 }
 
 .player-col {
@@ -92,7 +99,7 @@
   width: 50px;
   text-align: right;
   font-weight: 700;
-  color: var(--tg-theme-text-color);
+  color: var(--pm-accent-gold);
   font-size: 15px;
 }
 
@@ -100,7 +107,7 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background-color: var(--tg-theme-button-color);
+  background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
   color: white;
   display: flex;
   align-items: center;
@@ -129,26 +136,27 @@
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 15px;
+  color: var(--tg-theme-text-color);
 }
 
 .leaderboard-row.current-user {
-  background-color: rgba(51, 144, 236, 0.1); 
+  background: rgba(56, 189, 248, 0.08);
 }
 
 .sticky-user-row {
-  position: absolute; 
+  position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  background-color: var(--tg-theme-bg-color);
-  box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+  background-color: var(--pm-card-bg);
+  box-shadow: 0 -4px 16px var(--pm-shadow);
   padding: 0;
   z-index: 20;
 }
 
 .sticky-inner.leaderboard-row {
-  border-top: 1px solid var(--tg-theme-button-color);
-  background-color: var(--tg-theme-bg-color);
+  border-top: 2px solid var(--tg-theme-button-color);
+  background-color: var(--pm-card-bg);
 }
 
 .you-badge {
@@ -167,14 +175,15 @@
 .spinner {
   width: 32px;
   height: 32px;
-  border: 4px solid var(--tg-theme-secondary-bg-color);
+  border: 3px solid var(--pm-divider);
   border-top-color: var(--tg-theme-button-color);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin 0.8s linear infinite;
+  filter: drop-shadow(0 0 6px var(--pm-glow));
 }
 
 .empty-state {
-    padding: 40px;
-    text-align: center;
-    color: var(--tg-theme-hint-color);
+  padding: 40px;
+  text-align: center;
+  color: var(--tg-theme-hint-color);
 }

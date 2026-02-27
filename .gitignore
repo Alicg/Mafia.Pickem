@@ -4,3 +4,4 @@ src/MafiaPickem.Api.Tests/bin/
 src/MafiaPickem.Api.Tests/obj/
 src/MafiaPickem.Api/local.settings.json
 src/node_modules/
+.vite/deps/

@@ -26,7 +26,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
     setError(validationError);
 
     if (!validationError && val.length > 0) {
-      showMainButton('ЗАРЕГИСТРИРОВАТЬСЯ', handleSubmit);
+      showMainButton('НАЧАТЬ', handleSubmit);
     } else {
       hideMainButton();
     }

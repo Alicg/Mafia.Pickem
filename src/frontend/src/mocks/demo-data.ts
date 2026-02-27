@@ -149,6 +149,17 @@ export const demoTournament: TournamentDto = {
   currentMatch: demoMatches[2], // Game #3 (Open)
 };
 
+export const demoTournaments: TournamentDto[] = [
+  demoTournament,
+  {
+    id: 2,
+    name: 'Весенний Чемпионат 2026',
+    description: 'Открытый чемпионат города — регистрация открыта',
+    imageUrl: null,
+    currentMatch: null,
+  },
+];
+
 export const demoLeaderboard: LeaderboardResponse = {
   entries: [
     { rank: 1, displayName: 'ШерлокХолмс', photoUrl: null, totalPoints: 85, correctPredictions: 12, totalPredictions: 15, isCurrentUser: false },
