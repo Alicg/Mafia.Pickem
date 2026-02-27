@@ -52,7 +52,7 @@
 }
 
 .winner-label-right {
-  color: #999;
+  color: #ffffff;
 }
 
 .winner-bar-container {
@@ -76,7 +76,8 @@
 }
 
 .winner-bar.mafia {
-  background: rgba(80, 80, 80, 0.35);
+  background: linear-gradient(90deg, #333333, #4a4a4a);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
 /* Actual match result highlights */

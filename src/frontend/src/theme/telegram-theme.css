@@ -21,7 +21,7 @@
   --pm-divider: rgba(100, 140, 255, 0.08);
   --pm-shadow: rgba(0, 0, 0, 0.4);
   --pm-town-color: #ef4444;
-  --pm-mafia-color: rgba(100, 100, 100, 0.2);
+  --pm-mafia-color: #3a3a3a;
   --pm-gradient-accent: linear-gradient(135deg, #4f7cff, #7c5cff);
   --pm-gradient-accent-shadow: rgba(79, 124, 255, 0.3);
   --pm-glass-blur: blur(12px);

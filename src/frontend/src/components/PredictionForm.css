@@ -47,8 +47,8 @@
 }
 
 .winner-btn.mafia.selected {
-  background: linear-gradient(135deg, rgba(160, 160, 160, 0.15), rgba(120, 120, 120, 0.08));
-  color: #ddd;
-  border-color: rgba(180, 180, 180, 0.4);
-  box-shadow: 0 0 24px rgba(150, 150, 150, 0.08);
+  background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.4);
 }
