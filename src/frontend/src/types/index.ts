@@ -107,4 +107,8 @@ export interface BlobMatchState {
     mafia: { count: number; percent: number };
   } | null;
   votedOutVotes: { slot: number; count: number; percent: number }[] | null;
+  matchResult: {
+    winningSide: number;   // 0=Town, 1=Mafia
+    votedOutSlots: number[];
+  } | null;
 }

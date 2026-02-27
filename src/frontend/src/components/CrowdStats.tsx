@@ -1,13 +1,44 @@
 import React, { useMemo } from 'react';
 import './CrowdStats.css';
-import { BlobMatchState, VoteStatsDto } from '../types';
+import { BlobMatchState, PredictionDto, VoteStatsDto } from '../types';
+
+type LegendStatus = 'correct' | 'wrong' | 'pending';
+
+const LegendItem: React.FC<{ label: string; status: LegendStatus }> = ({ label, status }) => (
+  <span className={`legend-item ${status}`}>
+    <span className="legend-icon">
+      {status === 'correct' && (
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+          <circle cx="7" cy="7" r="7" />
+          <path d="M4 7l2 2 4-4" stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
+      {status === 'wrong' && (
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+          <circle cx="7" cy="7" r="7" />
+          <path d="M5 5l4 4M9 5l-4 4" stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+        </svg>
+      )}
+      {status === 'pending' && (
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <circle cx="7" cy="7" r="6" />
+          <path d="M4 7l2 2 4-4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
+    </span>
+    {label}
+  </span>
+);
 
 interface CrowdStatsProps {
   apiStats: VoteStatsDto | null;
   blobState: BlobMatchState | null;
+  prediction?: PredictionDto | null;
 }
 
-export const CrowdStats: React.FC<CrowdStatsProps> = ({ apiStats, blobState }) => {
+export const CrowdStats: React.FC<CrowdStatsProps> = ({ apiStats, blobState, prediction }) => {
+  const matchResult = blobState?.matchResult ?? null;
+
   // Prefer blob state for real-time updates, fallback to API stats
   const stats = useMemo(() => {
     if (blobState) {
@@ -57,16 +88,28 @@ export const CrowdStats: React.FC<CrowdStatsProps> = ({ apiStats, blobState }) =
       {/* Winner Stats */}
       <div className="stats-group">
         <label>Победа команды</label>
-        <div className="winner-bar-container">
-           {/* Town Bar */}
-           <div className="winner-bar town" style={{ width: `${townDisplay}%` }}>
-             <span className="bar-label left">Мирные {townDisplay}%</span>
-           </div>
-           {/* Mafia Bar */}
-           <div className="winner-bar mafia" style={{ width: `${mafiaDisplay}%` }}>
-             <span className="bar-label right">Мафия {mafiaDisplay}%</span>
-           </div>
+        <div className="winner-labels">
+          <span className="winner-label-left">Мирные {townDisplay}%</span>
+          <span className="winner-label-right">Мафия {mafiaDisplay}%</span>
         </div>
+        <div className="winner-bar-container">
+           <div className={`winner-bar town${matchResult?.winningSide === 0 ? ' actual-winner' : ''}`} style={{ width: `${townDisplay}%` }} />
+           <div className={`winner-bar mafia${matchResult?.winningSide === 1 ? ' actual-winner' : ''}`} style={{ width: `${mafiaDisplay}%` }} />
+        </div>
+        {prediction != null && (
+          <div className="legend-row">
+            <LegendItem
+              label={`Ваш выбор: ${prediction.predictedWinner === 0 ? 'Мирные' : 'Мафия'}`}
+              status={matchResult ? (matchResult.winningSide === prediction.predictedWinner ? 'correct' : 'wrong') : 'pending'}
+            />
+            {matchResult && (
+              <LegendItem
+                label={`Результат: ${matchResult.winningSide === 0 ? 'Мирные' : 'Мафия'}`}
+                status="correct"
+              />
+            )}
+          </div>
+        )}
       </div>
 
       {/* Voted Out Stats — vertical column chart */}
@@ -75,25 +118,45 @@ export const CrowdStats: React.FC<CrowdStatsProps> = ({ apiStats, blobState }) =
         {(() => {
           const pcts = stats.slots.map(s => formatPct(s.percent));
           const maxPct = Math.max(...pcts, 1);
+          const votedOutSet = new Set(matchResult?.votedOutSlots ?? []);
+          const userVotedOut = prediction?.predictedVotedOut ?? null;
           return (
-            <div className="slots-columns">
-              {stats.slots.map((s, i) => {
-                const pct = pcts[i];
-                const heightPct = (pct / maxPct) * 100;
-                return (
-                  <div key={s.slot} className="slot-col">
-                    <span className="slot-col-pct">{pct.toFixed(0)}%</span>
-                    <div className="slot-col-track">
-                      <div
-                        className="slot-col-fill"
-                        style={{ height: `${heightPct}%` }}
-                      />
+            <>
+              <div className="slots-columns">
+                {stats.slots.map((s, i) => {
+                  const pct = pcts[i];
+                  const heightPct = (pct / maxPct) * 100;
+                  const isVotedOut = votedOutSet.has(s.slot);
+                  const isUserPick = userVotedOut === s.slot;
+                  return (
+                    <div key={s.slot} className={`slot-col${isVotedOut ? ' actual-voted-out' : ''}${isUserPick ? ' user-pick-slot' : ''}`}>
+                      <span className="slot-col-pct">{pct.toFixed(0)}%</span>
+                      <div className="slot-col-track">
+                        <div
+                          className={`slot-col-fill${isVotedOut ? ' voted-out-fill' : ''}`}
+                          style={{ height: `${heightPct}%` }}
+                        />
+                      </div>
+                      <span className="slot-col-num">{s.slot === 0 ? '–' : s.slot}</span>
                     </div>
-                    <span className="slot-col-num">{s.slot === 0 ? '–' : s.slot}</span>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+              {userVotedOut != null && (
+                <div className="legend-row">
+                  <LegendItem
+                    label={`Ваш выбор: ${userVotedOut === 0 ? 'Никто' : userVotedOut}`}
+                    status={matchResult ? (votedOutSet.has(userVotedOut) ? 'correct' : 'wrong') : 'pending'}
+                  />
+                  {matchResult && (
+                    <LegendItem
+                      label={`Результат: ${matchResult.votedOutSlots.join(', ')}`}
+                      status="correct"
+                    />
+                  )}
+                </div>
+              )}
+            </>
           );
         })()}
       </div>

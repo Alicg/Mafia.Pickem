@@ -144,19 +144,19 @@ export const MatchCard: React.FC<MatchCardProps> = ({
                 onVotedOutChange={handleVotedOutChange}
                 disabled={isFormDisabled}
               />
-              <CrowdStats apiStats={match.voteStats} blobState={blobState} />
+              <CrowdStats apiStats={match.voteStats} blobState={blobState} prediction={prediction} />
             </>
           )}
 
           {/* Locked: stats only */}
           {currentState === MatchState.Locked && (
-            <CrowdStats apiStats={match.voteStats} blobState={blobState} />
+            <CrowdStats apiStats={match.voteStats} blobState={blobState} prediction={prediction} />
           )}
 
           {/* Resolved: stats + results */}
           {currentState === MatchState.Resolved && (
             <>
-              <CrowdStats apiStats={match.voteStats} blobState={blobState} />
+              <CrowdStats apiStats={match.voteStats} blobState={blobState} prediction={prediction} />
               {prediction && (
                 <div className="results-summary">
                   <div className="points-badge">

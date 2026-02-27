@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { BlobMatchState } from '../types';
 import { isDemoMode } from '../mocks/demo-mode';
+import { demoBlobStates } from '../mocks/demo-data';
 
 const VITE_BLOB_BASE_URL = import.meta.env.VITE_BLOB_BASE_URL || 'https://mafiapickem.blob.core.windows.net/match-state';
 
@@ -15,9 +16,10 @@ export function useMatchState(matchId: number | null): UseMatchStateResult {
   const [error, setError] = useState<string | null>(null);
   const [isPolling, setIsPolling] = useState(false);
 
-  // In demo mode, skip all polling
+  // In demo mode, return static demo blob state
   if (isDemoMode) {
-    return { blobState: null, isPolling: false, error: null };
+    const demoState = matchId ? (demoBlobStates[matchId] ?? null) : null;
+    return { blobState: demoState, isPolling: false, error: null };
   }
   
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);

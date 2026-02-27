@@ -5,6 +5,7 @@ import {
   MatchState,
   LeaderboardResponse,
   TournamentStats,
+  BlobMatchState,
 } from '../types';
 
 export const demoUser: UserProfile = {
@@ -181,4 +182,35 @@ export const demoStats: TournamentStats = {
   totalMatches: 5,
   matchesByState: { Upcoming: 1, Open: 1, Locked: 1, Resolved: 2 },
   totalPredictions: 122,
+};
+
+// Demo blob states with match results for resolved matches
+function buildDemoBlobState(match: MatchDto): BlobMatchState {
+  const stats = match.voteStats;
+  return {
+    matchId: match.id,
+    tournamentId: 1,
+    version: 1,
+    state: MatchState[match.state],
+    updatedAt: new Date().toISOString(),
+    tableSize: 10,
+    totalPredictions: stats?.totalVotes ?? 0,
+    winnerVotes: stats ? {
+      town: { count: Math.round(stats.totalVotes * stats.townPercentage / 100), percent: stats.townPercentage },
+      mafia: { count: Math.round(stats.totalVotes * stats.mafiaPercentage / 100), percent: stats.mafiaPercentage },
+    } : null,
+    votedOutVotes: stats ? stats.slotVotes.map(s => ({ slot: s.slot, count: s.count, percent: s.percentage })) : null,
+    matchResult: null,
+  };
+}
+
+export const demoBlobStates: Record<number, BlobMatchState> = {
+  // Match 1 (Resolved): Town won, slots 3 and 7 voted out
+  1: { ...buildDemoBlobState(demoMatches[0]), matchResult: { winningSide: 0, votedOutSlots: [3, 7] } },
+  // Match 2 (Resolved): Town won, slot 4 voted out
+  2: { ...buildDemoBlobState(demoMatches[1]), matchResult: { winningSide: 0, votedOutSlots: [4] } },
+  // Match 3 (Open): no result yet
+  3: buildDemoBlobState(demoMatches[2]),
+  // Match 5 (Locked): no result yet
+  5: buildDemoBlobState(demoMatches[4]),
 };

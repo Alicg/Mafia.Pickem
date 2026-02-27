@@ -92,6 +92,23 @@ public class StatePublishService : IStatePublishService
             }
         }
 
+        // Load match result if resolved
+        if (match.State == MatchState.Resolved)
+        {
+            var result = await _predictionRepository.GetMatchResultAsync(matchId);
+            if (result != null)
+            {
+                var (winningSide, correctVotedOutCsv) = result.Value;
+                blobState.MatchResult = new MatchResultDto
+                {
+                    WinningSide = winningSide,
+                    VotedOutSlots = string.IsNullOrEmpty(correctVotedOutCsv)
+                        ? new List<int>()
+                        : correctVotedOutCsv.Split(',').Select(int.Parse).ToList()
+                };
+            }
+        }
+
         // Write to blob
         await _blobWriter.WriteStateAsync(blobState);
 

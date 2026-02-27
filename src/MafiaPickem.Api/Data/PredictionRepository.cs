@@ -209,6 +209,22 @@ public class PredictionRepository : IPredictionRepository
         return await connection.QuerySingleOrDefaultAsync<PredictionScore>(sql, new { PredictionId = predictionId });
     }
 
+    public async Task<(byte WinningSide, string CorrectVotedOutCsv)?> GetMatchResultAsync(int matchId)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        const string sql = """
+            SELECT WinningSide, CorrectVotedOutCsv
+            FROM MatchResults
+            WHERE MatchId = @MatchId
+            """;
+
+        var row = await connection.QuerySingleOrDefaultAsync<dynamic>(sql, new { MatchId = matchId });
+        if (row == null) return null;
+
+        return ((byte)row.WinningSide, (string)row.CorrectVotedOutCsv);
+    }
+
     public async Task SaveMatchResultAsync(int matchId, byte winningSide, string correctVotedOutCsv)
     {
         using var connection = _connectionFactory.CreateConnection();

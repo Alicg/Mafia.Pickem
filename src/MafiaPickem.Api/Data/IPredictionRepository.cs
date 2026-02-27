@@ -14,5 +14,6 @@ public interface IPredictionRepository
     Task InsertScoresAsync(int matchId, int totalVotes, int correctWinnerVotes, int correctVotedOutVotes);
     Task<PredictionScore?> GetScoreByPredictionIdAsync(int predictionId);
     Task SaveMatchResultAsync(int matchId, byte winningSide, string correctVotedOutCsv);
+    Task<(byte WinningSide, string CorrectVotedOutCsv)?> GetMatchResultAsync(int matchId);
     Task DeleteScoresByMatchIdAsync(int matchId);
 }
