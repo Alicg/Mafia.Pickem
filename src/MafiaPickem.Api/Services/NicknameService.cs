@@ -6,7 +6,7 @@ namespace MafiaPickem.Api.Services;
 public partial class NicknameService : INicknameService
 {
     private readonly IPickemUserRepository _userRepository;
-    
+
     private const int MinLength = 2;
     private const int MaxLength = 30;
 

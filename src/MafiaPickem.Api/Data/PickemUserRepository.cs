@@ -15,7 +15,7 @@ public class PickemUserRepository : IPickemUserRepository
     public async Task<PickemUser?> GetByTelegramIdAsync(long telegramId)
     {
         using var connection = _connectionFactory.CreateConnection();
-        
+
         const string sql = """
             SELECT Id, TelegramId, GameNickname, PhotoUrl, DateCreated
             FROM PickemUsers
@@ -28,7 +28,7 @@ public class PickemUserRepository : IPickemUserRepository
     public async Task<PickemUser?> GetByIdAsync(int id)
     {
         using var connection = _connectionFactory.CreateConnection();
-        
+
         const string sql = """
             SELECT Id, TelegramId, GameNickname, PhotoUrl, DateCreated
             FROM PickemUsers
@@ -41,7 +41,7 @@ public class PickemUserRepository : IPickemUserRepository
     public async Task<PickemUser> UpsertByTelegramIdAsync(long telegramId, string? photoUrl)
     {
         using var connection = _connectionFactory.CreateConnection();
-        
+
         // Generate placeholder nickname for new users
         var placeholderNickname = $"_unregistered_{telegramId}";
 
@@ -60,9 +60,9 @@ public class PickemUserRepository : IPickemUserRepository
             WHERE TelegramId = @TelegramId;
             """;
 
-        return await connection.QuerySingleAsync<PickemUser>(sql, new 
-        { 
-            TelegramId = telegramId, 
+        return await connection.QuerySingleAsync<PickemUser>(sql, new
+        {
+            TelegramId = telegramId,
             PhotoUrl = photoUrl,
             PlaceholderNickname = placeholderNickname
         });
@@ -71,7 +71,7 @@ public class PickemUserRepository : IPickemUserRepository
     public async Task UpdateNicknameAsync(int userId, string nickname)
     {
         using var connection = _connectionFactory.CreateConnection();
-        
+
         const string sql = """
             UPDATE PickemUsers
             SET GameNickname = @Nickname
@@ -84,7 +84,7 @@ public class PickemUserRepository : IPickemUserRepository
     public async Task<bool> IsNicknameAvailableAsync(string nickname, int? excludeUserId)
     {
         using var connection = _connectionFactory.CreateConnection();
-        
+
         const string sql = """
             SELECT COUNT(1)
             FROM PickemUsers

@@ -10,17 +10,17 @@ public class WinningSideTests
     {
         // Arrange & Act
         var value = (byte)WinningSide.Town;
-        
+
         // Assert
         value.Should().Be(0);
     }
-    
+
     [Fact]
     public void WinningSide_Mafia_ShouldBe1()
     {
         // Arrange & Act
         var value = (byte)WinningSide.Mafia;
-        
+
         // Assert
         value.Should().Be(1);
     }

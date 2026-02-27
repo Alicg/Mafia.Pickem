@@ -1,12 +1,43 @@
+using MafiaPickem.Api.Auth;
+using MafiaPickem.Api.Bot;
+using MafiaPickem.Api.Data;
+using MafiaPickem.Api.Services;
+using MafiaPickem.Api.State;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 var host = new HostBuilder()
-    .ConfigureFunctionsWebApplication()
+    .ConfigureFunctionsWebApplication(builder =>
+    {
+        builder.UseMiddleware<ExceptionHandlingMiddleware>();
+        builder.UseMiddleware<TelegramAuthMiddleware>();
+    })
     .ConfigureServices(services =>
     {
-        // Service registrations will be added here as services are created
+        // Infrastructure
+        services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
+
+        // Repositories
+        services.AddScoped<IPickemUserRepository, PickemUserRepository>();
+        services.AddScoped<ITournamentRepository, TournamentRepository>();
+        services.AddScoped<IMatchRepository, MatchRepository>();
+        services.AddScoped<IPredictionRepository, PredictionRepository>();
+        services.AddScoped<ILeaderboardRepository, LeaderboardRepository>();
+
+        // Services
+        services.AddSingleton<ITelegramAuthService, TelegramAuthService>();
+        services.AddSingleton<IJwtService, JwtService>();
+        services.AddSingleton<ITelegramWebhookValidator, TelegramWebhookValidator>();
+        services.AddSingleton<IMatchStateBlobWriter, MatchStateBlobWriter>();
+        services.AddScoped<INicknameService, NicknameService>();
+        services.AddScoped<IMatchStateService, MatchStateService>();
+        services.AddScoped<IPredictionService, PredictionService>();
+        services.AddScoped<IScoringService, ScoringService>();
+        services.AddScoped<IStatePublishService, StatePublishService>();
+
+        // Auth
+        services.AddScoped<IUserContext, UserContext>();
     })
     .Build();
 

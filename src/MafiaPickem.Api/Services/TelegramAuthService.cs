@@ -65,7 +65,7 @@ public class TelegramAuthService : ITelegramAuthService
 
             var userJson = parameters["user"];
             var userNode = JsonNode.Parse(userJson);
-            
+
             if (userNode == null)
             {
                 return null;

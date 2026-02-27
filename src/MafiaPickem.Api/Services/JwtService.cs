@@ -56,7 +56,7 @@ public class JwtService : IJwtService
         try
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secret));
-            
+
             var validationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,

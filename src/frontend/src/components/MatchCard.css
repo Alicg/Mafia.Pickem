@@ -1,0 +1,90 @@
+.match-card {
+  background: var(--tg-theme-bg-color);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  margin-bottom: 30px;
+  width: 100%;
+}
+
+.match-card.state-upcoming {
+  opacity: 0.8;
+}
+
+.match-card.state-canceled {
+  filter: grayscale(1);
+  opacity: 0.6;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--tg-theme-secondary-bg-color);
+}
+
+.game-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.game-number {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.table-number {
+  font-size: 13px;
+  color: var(--tg-theme-hint-color);
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.status-badge.upcoming {
+  background-color: var(--tg-theme-secondary-bg-color);
+  color: var(--tg-theme-hint-color);
+}
+
+.status-badge.open {
+  background-color: #e6f4ea;
+  color: #1e8e3e;
+}
+
+.status-badge.locked {
+  background-color: #fce8e6;
+  color: #d93025;
+}
+
+.status-badge.resolved {
+  background-color: var(--tg-theme-button-color);
+  color: white;
+}
+
+.status-badge.canceled {
+  background-color: #3c4043;
+  color: white;
+}
+
+.results-summary {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.points-badge {
+  background-color: #fbbc04;
+  color: #202124;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: 800;
+  font-size: 14px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}

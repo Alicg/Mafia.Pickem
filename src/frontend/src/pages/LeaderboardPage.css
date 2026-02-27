@@ -1,0 +1,180 @@
+.leaderboard-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background-color: var(--tg-theme-bg-color);
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100; /* Cover everything */
+}
+
+.leaderboard-header {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background-color: var(--tg-theme-bg-color);
+  border-bottom: 1px solid var(--tg-theme-secondary-bg-color);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.back-icon-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--tg-theme-button-color);
+  cursor: pointer;
+  padding: 0 16px 0 0;
+  display: flex;
+  align-items: center;
+}
+
+.leaderboard-header h2 {
+  font-size: 18px;
+  margin: 0;
+  font-weight: 600;
+}
+
+.leaderboard-list-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.leaderboard-row.header {
+  font-size: 12px;
+  color: var(--tg-theme-hint-color);
+  text-transform: uppercase;
+  font-weight: 600;
+  background-color: var(--tg-theme-secondary-bg-color);
+  padding: 10px 16px;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.leaderboard-scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 60px; /* Space for sticky footer inside scroll? No, separate */
+}
+
+.leaderboard-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--tg-theme-secondary-bg-color);
+  background: var(--tg-theme-bg-color);
+}
+
+.rank-col {
+  width: 36px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.player-col {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+  padding: 0 8px;
+}
+
+.points-col {
+  width: 50px;
+  text-align: right;
+  font-weight: 700;
+  color: var(--tg-theme-text-color);
+  font-size: 15px;
+}
+
+.avatar-placeholder {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--tg-theme-button-color);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.player-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.player-name {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 15px;
+}
+
+.leaderboard-row.current-user {
+  background-color: rgba(51, 144, 236, 0.1); 
+}
+
+.sticky-user-row {
+  position: absolute; 
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: var(--tg-theme-bg-color);
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+  padding: 0;
+  z-index: 20;
+}
+
+.sticky-inner.leaderboard-row {
+  border-top: 1px solid var(--tg-theme-button-color);
+  background-color: var(--tg-theme-bg-color);
+}
+
+.you-badge {
+  font-size: 11px;
+  color: var(--tg-theme-hint-color);
+  margin-top: 2px;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 4px solid var(--tg-theme-secondary-bg-color);
+  border-top-color: var(--tg-theme-button-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.empty-state {
+    padding: 40px;
+    text-align: center;
+    color: var(--tg-theme-hint-color);
+}

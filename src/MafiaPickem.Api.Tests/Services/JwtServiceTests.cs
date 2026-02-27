@@ -64,11 +64,11 @@ public class JwtServiceTests
 
         // Assert
         principal.Should().NotBeNull();
-        
+
         var userIdClaim = principal!.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
         userIdClaim.Should().NotBeNull();
         userIdClaim!.Value.Should().Be("42");
-        
+
         principal.Claims.Should().ContainSingle(c => c.Type == "telegram_id" && c.Value == "987654321");
         principal.Claims.Should().ContainSingle(c => c.Type == "nickname" && c.Value == "AdminUser");
         principal.Claims.Should().ContainSingle(c => c.Type == "is_admin" && c.Value == "True");
@@ -112,7 +112,7 @@ public class JwtServiceTests
             .Build();
 
         var wrongKeyService = new JwtService(wrongSecretConfig);
-        
+
         var user = new PickemUser { Id = 1, TelegramId = 123, GameNickname = "Test" };
         var token = _jwtService.GenerateToken(user, false);
 

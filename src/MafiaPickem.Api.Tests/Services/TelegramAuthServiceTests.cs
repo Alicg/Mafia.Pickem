@@ -140,9 +140,9 @@ public class TelegramAuthServiceTests
     {
         var authDate = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         var userJson = JsonSerializer.Serialize(telegramUser);
-        
+
         var dataCheckString = $"auth_date={authDate}\nuser={userJson}";
-        
+
         // Calculate HMAC according to Telegram's algorithm
         var secretKey = HMACSHA256.HashData(Encoding.UTF8.GetBytes("WebAppData"), Encoding.UTF8.GetBytes(TestBotToken));
         var hash = HMACSHA256.HashData(secretKey, Encoding.UTF8.GetBytes(dataCheckString));
