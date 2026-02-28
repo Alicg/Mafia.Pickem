@@ -16,9 +16,10 @@ interface MatchStateControlsProps {
   currentState: MatchState;
   onRefresh: () => void;
   onResolve: () => void; // Callback to open resolve modal
+  onRefetchState: () => Promise<void>;
 }
 
-export const MatchStateControls: React.FC<MatchStateControlsProps> = ({ matchId, currentState, onRefresh, onResolve }) => {
+export const MatchStateControls: React.FC<MatchStateControlsProps> = ({ matchId, currentState, onRefresh, onResolve, onRefetchState }) => {
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
   const handleAction = async (actionKey: string, action: () => Promise<any>, confirmMessage?: string) => {
@@ -32,6 +33,7 @@ export const MatchStateControls: React.FC<MatchStateControlsProps> = ({ matchId,
     try {
       await action();
       hapticFeedback('success');
+      await onRefetchState();
       onRefresh();
     } catch (error) {
       console.error('Action failed', error);

@@ -18,6 +18,7 @@ interface MatchCardProps {
   onPredictionChange: (prediction: PredictionDto | null) => void;
   onRefresh: () => void;
   onResolve: () => void;
+  onRefetchState: () => Promise<void>;
 }
 
 function parseState(s: string): MatchState {
@@ -31,7 +32,7 @@ function parseState(s: string): MatchState {
 }
 
 export const MatchCard: React.FC<MatchCardProps> = ({
-  matchInfo, blobState, prediction, isExpanded, canExpand, onToggle, isAdmin, onPredictionChange, onRefresh, onResolve
+  matchInfo, blobState, prediction, isExpanded, canExpand, onToggle, isAdmin, onPredictionChange, onRefresh, onResolve, onRefetchState
 }) => {
   const [selectedWinner, setSelectedWinner] = useState<number | null>(prediction?.predictedWinner ?? null);
   const [selectedVotedOut, setSelectedVotedOut] = useState<number | null>(prediction?.predictedVotedOut ?? null);
@@ -190,6 +191,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
               currentState={currentState}
               onRefresh={onRefresh}
               onResolve={onResolve}
+              onRefetchState={onRefetchState}
             />
           )}
         </div>

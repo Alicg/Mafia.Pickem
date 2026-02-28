@@ -40,7 +40,7 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
 
   // Blob polling for all matches
   const matchIds = useMemo(() => matchInfos.map(m => m.id), [matchInfos]);
-  const { states: blobStates } = useMatchStates(matchIds);
+  const { states: blobStates, refetchMatch } = useMatchStates(matchIds);
 
   // Initial data load
   const loadInitialData = useCallback(async () => {
@@ -240,6 +240,7 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
                       onPredictionChange={(p) => handlePredictionChange(mi.id, p)}
                       onRefresh={refreshMatchList}
                       onResolve={() => setResolvingMatchId(mi.id)}
+                      onRefetchState={() => refetchMatch(mi.id)}
                     />
                   </div>
                 ))}

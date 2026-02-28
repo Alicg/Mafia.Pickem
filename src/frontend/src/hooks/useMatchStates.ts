@@ -17,6 +17,8 @@ export interface UseMatchStatesResult {
   states: Record<number, BlobMatchState | null>;
   /** Whether the initial load is complete for a given matchId */
   isLoading: (matchId: number) => boolean;
+  /** Force-refetch a single match's blob state immediately */
+  refetchMatch: (matchId: number) => Promise<void>;
 }
 
 function getInterval(stateStr?: string): number {
@@ -48,6 +50,7 @@ export function useMatchStates(matchIds: number[]): UseMatchStatesResult {
     return {
       states: demoStates,
       isLoading: (id) => !(id in demoBlobStates),
+      refetchMatch: async () => {},
     };
   }
 
@@ -154,8 +157,39 @@ export function useMatchStates(matchIds: number[]): UseMatchStatesResult {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [pollMatch]);
 
+  const refetchMatch = useCallback(async (matchId: number): Promise<void> => {
+    const entry = entriesRef.current.get(matchId);
+    if (!entry) return;
+
+    // Cancel existing timer to avoid double-polling
+    if (entry.timeoutId) clearTimeout(entry.timeoutId);
+
+    try {
+      const response = await fetch(
+        `${VITE_BLOB_BASE_URL}/match-state-${matchId}.json?t=${Date.now()}`
+      );
+      if (response.ok) {
+        const data: BlobMatchState = await response.json();
+        if (mountedRef.current && entriesRef.current.has(matchId)) {
+          entry.lastVersion = data.version;
+          entry.blobState = data;
+          setStates(prev => ({ ...prev, [matchId]: data }));
+        }
+      }
+    } catch (err) {
+      console.error(`Refetch error for match ${matchId}:`, err);
+    }
+
+    // Resume normal polling
+    if (mountedRef.current && entriesRef.current.has(matchId)) {
+      const interval = getInterval(entry.blobState?.state);
+      entry.timeoutId = setTimeout(() => pollMatch(matchId), interval);
+    }
+  }, [pollMatch]);
+
   return {
     states,
     isLoading: (id: number) => states[id] === undefined || states[id] === null,
+    refetchMatch,
   };
 }
