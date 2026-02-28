@@ -178,9 +178,9 @@ export async function adminResolveMatch(matchId: number, request: ResolveMatchRe
   });
 }
 
-export async function adminCancelMatch(matchId: number): Promise<MatchDto> {
-  if (isDemoMode) return { ...demoMatches[0], id: matchId, state: 4 };
-  return apiFetch(`/manage/cancel-match/${encodeURIComponent(matchId)}`, { method: 'POST' });
+export async function adminDeleteMatch(matchId: number): Promise<void> {
+  if (isDemoMode) { console.log('[DEMO] adminDeleteMatch', matchId); return; }
+  await apiFetch(`/manage/matches/${encodeURIComponent(matchId)}`, { method: 'DELETE' });
 }
 
 export async function adminPublishState(matchId: number): Promise<void> {

@@ -150,4 +150,47 @@ public class MatchFunctions
             return errorResponse;
         }
     }
+
+    [Function("DeletePrediction")]
+    public async Task<HttpResponseData> DeletePredictionHttp(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "matches/{id}/predict")] HttpRequestData req,
+        int id)
+    {
+        try
+        {
+            if (!_userContext.IsRegistered)
+            {
+                var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+                await unauthorizedResponse.WriteStringAsync("User must be registered");
+                return unauthorizedResponse;
+            }
+
+            var match = await _matchRepository.GetByIdAsync(id);
+            if (match == null)
+            {
+                var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+                await notFoundResponse.WriteStringAsync($"Match {id} not found");
+                return notFoundResponse;
+            }
+
+            if (match.State != MatchState.Open)
+            {
+                var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                await badRequestResponse.WriteStringAsync("Predictions can only be deleted while the match is open");
+                return badRequestResponse;
+            }
+
+            await _predictionRepository.DeleteByMatchAndUserAsync(id, _userContext.UserId);
+            await _statePublishService.PublishMatchStateAsync(id);
+
+            return req.CreateResponse(HttpStatusCode.NoContent);
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Error deleting prediction for match {MatchId}", id);
+            var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await errorResponse.WriteStringAsync("An error occurred");
+            return errorResponse;
+        }
+    }
 }

@@ -10,5 +10,6 @@ public interface IMatchRepository
     Task<Match?> GetCurrentMatchByTournamentIdAsync(int tournamentId);
     Task<Match> CreateAsync(int tournamentId, int gameNumber, int? tableNumber, string? externalMatchRef);
     Task UpdateStateAsync(int matchId, MatchState newState);
+    Task DeleteAsync(int matchId);
     Task<IEnumerable<Match>> GetByTournamentAndStateAsync(int tournamentId, params MatchState[] states);
 }

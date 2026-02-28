@@ -147,49 +147,6 @@ public class MatchStateServiceTests
             .WithMessage($"Cannot transition match from {currentState} to Resolved");
     }
 
-    [Theory]
-    [InlineData(MatchState.Upcoming)]
-    [InlineData(MatchState.Open)]
-    [InlineData(MatchState.Locked)]
-    public async Task CancelMatch_FromValidState_ShouldSucceed(MatchState currentState)
-    {
-        // Arrange
-        var matchId = 1;
-        var match = new DomainMatch { Id = matchId, State = currentState };
-        var updatedMatch = new DomainMatch { Id = matchId, State = MatchState.Canceled };
-
-        _mockRepository.SetupSequence(r => r.GetByIdAsync(matchId))
-            .ReturnsAsync(match)
-            .ReturnsAsync(updatedMatch);
-        _mockRepository.Setup(r => r.UpdateStateAsync(matchId, MatchState.Canceled))
-            .Returns(Task.CompletedTask);
-
-        // Act
-        var result = await _matchStateService.CancelMatchAsync(matchId);
-
-        // Assert
-        result.Should().NotBeNull();
-        _mockRepository.Verify(r => r.UpdateStateAsync(matchId, MatchState.Canceled), Times.Once);
-    }
-
-    [Fact]
-    public async Task CancelMatch_FromResolved_ShouldThrow()
-    {
-        // Arrange
-        var matchId = 1;
-        var match = new DomainMatch { Id = matchId, State = MatchState.Resolved };
-
-        _mockRepository.Setup(r => r.GetByIdAsync(matchId))
-            .ReturnsAsync(match);
-
-        // Act
-        var act = async () => await _matchStateService.CancelMatchAsync(matchId);
-
-        // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("Cannot transition match from Resolved to Canceled");
-    }
-
     [Fact]
     public async Task OpenMatch_WhenMatchNotFound_ShouldThrow()
     {

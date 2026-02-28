@@ -4,6 +4,7 @@ using MafiaPickem.Api.Models.Enums;
 using MafiaPickem.Api.Models.Requests;
 using MafiaPickem.Api.Models.Responses;
 using MafiaPickem.Api.Services;
+using MafiaPickem.Api.State;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using System.Net;
@@ -18,6 +19,7 @@ public class AdminFunctions
     private readonly IMatchStateService _matchStateService;
     private readonly IScoringService _scoringService;
     private readonly IStatePublishService _statePublishService;
+    private readonly IMatchStateBlobWriter _blobWriter;
     private readonly IUserContext _userContext;
 
     public AdminFunctions(
@@ -27,6 +29,7 @@ public class AdminFunctions
         IMatchStateService matchStateService,
         IScoringService scoringService,
         IStatePublishService statePublishService,
+        IMatchStateBlobWriter blobWriter,
         IUserContext userContext)
     {
         _matchRepository = matchRepository;
@@ -35,6 +38,7 @@ public class AdminFunctions
         _matchStateService = matchStateService;
         _scoringService = scoringService;
         _statePublishService = statePublishService;
+        _blobWriter = blobWriter;
         _userContext = userContext;
     }
 
@@ -262,9 +266,9 @@ public class AdminFunctions
         return response;
     }
 
-    [Function("AdminCancelMatch")]
-    public async Task<HttpResponseData> CancelMatchHttp(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/cancel-match/{id}")] HttpRequestData req,
+    [Function("AdminDeleteMatch")]
+    public async Task<HttpResponseData> DeleteMatchHttp(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "manage/matches/{id}")] HttpRequestData req,
         int id)
     {
         if (!_userContext.IsAdmin)
@@ -274,25 +278,27 @@ public class AdminFunctions
             return forbiddenResponse;
         }
 
-        // Transition state to Canceled
-        var match = await _matchStateService.CancelMatchAsync(id);
-
-        // Delete any scores that may exist
-        await _predictionRepository.DeleteScoresByMatchIdAsync(id);
-
-        // Publish state to blob
-        await _statePublishService.PublishMatchStateAsync(id, forcePublish: true);
-
-        var matchDto = new MatchDto
+        var match = await _matchRepository.GetByIdAsync(id);
+        if (match == null)
         {
-            Id = match.Id,
-            GameNumber = match.GameNumber,
-            TableNumber = match.TableNumber,
-            State = match.State
-        };
+            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFoundResponse.WriteStringAsync($"Match {id} not found");
+            return notFoundResponse;
+        }
 
-        var response = req.CreateResponse(HttpStatusCode.OK);
-        await response.WriteAsJsonAsync(matchDto);
+        // Delete in correct order respecting FK constraints:
+        // 1. PredictionScore (FK → Prediction)
+        await _predictionRepository.DeleteScoresByMatchIdAsync(id);
+        // 2. MatchResult (FK → Match)
+        await _predictionRepository.DeleteMatchResultByMatchIdAsync(id);
+        // 3. Prediction (FK → Match)
+        await _predictionRepository.DeleteByMatchIdAsync(id);
+        // 4. Match row
+        await _matchRepository.DeleteAsync(id);
+        // 5. Blob state file
+        await _blobWriter.DeleteStateAsync(id);
+
+        var response = req.CreateResponse(HttpStatusCode.NoContent);
         return response;
     }
 

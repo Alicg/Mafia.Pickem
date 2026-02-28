@@ -5,6 +5,7 @@ using MafiaPickem.Api.Functions;
 using MafiaPickem.Api.Models.Enums;
 using MafiaPickem.Api.Models.Requests;
 using MafiaPickem.Api.Services;
+using MafiaPickem.Api.State;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,28 +20,34 @@ namespace MafiaPickem.Api.Tests.Functions;
 public class AdminFunctionsTests
 {
     private readonly Mock<IMatchRepository> _mockMatchRepository;
+    private readonly Mock<ITournamentRepository> _mockTournamentRepository;
     private readonly Mock<IPredictionRepository> _mockPredictionRepository;
     private readonly Mock<IMatchStateService> _mockMatchStateService;
     private readonly Mock<IScoringService> _mockScoringService;
     private readonly Mock<IStatePublishService> _mockStatePublishService;
+    private readonly Mock<IMatchStateBlobWriter> _mockBlobWriter;
     private readonly Mock<IUserContext> _mockUserContext;
     private readonly AdminFunctions _adminFunctions;
 
     public AdminFunctionsTests()
     {
         _mockMatchRepository = new Mock<IMatchRepository>();
+        _mockTournamentRepository = new Mock<ITournamentRepository>();
         _mockPredictionRepository = new Mock<IPredictionRepository>();
         _mockMatchStateService = new Mock<IMatchStateService>();
         _mockScoringService = new Mock<IScoringService>();
         _mockStatePublishService = new Mock<IStatePublishService>();
+        _mockBlobWriter = new Mock<IMatchStateBlobWriter>();
         _mockUserContext = new Mock<IUserContext>();
 
         _adminFunctions = new AdminFunctions(
             _mockMatchRepository.Object,
+            _mockTournamentRepository.Object,
             _mockPredictionRepository.Object,
             _mockMatchStateService.Object,
             _mockScoringService.Object,
             _mockStatePublishService.Object,
+            _mockBlobWriter.Object,
             _mockUserContext.Object);
     }
 
@@ -195,31 +202,37 @@ public class AdminFunctionsTests
     }
 
     [Fact]
-    public void CancelMatch_ShouldCallServices()
+    public void DeleteMatch_ShouldCallServices()
     {
         // Arrange - Test service coordination without HTTP layer
         _mockUserContext.Setup(u => u.IsAdmin).Returns(true);
 
         var matchId = 1;
-        var canceledMatch = new DomainMatch
+        var match = new DomainMatch
         {
             Id = matchId,
-            State = MatchState.Canceled,
+            State = MatchState.Open,
             TournamentId = 10,
             GameNumber = 3
         };
 
-        _mockMatchStateService.Setup(s => s.CancelMatchAsync(matchId))
-            .ReturnsAsync(canceledMatch);
+        _mockMatchRepository.Setup(r => r.GetByIdAsync(matchId))
+            .ReturnsAsync(match);
         _mockPredictionRepository.Setup(r => r.DeleteScoresByMatchIdAsync(matchId))
             .Returns(Task.CompletedTask);
-        _mockStatePublishService.Setup(s => s.PublishMatchStateAsync(matchId, true))
+        _mockPredictionRepository.Setup(r => r.DeleteMatchResultByMatchIdAsync(matchId))
+            .Returns(Task.CompletedTask);
+        _mockPredictionRepository.Setup(r => r.DeleteByMatchIdAsync(matchId))
+            .Returns(Task.CompletedTask);
+        _mockMatchRepository.Setup(r => r.DeleteAsync(matchId))
+            .Returns(Task.CompletedTask);
+        _mockBlobWriter.Setup(b => b.DeleteStateAsync(matchId))
             .Returns(Task.CompletedTask);
 
         // Assert - Services are configured correctly
-        _mockMatchStateService.VerifyNoOtherCalls();
+        _mockMatchRepository.VerifyNoOtherCalls();
         _mockPredictionRepository.VerifyNoOtherCalls();
-        _mockStatePublishService.VerifyNoOtherCalls();
+        _mockBlobWriter.VerifyNoOtherCalls();
     }
 
     [Fact]

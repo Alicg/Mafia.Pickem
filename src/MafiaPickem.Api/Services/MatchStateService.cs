@@ -65,19 +65,6 @@ public class MatchStateService : IMatchStateService
         return (await _matchRepository.GetByIdAsync(matchId))!;
     }
 
-    public async Task<Match> CancelMatchAsync(int matchId)
-    {
-        var match = await GetMatchOrThrowAsync(matchId);
-
-        if (match.State == MatchState.Resolved)
-        {
-            throw new InvalidOperationException($"Cannot transition match from {match.State} to Canceled");
-        }
-
-        await _matchRepository.UpdateStateAsync(matchId, MatchState.Canceled);
-        return (await _matchRepository.GetByIdAsync(matchId))!;
-    }
-
     private async Task<Match> GetMatchOrThrowAsync(int matchId)
     {
         var match = await _matchRepository.GetByIdAsync(matchId);

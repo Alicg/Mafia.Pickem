@@ -17,4 +17,7 @@ public interface IPredictionRepository
     Task SaveMatchResultAsync(int matchId, byte winningSide, string correctVotedOutCsv);
     Task<(byte WinningSide, string CorrectVotedOutCsv)?> GetMatchResultAsync(int matchId);
     Task DeleteScoresByMatchIdAsync(int matchId);
+    Task DeleteByMatchAndUserAsync(int matchId, int userId);
+    Task DeleteByMatchIdAsync(int matchId);
+    Task DeleteMatchResultByMatchIdAsync(int matchId);
 }

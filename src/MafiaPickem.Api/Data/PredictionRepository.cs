@@ -279,4 +279,38 @@ public class PredictionRepository : IPredictionRepository
 
         await connection.ExecuteAsync(sql, new { MatchId = matchId });
     }
+
+    public async Task DeleteByMatchAndUserAsync(int matchId, int userId)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        const string sql = """
+            DELETE FROM pickem.Prediction
+            WHERE MatchId = @MatchId AND UserId = @UserId
+            """;
+
+        await connection.ExecuteAsync(sql, new { MatchId = matchId, UserId = userId });
+    }
+
+    public async Task DeleteByMatchIdAsync(int matchId)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        const string sql = """
+            DELETE FROM pickem.Prediction WHERE MatchId = @MatchId
+            """;
+
+        await connection.ExecuteAsync(sql, new { MatchId = matchId });
+    }
+
+    public async Task DeleteMatchResultByMatchIdAsync(int matchId)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        const string sql = """
+            DELETE FROM pickem.MatchResult WHERE MatchId = @MatchId
+            """;
+
+        await connection.ExecuteAsync(sql, new { MatchId = matchId });
+    }
 }

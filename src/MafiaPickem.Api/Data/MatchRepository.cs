@@ -139,4 +139,15 @@ public class MatchRepository : IMatchRepository
             States = stateBytes
         });
     }
+
+    public async Task DeleteAsync(int matchId)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        const string sql = """
+            DELETE FROM pickem.Match WHERE Id = @MatchId
+            """;
+
+        await connection.ExecuteAsync(sql, new { MatchId = matchId });
+    }
 }

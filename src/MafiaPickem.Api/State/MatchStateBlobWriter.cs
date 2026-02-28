@@ -51,4 +51,12 @@ public class MatchStateBlobWriter : IMatchStateBlobWriter
             HttpHeaders = blobHttpHeaders
         });
     }
+
+    public async Task DeleteStateAsync(int matchId)
+    {
+        var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
+        var blobName = $"match-state-{matchId}.json";
+        var blobClient = containerClient.GetBlobClient(blobName);
+        await blobClient.DeleteIfExistsAsync();
+    }
 }

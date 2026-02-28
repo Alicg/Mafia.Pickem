@@ -4,7 +4,7 @@ import {
   adminOpenMatch, 
   adminRevertToUpcoming, 
   adminLockMatch, 
-  adminCancelMatch 
+  adminDeleteMatch 
 } from '../../lib/api';
 import { hapticFeedback } from '../../lib/telegram';
 import './admin.css';
@@ -99,18 +99,18 @@ export const MatchStateControls: React.FC<MatchStateControlsProps> = ({ matchId,
         </button>
       )}
 
-      {/* Cancel (Available in all active states) */}
+      {/* Delete (Available in all active states) */}
       <button 
         className="btn btn-danger"
         onClick={() => handleAction(
-          'cancel',
-          () => adminCancelMatch(matchId), 
-          'Вы уверены, что хотите отменить эту игру? Это действие нельзя отменить.'
+          'delete',
+          () => adminDeleteMatch(matchId), 
+          'Вы уверены, что хотите удалить эту игру? Все прогнозы и данные будут безвозвратно удалены.'
         )}
         disabled={isLoading}
       >
-        {loadingAction === 'cancel' && <span className="btn-spinner" />}
-        Отменить
+        {loadingAction === 'delete' && <span className="btn-spinner" />}
+        Удалить
       </button>
     </div>
   );
