@@ -252,9 +252,9 @@ public class PredictionRepository : IPredictionRepository
                 UPDATE SET 
                     WinningSide = @WinningSide,
                     CorrectVotedOutCsv = @CorrectVotedOutCsv,
-                    DateResolved = GETUTCDATE()
+                    DateCreated = GETUTCDATE()
             WHEN NOT MATCHED THEN
-                INSERT (MatchId, WinningSide, CorrectVotedOutCsv, DateResolved)
+                INSERT (MatchId, WinningSide, CorrectVotedOutCsv, DateCreated)
                 VALUES (@MatchId, @WinningSide, @CorrectVotedOutCsv, GETUTCDATE());
             """;
 

@@ -102,7 +102,7 @@ export const CrowdStats: React.FC<CrowdStatsProps> = ({ blobState, prediction })
 
       {/* Voted Out Stats — vertical column chart */}
       <div className="stats-group">
-        <label>Первый отстрел</label>
+        <label>Первый заголосованный</label>
         {(() => {
           const pcts = stats.slots.map(s => formatPct(s.percent));
           const maxPct = Math.max(...pcts, 1);
