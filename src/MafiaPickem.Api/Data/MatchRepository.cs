@@ -118,6 +118,23 @@ public class MatchRepository : IMatchRepository
         });
     }
 
+    public async Task UnresolveToLockedAsync(int matchId)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        const string sql = """
+            UPDATE pickem.Match
+            SET State = @NewState, DateResolved = NULL
+            WHERE Id = @MatchId
+            """;
+
+        await connection.ExecuteAsync(sql, new
+        {
+            MatchId = matchId,
+            NewState = (byte)MatchState.Locked
+        });
+    }
+
     public async Task<IEnumerable<Match>> GetByTournamentAndStateAsync(int tournamentId, params MatchState[] states)
     {
         using var connection = _connectionFactory.CreateConnection();

@@ -5,7 +5,8 @@ import {
   adminRevertToUpcoming, 
   adminLockMatch, 
   adminReopenMatch,
-  adminDeleteMatch 
+  adminDeleteMatch,
+  adminUnresolveMatch
 } from '../../lib/api';
 import { hapticFeedback } from '../../lib/telegram';
 import './admin.css';
@@ -43,12 +44,28 @@ export const MatchStateControls: React.FC<MatchStateControlsProps> = ({ matchId,
 
   const isLoading = loadingAction !== null;
 
-  if (currentState === MatchState.Resolved || currentState === MatchState.Canceled) {
+  if (currentState === MatchState.Canceled) {
     return null;
   }
 
   return (
     <div className="match-controls">
+      {/* Resolved -> Locked (Unresolve) */}
+      {currentState === MatchState.Resolved && (
+        <button 
+          className="btn btn-warning"
+          onClick={() => handleAction(
+            'unresolve',
+            () => adminUnresolveMatch(matchId),
+            'Отменить результат и вернуть игру в статус "Заблокировано"? Очки за эту игру будут пересчитаны.'
+          )}
+          disabled={isLoading}
+        >
+          {loadingAction === 'unresolve' && <span className="btn-spinner" />}
+          ← Отменить результат
+        </button>
+      )}
+
       {/* Upcoming -> Open */}
       {currentState === MatchState.Upcoming && (
         <button 
@@ -117,18 +134,20 @@ export const MatchStateControls: React.FC<MatchStateControlsProps> = ({ matchId,
       )}
 
       {/* Delete (Available in all active states) */}
-      <button 
-        className="btn btn-danger"
-        onClick={() => handleAction(
-          'delete',
-          () => adminDeleteMatch(matchId), 
-          'Вы уверены, что хотите удалить эту игру? Все прогнозы и данные будут безвозвратно удалены.'
-        )}
-        disabled={isLoading}
-      >
-        {loadingAction === 'delete' && <span className="btn-spinner" />}
-        Удалить
-      </button>
+      {currentState !== MatchState.Resolved && (
+        <button 
+          className="btn btn-danger"
+          onClick={() => handleAction(
+            'delete',
+            () => adminDeleteMatch(matchId), 
+            'Вы уверены, что хотите удалить эту игру? Все прогнозы и данные будут безвозвратно удалены.'
+          )}
+          disabled={isLoading}
+        >
+          {loadingAction === 'delete' && <span className="btn-spinner" />}
+          Удалить
+        </button>
+      )}
     </div>
   );
 };

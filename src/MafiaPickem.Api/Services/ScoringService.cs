@@ -29,4 +29,16 @@ public class ScoringService : IScoringService
         // Update leaderboard for the tournament
         await _leaderboardRepository.UpdateLeaderboardAsync(tournamentId);
     }
+
+    public async Task RollbackScoresAsync(int matchId, int tournamentId)
+    {
+        // Delete prediction scores for this match
+        await _predictionRepository.DeleteScoresByMatchIdAsync(matchId);
+
+        // Delete match result
+        await _predictionRepository.DeleteMatchResultByMatchIdAsync(matchId);
+
+        // Recalculate leaderboard without this match's scores
+        await _leaderboardRepository.UpdateLeaderboardAsync(tournamentId);
+    }
 }

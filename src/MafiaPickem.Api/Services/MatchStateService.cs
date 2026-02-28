@@ -78,6 +78,19 @@ public class MatchStateService : IMatchStateService
         return (await _matchRepository.GetByIdAsync(matchId))!;
     }
 
+    public async Task<Match> UnresolveMatchAsync(int matchId)
+    {
+        var match = await GetMatchOrThrowAsync(matchId);
+
+        if (match.State != MatchState.Resolved)
+        {
+            throw new InvalidOperationException($"Cannot unresolve match from {match.State} — only Resolved matches can be unresolved");
+        }
+
+        await _matchRepository.UnresolveToLockedAsync(matchId);
+        return (await _matchRepository.GetByIdAsync(matchId))!;
+    }
+
     private async Task<Match> GetMatchOrThrowAsync(int matchId)
     {
         var match = await _matchRepository.GetByIdAsync(matchId);

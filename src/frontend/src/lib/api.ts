@@ -183,6 +183,14 @@ export async function adminResolveMatch(matchId: number, request: ResolveMatchRe
   });
 }
 
+export async function adminUnresolveMatch(matchId: number): Promise<MatchDto> {
+  if (isDemoMode) {
+    console.log('[DEMO] adminUnresolveMatch', matchId);
+    return { ...demoMatches[0], id: matchId, state: 2 };
+  }
+  return apiFetch(`/manage/unresolve-match/${encodeURIComponent(matchId)}`, { method: 'POST' });
+}
+
 export async function adminDeleteMatch(matchId: number): Promise<void> {
   if (isDemoMode) { console.log('[DEMO] adminDeleteMatch', matchId); return; }
   await apiFetch(`/manage/matches/${encodeURIComponent(matchId)}`, { method: 'DELETE' });

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { getProfile, getTournamentMatches, getMyPredictions } from '../lib/api';
 import { TournamentDto, UserProfile, MatchInfo, MatchState, PredictionsMap, PredictionDto } from '../types';
 import { useMatchStates } from '../hooks/useMatchStates';
@@ -83,18 +83,29 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
     return blob ? parseState(blob.state) : matchInfo.state;
   }, [blobStates]);
 
-  // Auto-expand the first expandable match
+  const firstOpenRef = useRef<HTMLDivElement>(null);
+  const hasAutoScrolled = useRef(false);
+
+  const firstOpenId = useMemo(() => {
+    return matchInfos.find(m => getEffectiveState(m) === MatchState.Open)?.id ?? null;
+  }, [matchInfos, getEffectiveState]);
+
+  // Auto-expand the first Open match
   useEffect(() => {
-    if (matchInfos.length > 0 && expandedMatchId === null) {
-      const expandable = matchInfos.find(m => {
-        const state = getEffectiveState(m);
-        return state === MatchState.Open || state === MatchState.Locked || state === MatchState.Resolved;
-      });
-      if (expandable) {
-        setExpandedMatchId(expandable.id);
-      }
+    if (matchInfos.length > 0 && expandedMatchId === null && firstOpenId !== null) {
+      setExpandedMatchId(firstOpenId);
     }
-  }, [matchInfos, blobStates]);
+  }, [matchInfos, blobStates, firstOpenId]);
+
+  // Scroll to the first Open match after initial expand
+  useEffect(() => {
+    if (!hasAutoScrolled.current && expandedMatchId !== null && firstOpenRef.current) {
+      hasAutoScrolled.current = true;
+      setTimeout(() => {
+        firstOpenRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 150);
+    }
+  }, [expandedMatchId]);
 
   const handleTabChange = (tab: TabState) => {
     hapticFeedback('selection');
@@ -130,6 +141,28 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
       return next;
     });
   }, []);
+
+  // Re-fetch predictions when any match transitions to Resolved
+  // so that calculated scores (points) are loaded from the API.
+  const prevBlobStatesRef = React.useRef<Record<number, string>>({});
+  useEffect(() => {
+    const prev = prevBlobStatesRef.current;
+    let needRefetch = false;
+    for (const [idStr, blob] of Object.entries(blobStates)) {
+      if (!blob) continue;
+      const st = blob.state.toLowerCase();
+      const prevSt = prev[Number(idStr)];
+      if (st === 'resolved' && prevSt !== 'resolved') {
+        needRefetch = true;
+      }
+      prev[Number(idStr)] = st;
+    }
+    if (needRefetch) {
+      getMyPredictions(tournament.id)
+        .then(preds => setPredictions(preds))
+        .catch(err => console.error('Failed to refresh predictions:', err));
+    }
+  }, [blobStates, tournament.id]);
 
   // Refresh match list (used by admin actions)
   const refreshMatchList = useCallback(async () => {
@@ -191,19 +224,20 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
             ) : (
               <div className="matches-accordion">
                 {matchInfos.map(mi => (
-                  <MatchCard
-                    key={mi.id}
-                    matchInfo={mi}
-                    blobState={blobStates[mi.id] ?? null}
-                    prediction={predictions[String(mi.id)] ?? null}
-                    isExpanded={expandedMatchId === mi.id}
-                    canExpand={canExpand(getEffectiveState(mi))}
-                    onToggle={() => handleToggleMatch(mi)}
-                    isAdmin={isAdmin}
-                    onPredictionChange={(p) => handlePredictionChange(mi.id, p)}
-                    onRefresh={refreshMatchList}
-                    onResolve={() => setResolvingMatchId(mi.id)}
-                  />
+                  <div key={mi.id} ref={mi.id === firstOpenId ? firstOpenRef : undefined}>
+                    <MatchCard
+                      matchInfo={mi}
+                      blobState={blobStates[mi.id] ?? null}
+                      prediction={predictions[String(mi.id)] ?? null}
+                      isExpanded={expandedMatchId === mi.id}
+                      canExpand={canExpand(getEffectiveState(mi))}
+                      onToggle={() => handleToggleMatch(mi)}
+                      isAdmin={isAdmin}
+                      onPredictionChange={(p) => handlePredictionChange(mi.id, p)}
+                      onRefresh={refreshMatchList}
+                      onResolve={() => setResolvingMatchId(mi.id)}
+                    />
+                  </div>
                 ))}
               </div>
             )}

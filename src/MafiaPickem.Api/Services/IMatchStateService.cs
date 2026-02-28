@@ -9,4 +9,5 @@ public interface IMatchStateService
     Task<Match> LockMatchAsync(int matchId);
     Task<Match> ReopenMatchAsync(int matchId);
     Task<Match> ResolveMatchAsync(int matchId);
+    Task<Match> UnresolveMatchAsync(int matchId);
 }

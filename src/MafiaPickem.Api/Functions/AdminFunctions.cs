@@ -294,6 +294,48 @@ public class AdminFunctions
         return response;
     }
 
+    [Function("AdminUnresolveMatch")]
+    public async Task<HttpResponseData> UnresolveMatchHttp(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/unresolve-match/{id}")] HttpRequestData req,
+        int id)
+    {
+        if (!_userContext.IsAdmin)
+        {
+            var forbiddenResponse = req.CreateResponse(HttpStatusCode.Forbidden);
+            await forbiddenResponse.WriteStringAsync("Admin access required");
+            return forbiddenResponse;
+        }
+
+        var match = await _matchRepository.GetByIdAsync(id);
+        if (match == null)
+        {
+            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFoundResponse.WriteStringAsync($"Match {id} not found");
+            return notFoundResponse;
+        }
+
+        // Rollback scores, match result, and recalculate leaderboard
+        await _scoringService.RollbackScoresAsync(id, match.TournamentId);
+
+        // Transition state back to Locked
+        var unresolved = await _matchStateService.UnresolveMatchAsync(id);
+
+        // Republish blob state (now shows Locked without match result)
+        await _statePublishService.PublishMatchStateAsync(id, forcePublish: true);
+
+        var matchDto = new MatchDto
+        {
+            Id = unresolved.Id,
+            GameNumber = unresolved.GameNumber,
+            TableNumber = unresolved.TableNumber,
+            State = unresolved.State
+        };
+
+        var response = req.CreateResponse(HttpStatusCode.OK);
+        await response.WriteAsJsonAsync(matchDto);
+        return response;
+    }
+
     [Function("AdminDeleteMatch")]
     public async Task<HttpResponseData> DeleteMatchHttp(
         [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "manage/matches/{id}")] HttpRequestData req,
