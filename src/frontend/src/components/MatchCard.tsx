@@ -157,6 +157,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
                   onClick={handleInlineSubmit}
                   disabled={isSubmitting}
                 >
+                  {isSubmitting && <span className="btn-spinner" />}
                   {isSubmitting ? 'Сохраняем...' : 'Сохранить прогноз'}
                 </button>
               )}
@@ -170,6 +171,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
                 onClick={handleCancelVote}
                 disabled={isSubmitting}
               >
+                {isSubmitting && <span className="btn-spinner" />}
                 {isSubmitting ? 'Отмена...' : 'Отменить голос'}
               </button>
             </>

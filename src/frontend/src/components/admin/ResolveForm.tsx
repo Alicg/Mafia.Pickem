@@ -132,6 +132,7 @@ export const ResolveForm: React.FC<ResolveFormProps> = ({ matchId, onSuccess, on
             onClick={handleResolve}
             disabled={isLoading}
           >
+            {isLoading && <span className="btn-spinner" />}
             {isLoading ? 'Сохранение...' : 'Завершить'}
           </button>
         </div>

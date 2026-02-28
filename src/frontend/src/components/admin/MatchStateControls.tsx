@@ -16,14 +16,14 @@ interface MatchStateControlsProps {
 }
 
 export const MatchStateControls: React.FC<MatchStateControlsProps> = ({ match, onRefresh, onResolve }) => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
-  const handleAction = async (action: () => Promise<any>, confirmMessage?: string) => {
+  const handleAction = async (actionKey: string, action: () => Promise<any>, confirmMessage?: string) => {
     if (confirmMessage && !window.confirm(confirmMessage)) {
       return;
     }
 
-    setIsLoading(true);
+    setLoadingAction(actionKey);
     hapticFeedback();
     
     try {
@@ -35,9 +35,11 @@ export const MatchStateControls: React.FC<MatchStateControlsProps> = ({ match, o
       hapticFeedback('error');
       alert('Ошибка выполнения действия');
     } finally {
-      setIsLoading(false);
+      setLoadingAction(null);
     }
   };
+
+  const isLoading = loadingAction !== null;
 
   if (match.state === MatchState.Resolved || match.state === MatchState.Canceled) {
     return null;
@@ -49,9 +51,10 @@ export const MatchStateControls: React.FC<MatchStateControlsProps> = ({ match, o
       {match.state === MatchState.Upcoming && (
         <button 
           className="btn btn-success"
-          onClick={() => handleAction(() => adminOpenMatch(match.id))}
+          onClick={() => handleAction('open', () => adminOpenMatch(match.id))}
           disabled={isLoading}
         >
+          {loadingAction === 'open' && <span className="btn-spinner" />}
           Открыть
         </button>
       )}
@@ -61,11 +64,13 @@ export const MatchStateControls: React.FC<MatchStateControlsProps> = ({ match, o
         <button 
           className="btn btn-secondary"
           onClick={() => handleAction(
+            'revert',
             () => adminRevertToUpcoming(match.id),
             'Вернуть игру в статус "Ожидание"?'
           )}
           disabled={isLoading}
         >
+          {loadingAction === 'revert' && <span className="btn-spinner" />}
           ← Ожидание
         </button>
       )}
@@ -74,9 +79,10 @@ export const MatchStateControls: React.FC<MatchStateControlsProps> = ({ match, o
       {match.state === MatchState.Open && (
         <button 
           className="btn btn-warning"
-          onClick={() => handleAction(() => adminLockMatch(match.id))}
+          onClick={() => handleAction('lock', () => adminLockMatch(match.id))}
           disabled={isLoading}
         >
+          {loadingAction === 'lock' && <span className="btn-spinner" />}
           Заблокировать
         </button>
       )}
@@ -96,11 +102,13 @@ export const MatchStateControls: React.FC<MatchStateControlsProps> = ({ match, o
       <button 
         className="btn btn-danger"
         onClick={() => handleAction(
+          'cancel',
           () => adminCancelMatch(match.id), 
           'Вы уверены, что хотите отменить эту игру? Это действие нельзя отменить.'
         )}
         disabled={isLoading}
       >
+        {loadingAction === 'cancel' && <span className="btn-spinner" />}
         Отменить
       </button>
     </div>

@@ -73,6 +73,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
         onClick={handleSubmit}
         disabled={isSubmitting || !!error || nickname.length === 0}
       >
+        {isSubmitting && <span className="btn-spinner" />}
         {isSubmitting ? 'Регистрация...' : 'НАЧАТЬ'}
       </button>
 

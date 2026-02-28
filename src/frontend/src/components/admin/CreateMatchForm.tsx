@@ -99,6 +99,7 @@ export const CreateMatchForm: React.FC<CreateMatchFormProps> = ({ tournamentId, 
               className="btn btn-primary"
               disabled={isLoading}
             >
+              {isLoading && <span className="btn-spinner" />}
               {isLoading ? 'Создание...' : 'Создать'}
             </button>
           </div>

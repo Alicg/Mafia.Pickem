@@ -101,6 +101,7 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ onSu
               className="btn btn-primary"
               disabled={isLoading || !name.trim()}
             >
+              {isLoading && <span className="btn-spinner" />}
               {isLoading ? 'Создание...' : 'Создать'}
             </button>
           </div>

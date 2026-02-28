@@ -102,7 +102,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ tournamentId, onBack }) =>
       </button>
 
       {isLoading ? (
-        <div style={{ textAlign: 'center', padding: '20px' }}>Загрузка...</div>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}><div className="spinner"></div></div>
       ) : (
         <MatchList 
           matches={matches} 
