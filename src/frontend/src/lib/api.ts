@@ -167,6 +167,11 @@ export async function adminLockMatch(matchId: number): Promise<MatchDto> {
   return apiFetch(`/manage/lock-match/${encodeURIComponent(matchId)}`, { method: 'POST' });
 }
 
+export async function adminReopenMatch(matchId: number): Promise<MatchDto> {
+  if (isDemoMode) return { ...demoMatches[0], id: matchId, state: 1 };
+  return apiFetch(`/manage/reopen-match/${encodeURIComponent(matchId)}`, { method: 'POST' });
+}
+
 export async function adminResolveMatch(matchId: number, request: ResolveMatchRequest): Promise<MatchDto> {
   if (isDemoMode) {
     console.log('[DEMO] adminResolveMatch', matchId, request);

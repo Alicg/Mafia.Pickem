@@ -4,6 +4,7 @@ import {
   adminOpenMatch, 
   adminRevertToUpcoming, 
   adminLockMatch, 
+  adminReopenMatch,
   adminDeleteMatch 
 } from '../../lib/api';
 import { hapticFeedback } from '../../lib/telegram';
@@ -85,6 +86,22 @@ export const MatchStateControls: React.FC<MatchStateControlsProps> = ({ matchId,
         >
           {loadingAction === 'lock' && <span className="btn-spinner" />}
           Заблокировать
+        </button>
+      )}
+
+      {/* Locked -> Open */}
+      {currentState === MatchState.Locked && (
+        <button 
+          className="btn btn-secondary"
+          onClick={() => handleAction(
+            'reopen',
+            () => adminReopenMatch(matchId),
+            'Вернуть игру в статус "Открыта"?'
+          )}
+          disabled={isLoading}
+        >
+          {loadingAction === 'reopen' && <span className="btn-spinner" />}
+          ← Открыть
         </button>
       )}
 

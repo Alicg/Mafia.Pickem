@@ -52,6 +52,19 @@ public class MatchStateService : IMatchStateService
         return (await _matchRepository.GetByIdAsync(matchId))!;
     }
 
+    public async Task<Match> ReopenMatchAsync(int matchId)
+    {
+        var match = await GetMatchOrThrowAsync(matchId);
+
+        if (match.State != MatchState.Locked)
+        {
+            throw new InvalidOperationException($"Cannot transition match from {match.State} to Open");
+        }
+
+        await _matchRepository.UpdateStateAsync(matchId, MatchState.Open);
+        return (await _matchRepository.GetByIdAsync(matchId))!;
+    }
+
     public async Task<Match> ResolveMatchAsync(int matchId)
     {
         var match = await GetMatchOrThrowAsync(matchId);

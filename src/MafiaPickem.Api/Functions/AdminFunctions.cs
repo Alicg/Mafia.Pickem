@@ -204,6 +204,34 @@ public class AdminFunctions
         return response;
     }
 
+    [Function("AdminReopenMatch")]
+    public async Task<HttpResponseData> ReopenMatchHttp(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/reopen-match/{id}")] HttpRequestData req,
+        int id)
+    {
+        if (!_userContext.IsAdmin)
+        {
+            var forbiddenResponse = req.CreateResponse(HttpStatusCode.Forbidden);
+            await forbiddenResponse.WriteStringAsync("Admin access required");
+            return forbiddenResponse;
+        }
+
+        var match = await _matchStateService.ReopenMatchAsync(id);
+        await _statePublishService.PublishMatchStateAsync(id, forcePublish: true);
+
+        var matchDto = new MatchDto
+        {
+            Id = match.Id,
+            GameNumber = match.GameNumber,
+            TableNumber = match.TableNumber,
+            State = match.State
+        };
+
+        var response = req.CreateResponse(HttpStatusCode.OK);
+        await response.WriteAsJsonAsync(matchDto);
+        return response;
+    }
+
     [Function("AdminResolveMatch")]
     public async Task<HttpResponseData> ResolveMatchHttp(
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/resolve-match/{id}")] HttpRequestData req,
