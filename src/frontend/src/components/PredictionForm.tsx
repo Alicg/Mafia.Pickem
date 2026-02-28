@@ -55,7 +55,7 @@ export const PredictionForm: React.FC<PredictionFormProps> = ({
       </div>
 
       <div className="form-section">
-        <h3>Кого выгонят первым?</h3>
+        <h3>Кого заголосуют первым?</h3>
         <PlayerGrid
           selectedSlot={selectedVotedOut}
           onSelect={handleVotedOutSelect}
