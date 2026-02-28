@@ -64,19 +64,19 @@ public class LeaderboardRepository : ILeaderboardRepository
         await connection.ExecuteAsync(rankSql, new { TournamentId = tournamentId });
     }
 
-    public async Task<LeaderboardResponse> GetLeaderboardAsync(int tournamentId, int currentUserId)
+    public async Task<LeaderboardResponse> GetLeaderboardAsync(int tournamentId)
     {
         using var connection = _connectionFactory.CreateConnection();
 
         const string sql = """
             SELECT 
+                l.UserId,
                 l.Rank,
                 u.GameNickname AS DisplayName,
                 u.PhotoUrl,
                 l.TotalPoints,
                 l.CorrectPredictions,
-                l.TotalPredictions,
-                CAST(CASE WHEN l.UserId = @CurrentUserId THEN 1 ELSE 0 END AS BIT) AS IsCurrentUser
+                l.TotalPredictions
             FROM pickem.Leaderboard l
             INNER JOIN pickem.PickemUser u ON l.UserId = u.Id
             WHERE l.TournamentId = @TournamentId
@@ -85,16 +85,12 @@ public class LeaderboardRepository : ILeaderboardRepository
 
         var entries = (await connection.QueryAsync<LeaderboardEntryDto>(sql, new
         {
-            TournamentId = tournamentId,
-            CurrentUserId = currentUserId
+            TournamentId = tournamentId
         })).ToList();
-
-        var currentUser = entries.FirstOrDefault(e => e.IsCurrentUser);
 
         return new LeaderboardResponse
         {
-            Entries = entries,
-            CurrentUser = currentUser
+            Entries = entries
         };
     }
 }

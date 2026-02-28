@@ -96,18 +96,17 @@ export const demoTournaments: TournamentDto[] = [
 
 export const demoLeaderboard: LeaderboardResponse = {
   entries: [
-    { rank: 1, displayName: 'ШерлокХолмс', photoUrl: null, totalPoints: 85, correctPredictions: 12, totalPredictions: 15, isCurrentUser: false },
-    { rank: 2, displayName: 'Детектив007', photoUrl: null, totalPoints: 72, correctPredictions: 10, totalPredictions: 14, isCurrentUser: false },
-    { rank: 3, displayName: 'МафиозоДжо', photoUrl: null, totalPoints: 65, correctPredictions: 9, totalPredictions: 15, isCurrentUser: true },
-    { rank: 4, displayName: 'НочнойДозор', photoUrl: null, totalPoints: 58, correctPredictions: 8, totalPredictions: 13, isCurrentUser: false },
-    { rank: 5, displayName: 'КомиссарРекс', photoUrl: null, totalPoints: 51, correctPredictions: 7, totalPredictions: 12, isCurrentUser: false },
-    { rank: 6, displayName: 'ДонКорлеоне', photoUrl: null, totalPoints: 44, correctPredictions: 6, totalPredictions: 14, isCurrentUser: false },
-    { rank: 7, displayName: 'МирныйЖитель', photoUrl: null, totalPoints: 38, correctPredictions: 5, totalPredictions: 11, isCurrentUser: false },
-    { rank: 8, displayName: 'Провидец', photoUrl: null, totalPoints: 30, correctPredictions: 4, totalPredictions: 10, isCurrentUser: false },
-    { rank: 9, displayName: 'ТихийОмут', photoUrl: null, totalPoints: 22, correctPredictions: 3, totalPredictions: 9, isCurrentUser: false },
-    { rank: 10, displayName: 'Новичок42', photoUrl: null, totalPoints: 10, correctPredictions: 1, totalPredictions: 5, isCurrentUser: false },
+    { userId: 10, rank: 1, displayName: 'ШерлокХолмс', photoUrl: null, totalPoints: 85, correctPredictions: 12, totalPredictions: 15 },
+    { userId: 11, rank: 2, displayName: 'Детектив007', photoUrl: null, totalPoints: 72, correctPredictions: 10, totalPredictions: 14 },
+    { userId: 1, rank: 3, displayName: 'МафиозоДжо', photoUrl: null, totalPoints: 65, correctPredictions: 9, totalPredictions: 15 },
+    { userId: 12, rank: 4, displayName: 'НочнойДозор', photoUrl: null, totalPoints: 58, correctPredictions: 8, totalPredictions: 13 },
+    { userId: 13, rank: 5, displayName: 'КомиссарРекс', photoUrl: null, totalPoints: 51, correctPredictions: 7, totalPredictions: 12 },
+    { userId: 14, rank: 6, displayName: 'ДонКорлеоне', photoUrl: null, totalPoints: 44, correctPredictions: 6, totalPredictions: 14 },
+    { userId: 15, rank: 7, displayName: 'МирныйЖитель', photoUrl: null, totalPoints: 38, correctPredictions: 5, totalPredictions: 11 },
+    { userId: 16, rank: 8, displayName: 'Провидец', photoUrl: null, totalPoints: 30, correctPredictions: 4, totalPredictions: 10 },
+    { userId: 17, rank: 9, displayName: 'ТихийОмут', photoUrl: null, totalPoints: 22, correctPredictions: 3, totalPredictions: 9 },
+    { userId: 18, rank: 10, displayName: 'Новичок42', photoUrl: null, totalPoints: 10, correctPredictions: 1, totalPredictions: 5 },
   ],
-  currentUser: { rank: 3, displayName: 'МафиозоДжо', photoUrl: null, totalPoints: 65, correctPredictions: 9, totalPredictions: 15, isCurrentUser: true },
 };
 
 export const demoStats: TournamentStats = {

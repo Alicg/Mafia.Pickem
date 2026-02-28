@@ -125,8 +125,13 @@ export async function deletePrediction(matchId: number): Promise<void> {
 
 export async function getLeaderboard(tournamentId: number): Promise<LeaderboardResponse> {
   if (isDemoMode) return demoLeaderboard;
-  const result = await apiFetch<LeaderboardResponse>(`/tournaments/${encodeURIComponent(tournamentId)}/leaderboard`);
-  return result;
+  const blobBaseUrl = import.meta.env.VITE_BLOB_BASE_URL || '/blob';
+  const res = await fetch(`${blobBaseUrl}/leaderboard-${tournamentId}.json?t=${Date.now()}`);
+  if (!res.ok) {
+    if (res.status === 404) return { entries: [] };
+    throw new Error(`Leaderboard fetch failed: ${res.status}`);
+  }
+  return res.json();
 }
 
 // Admin API

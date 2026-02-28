@@ -58,17 +58,16 @@ export interface PredictionDto {
 
 export interface LeaderboardResponse {
   entries: LeaderboardEntryDto[];
-  currentUser: LeaderboardEntryDto | null;
 }
 
 export interface LeaderboardEntryDto {
+  userId: number;
   rank: number;
   displayName: string;
   photoUrl: string | null;
   totalPoints: number;
   correctPredictions: number;
   totalPredictions: number;
-  isCurrentUser: boolean;
 }
 
 // Admin Types

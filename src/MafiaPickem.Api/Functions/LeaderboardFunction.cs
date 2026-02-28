@@ -1,4 +1,3 @@
-using MafiaPickem.Api.Auth;
 using MafiaPickem.Api.Data;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -10,16 +9,13 @@ namespace MafiaPickem.Api.Functions;
 public class LeaderboardFunction
 {
     private readonly ILeaderboardRepository _leaderboardRepository;
-    private readonly IUserContext _userContext;
     private readonly ILogger<LeaderboardFunction> _logger;
 
     public LeaderboardFunction(
         ILeaderboardRepository leaderboardRepository,
-        IUserContext userContext,
         ILogger<LeaderboardFunction>? logger = null)
     {
         _leaderboardRepository = leaderboardRepository;
-        _userContext = userContext;
         _logger = logger ?? null!;
     }
 
@@ -30,8 +26,7 @@ public class LeaderboardFunction
     {
         try
         {
-            var currentUserId = _userContext.UserId;
-            var leaderboard = await _leaderboardRepository.GetLeaderboardAsync(id, currentUserId);
+            var leaderboard = await _leaderboardRepository.GetLeaderboardAsync(id);
 
             var response = req.CreateResponse(HttpStatusCode.OK);
             await response.WriteAsJsonAsync(leaderboard);

@@ -1,4 +1,5 @@
 using MafiaPickem.Api.Data;
+using MafiaPickem.Api.State;
 
 namespace MafiaPickem.Api.Services;
 
@@ -7,15 +8,18 @@ public class ScoringService : IScoringService
     private readonly IPredictionRepository _predictionRepository;
     private readonly ILeaderboardRepository _leaderboardRepository;
     private readonly IMatchRepository _matchRepository;
+    private readonly ILeaderboardBlobWriter _leaderboardBlobWriter;
 
     public ScoringService(
         IPredictionRepository predictionRepository,
         ILeaderboardRepository leaderboardRepository,
-        IMatchRepository matchRepository)
+        IMatchRepository matchRepository,
+        ILeaderboardBlobWriter leaderboardBlobWriter)
     {
         _predictionRepository = predictionRepository;
         _leaderboardRepository = leaderboardRepository;
         _matchRepository = matchRepository;
+        _leaderboardBlobWriter = leaderboardBlobWriter;
     }
 
     public async Task CalculateAndSaveScoresAsync(int matchId, int tournamentId, int correctWinnerVotes, int correctVotedOutVotes)
@@ -28,6 +32,9 @@ public class ScoringService : IScoringService
 
         // Update leaderboard for the tournament
         await _leaderboardRepository.UpdateLeaderboardAsync(tournamentId);
+
+        // Publish leaderboard blob
+        await PublishLeaderboardBlobAsync(tournamentId);
     }
 
     public async Task RollbackScoresAsync(int matchId, int tournamentId)
@@ -40,5 +47,14 @@ public class ScoringService : IScoringService
 
         // Recalculate leaderboard without this match's scores
         await _leaderboardRepository.UpdateLeaderboardAsync(tournamentId);
+
+        // Publish updated leaderboard blob
+        await PublishLeaderboardBlobAsync(tournamentId);
+    }
+
+    private async Task PublishLeaderboardBlobAsync(int tournamentId)
+    {
+        var leaderboard = await _leaderboardRepository.GetLeaderboardAsync(tournamentId);
+        await _leaderboardBlobWriter.WriteAsync(tournamentId, leaderboard);
     }
 }

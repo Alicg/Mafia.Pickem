@@ -1,6 +1,7 @@
 using FluentAssertions;
 using MafiaPickem.Api.Data;
 using MafiaPickem.Api.Services;
+using MafiaPickem.Api.State;
 using Moq;
 using DomainMatch = MafiaPickem.Api.Models.Domain.Match;
 
@@ -11,6 +12,7 @@ public class ScoringServiceTests
     private readonly Mock<IPredictionRepository> _mockPredictionRepo;
     private readonly Mock<ILeaderboardRepository> _mockLeaderboardRepo;
     private readonly Mock<IMatchRepository> _mockMatchRepo;
+    private readonly Mock<ILeaderboardBlobWriter> _mockLeaderboardBlobWriter;
     private readonly IScoringService _scoringService;
 
     public ScoringServiceTests()
@@ -18,10 +20,12 @@ public class ScoringServiceTests
         _mockPredictionRepo = new Mock<IPredictionRepository>();
         _mockLeaderboardRepo = new Mock<ILeaderboardRepository>();
         _mockMatchRepo = new Mock<IMatchRepository>();
+        _mockLeaderboardBlobWriter = new Mock<ILeaderboardBlobWriter>();
         _scoringService = new ScoringService(
             _mockPredictionRepo.Object,
             _mockLeaderboardRepo.Object,
-            _mockMatchRepo.Object);
+            _mockMatchRepo.Object,
+            _mockLeaderboardBlobWriter.Object);
     }
 
     [Fact]

@@ -39,6 +39,7 @@ var host = new HostBuilder()
         services.AddSingleton<IJwtService, JwtService>();
         services.AddSingleton<ITelegramWebhookValidator, TelegramWebhookValidator>();
         services.AddSingleton<IMatchStateBlobWriter, MatchStateBlobWriter>();
+        services.AddSingleton<ILeaderboardBlobWriter, LeaderboardBlobWriter>();
         services.AddScoped<INicknameService, NicknameService>();
         services.AddScoped<IMatchStateService, MatchStateService>();
         services.AddScoped<IPredictionService, PredictionService>();

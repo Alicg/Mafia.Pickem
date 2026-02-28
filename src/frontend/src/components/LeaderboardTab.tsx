@@ -5,9 +5,10 @@ import './LeaderboardTab.css';
 
 interface LeaderboardTabProps {
   tournamentId: number;
+  currentUserId: number;
 }
 
-const LeaderboardRow: React.FC<{ entry: LeaderboardEntryDto }> = ({ entry }) => {
+const LeaderboardRow: React.FC<{ entry: LeaderboardEntryDto; isCurrentUser: boolean }> = ({ entry, isCurrentUser }) => {
   let rankDisplay: React.ReactNode = entry.rank;
   if (entry.rank === 1) rankDisplay = '🥇';
   if (entry.rank === 2) rankDisplay = '🥈';
@@ -16,7 +17,7 @@ const LeaderboardRow: React.FC<{ entry: LeaderboardEntryDto }> = ({ entry }) => 
   const rankClass = entry.rank <= 3 ? `rank-${entry.rank}` : '';
 
   return (
-    <div className={`lb-row ${entry.isCurrentUser ? 'current-user' : ''} ${rankClass}`}>
+    <div className={`lb-row ${isCurrentUser ? 'current-user' : ''} ${rankClass}`}>
       <span className="lb-rank">{rankDisplay}</span>
       <div className="lb-player">
         <div className="lb-avatar">
@@ -33,7 +34,7 @@ const LeaderboardRow: React.FC<{ entry: LeaderboardEntryDto }> = ({ entry }) => 
   );
 };
 
-export const LeaderboardTab: React.FC<LeaderboardTabProps> = ({ tournamentId }) => {
+export const LeaderboardTab: React.FC<LeaderboardTabProps> = ({ tournamentId, currentUserId }) => {
   const [data, setData] = useState<LeaderboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +63,7 @@ export const LeaderboardTab: React.FC<LeaderboardTabProps> = ({ tournamentId }) 
     return <div className="lb-error">{error || 'Нет данных'}</div>;
   }
 
-  const isUserInList = data.currentUser && data.entries.some(e => e.isCurrentUser);
+  const currentUser = data.entries.find(e => e.userId === currentUserId) ?? null;
 
   return (
     <div className="leaderboard-tab">
@@ -73,16 +74,16 @@ export const LeaderboardTab: React.FC<LeaderboardTabProps> = ({ tournamentId }) 
       </div>
 
       {data.entries.map(entry => (
-        <LeaderboardRow key={entry.rank} entry={entry} />
+        <LeaderboardRow key={entry.rank} entry={entry} isCurrentUser={entry.userId === currentUserId} />
       ))}
 
       {data.entries.length === 0 && (
         <div className="lb-empty">Пока нет результатов</div>
       )}
 
-      {data.currentUser && !isUserInList && (
+      {currentUser && !data.entries.some(e => e.userId === currentUserId) && (
         <div className="lb-current-user-sticky">
-          <LeaderboardRow entry={data.currentUser} />
+          <LeaderboardRow entry={currentUser} isCurrentUser />
         </div>
       )}
     </div>

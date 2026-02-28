@@ -250,7 +250,7 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
         )}
 
         {activeTab === 'leaders' && (
-          <LeaderboardTab tournamentId={tournament.id} />
+          <LeaderboardTab tournamentId={tournament.id} currentUserId={profile?.id ?? 0} />
         )}
       </div>
 
