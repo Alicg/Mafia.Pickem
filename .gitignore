@@ -17,3 +17,4 @@ azurite-debug.log
 AzuriteConfig
 __blobstorage__/
 *.png
+.vs/

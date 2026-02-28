@@ -1,7 +1,6 @@
 using MafiaPickem.Api.Data;
 using MafiaPickem.Api.Models.Enums;
 using MafiaPickem.Api.State;
-using System.Collections.Concurrent;
 
 namespace MafiaPickem.Api.Services;
 
@@ -11,8 +10,6 @@ public class StatePublishService : IStatePublishService
     private readonly IPredictionRepository _predictionRepository;
     private readonly IMatchStateBlobWriter _blobWriter;
 
-    private static readonly ConcurrentDictionary<int, DateTime> _lastPublishTimes = new();
-    private static readonly ConcurrentDictionary<int, long> _versions = new();
     private static readonly TimeSpan _throttleInterval = TimeSpan.FromSeconds(10);
 
     public StatePublishService(
@@ -36,9 +33,10 @@ public class StatePublishService : IStatePublishService
         // Check throttle for Open state only
         if (!forcePublish && match.State == MatchState.Open)
         {
-            if (_lastPublishTimes.TryGetValue(matchId, out var lastPublish))
+            var lastPublish = await _blobWriter.GetLastPublishTimeAsync(matchId);
+            if (lastPublish.HasValue)
             {
-                var elapsed = DateTime.UtcNow - lastPublish;
+                var elapsed = DateTime.UtcNow - lastPublish.Value;
                 if (elapsed < _throttleInterval)
                 {
                     return; // Skip publish
@@ -46,8 +44,7 @@ public class StatePublishService : IStatePublishService
             }
         }
 
-        // Increment version
-        var version = _versions.AddOrUpdate(matchId, 1, (_, v) => v + 1);
+        var version = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         // Build blob state
         var blobState = new BlobMatchState
@@ -111,8 +108,5 @@ public class StatePublishService : IStatePublishService
 
         // Write to blob
         await _blobWriter.WriteStateAsync(blobState);
-
-        // Update last publish time
-        _lastPublishTimes[matchId] = DateTime.UtcNow;
     }
 }

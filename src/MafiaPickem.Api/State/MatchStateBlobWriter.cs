@@ -48,7 +48,11 @@ public class MatchStateBlobWriter : IMatchStateBlobWriter
 
         await blobClient.UploadAsync(stream, new BlobUploadOptions
         {
-            HttpHeaders = blobHttpHeaders
+            HttpHeaders = blobHttpHeaders,
+            Metadata = new Dictionary<string, string>
+            {
+                ["lastPublish"] = DateTime.UtcNow.ToString("O")
+            }
         });
     }
 
@@ -58,5 +62,24 @@ public class MatchStateBlobWriter : IMatchStateBlobWriter
         var blobName = $"match-state-{matchId}.json";
         var blobClient = containerClient.GetBlobClient(blobName);
         await blobClient.DeleteIfExistsAsync();
+    }
+
+    public async Task<DateTime?> GetLastPublishTimeAsync(int matchId)
+    {
+        var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
+        var blobName = $"match-state-{matchId}.json";
+        var blobClient = containerClient.GetBlobClient(blobName);
+
+        if (!await blobClient.ExistsAsync())
+            return null;
+
+        var properties = await blobClient.GetPropertiesAsync();
+        if (properties.Value.Metadata.TryGetValue("lastPublish", out var ts)
+            && DateTime.TryParse(ts, null, System.Globalization.DateTimeStyles.RoundtripKind, out var parsed))
+        {
+            return parsed;
+        }
+
+        return null;
     }
 }
