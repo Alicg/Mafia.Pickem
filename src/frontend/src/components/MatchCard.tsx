@@ -180,16 +180,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
 
           {/* Resolved: stats + results */}
           {currentState === MatchState.Resolved && (
-            <>
-              <CrowdStats blobState={blobState} prediction={prediction} />
-              {prediction && (
-                <div className="results-summary">
-                  <div className="points-badge">
-                    +{(prediction.winnerPoints || 0) + (prediction.votedOutPoints || 0)} очков
-                  </div>
-                </div>
-              )}
-            </>
+            <CrowdStats blobState={blobState} prediction={prediction} />
           )}
 
           {/* Admin controls inline */}

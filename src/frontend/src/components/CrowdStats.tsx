@@ -90,6 +90,9 @@ export const CrowdStats: React.FC<CrowdStatsProps> = ({ blobState, prediction })
               label={`Ваш выбор: ${prediction.predictedWinner === 0 ? 'Мирные' : 'Мафия'}`}
               status={matchResult ? (matchResult.winningSide === prediction.predictedWinner ? 'correct' : 'wrong') : 'pending'}
             />
+            {prediction.winnerPoints != null && (
+              <span className={`legend-pts ${prediction.winnerPoints > 0 ? 'positive' : ''}`}>+{prediction.winnerPoints}</span>
+            )}
             {matchResult && (
               <LegendItem
                 label={`Результат: ${matchResult.winningSide === 0 ? 'Мирные' : 'Мафия'}`}
@@ -136,6 +139,9 @@ export const CrowdStats: React.FC<CrowdStatsProps> = ({ blobState, prediction })
                     label={`Ваш выбор: ${userVotedOut === 0 ? 'Никто' : userVotedOut}`}
                     status={matchResult ? (votedOutSet.has(userVotedOut) ? 'correct' : 'wrong') : 'pending'}
                   />
+                  {prediction?.votedOutPoints != null && (
+                    <span className={`legend-pts ${prediction.votedOutPoints > 0 ? 'positive' : ''}`}>+{prediction.votedOutPoints}</span>
+                  )}
                   {matchResult && (
                     <LegendItem
                       label={`Результат: ${matchResult.votedOutSlots.join(', ')}`}
@@ -148,6 +154,12 @@ export const CrowdStats: React.FC<CrowdStatsProps> = ({ blobState, prediction })
           );
         })()}
       </div>
+
+      {prediction != null && prediction.totalPoints != null && (
+        <div className="total-points-row">
+          <span className="total-points-badge">+{prediction.totalPoints} очков</span>
+        </div>
+      )}
     </div>
   );
 };
