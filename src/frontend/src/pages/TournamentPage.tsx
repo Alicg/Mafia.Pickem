@@ -1,12 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { getProfile, getTournamentMatches } from '../lib/api';
-import { TournamentDto, UserProfile, MatchDto, MatchState } from '../types';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import { getProfile, getTournamentMatches, getMyPredictions } from '../lib/api';
+import { TournamentDto, UserProfile, MatchInfo, MatchState, PredictionsMap, PredictionDto } from '../types';
+import { useMatchStates } from '../hooks/useMatchStates';
 import { MatchCard } from '../components/MatchCard';
 import { LeaderboardTab } from '../components/LeaderboardTab';
 import { CreateMatchForm } from '../components/admin/CreateMatchForm';
 import { ResolveForm } from '../components/admin/ResolveForm';
 import { hapticFeedback } from '../lib/telegram';
 import './TournamentPage.css';
+
+const MATCH_LIST_REFRESH_MS = 60_000;
 
 type TabState = 'games' | 'leaders';
 
@@ -15,45 +18,83 @@ interface TournamentPageProps {
   onBack: () => void;
 }
 
+function parseState(s: string): MatchState {
+  const lower = s.toLowerCase();
+  if (lower === 'upcoming' || lower === '0') return MatchState.Upcoming;
+  if (lower === 'open' || lower === '1') return MatchState.Open;
+  if (lower === 'locked' || lower === '2') return MatchState.Locked;
+  if (lower === 'resolved' || lower === '3') return MatchState.Resolved;
+  if (lower === 'canceled' || lower === '4') return MatchState.Canceled;
+  return MatchState.Upcoming;
+}
+
 export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBack }) => {
   const [activeTab, setActiveTab] = useState<TabState>('games');
-  const [matches, setMatches] = useState<MatchDto[]>([]);
+  const [matchInfos, setMatchInfos] = useState<MatchInfo[]>([]);
+  const [predictions, setPredictions] = useState<PredictionsMap>({});
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedMatchId, setExpandedMatchId] = useState<number | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [resolvingMatchId, setResolvingMatchId] = useState<number | null>(null);
 
-  const loadData = async () => {
+  // Blob polling for all matches
+  const matchIds = useMemo(() => matchInfos.map(m => m.id), [matchInfos]);
+  const { states: blobStates } = useMatchStates(matchIds);
+
+  // Initial data load
+  const loadInitialData = useCallback(async () => {
     try {
-      const [userProfile, tournamentMatches] = await Promise.all([
+      const [userProfile, matches, preds] = await Promise.all([
         getProfile(),
-        getTournamentMatches(tournament.id)
+        getTournamentMatches(tournament.id),
+        getMyPredictions(tournament.id),
       ]);
       setProfile(userProfile);
-      setMatches(tournamentMatches.sort((a, b) => a.gameNumber - b.gameNumber));
+      setMatchInfos(matches.sort((a, b) => a.gameNumber - b.gameNumber));
+      setPredictions(preds);
     } catch (err) {
       console.error('Failed to init tournament page:', err);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  useEffect(() => {
-    loadData();
   }, [tournament.id]);
 
-  // Auto-expand the first expandable match (Open or Locked)
   useEffect(() => {
-    if (matches.length > 0 && expandedMatchId === null) {
-      const expandable = matches.find(
-        m => m.state === MatchState.Open || m.state === MatchState.Locked || m.state === MatchState.Resolved
-      );
+    loadInitialData();
+  }, [loadInitialData]);
+
+  // Refresh match list every 60s to detect new games
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const matches = await getTournamentMatches(tournament.id);
+        setMatchInfos(matches.sort((a, b) => a.gameNumber - b.gameNumber));
+      } catch (err) {
+        console.error('Match list refresh failed:', err);
+      }
+    }, MATCH_LIST_REFRESH_MS);
+    return () => clearInterval(interval);
+  }, [tournament.id]);
+
+  // Get effective match state (blob overrides API)
+  const getEffectiveState = useCallback((matchInfo: MatchInfo): MatchState => {
+    const blob = blobStates[matchInfo.id];
+    return blob ? parseState(blob.state) : matchInfo.state;
+  }, [blobStates]);
+
+  // Auto-expand the first expandable match
+  useEffect(() => {
+    if (matchInfos.length > 0 && expandedMatchId === null) {
+      const expandable = matchInfos.find(m => {
+        const state = getEffectiveState(m);
+        return state === MatchState.Open || state === MatchState.Locked || state === MatchState.Resolved;
+      });
       if (expandable) {
         setExpandedMatchId(expandable.id);
       }
     }
-  }, [matches]);
+  }, [matchInfos, blobStates]);
 
   const handleTabChange = (tab: TabState) => {
     hapticFeedback('selection');
@@ -65,10 +106,11 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
   const canExpand = (state: MatchState) =>
     state !== MatchState.Canceled && (state !== MatchState.Upcoming || isAdmin);
 
-  const handleToggleMatch = (match: MatchDto) => {
-    if (!canExpand(match.state)) return;
+  const handleToggleMatch = (matchInfo: MatchInfo) => {
+    const state = getEffectiveState(matchInfo);
+    if (!canExpand(state)) return;
     hapticFeedback('selection');
-    setExpandedMatchId(prev => (prev === match.id ? null : match.id));
+    setExpandedMatchId(prev => (prev === matchInfo.id ? null : matchInfo.id));
   };
 
   const handleBack = () => {
@@ -76,9 +118,28 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
     onBack();
   };
 
-  const handleMatchRefresh = () => {
-    loadData();
-  };
+  // Update prediction locally (no API refetch needed)
+  const handlePredictionChange = useCallback((matchId: number, prediction: PredictionDto | null) => {
+    setPredictions(prev => {
+      const next = { ...prev };
+      if (prediction) {
+        next[String(matchId)] = prediction;
+      } else {
+        delete next[String(matchId)];
+      }
+      return next;
+    });
+  }, []);
+
+  // Refresh match list (used by admin actions)
+  const refreshMatchList = useCallback(async () => {
+    try {
+      const matches = await getTournamentMatches(tournament.id);
+      setMatchInfos(matches.sort((a, b) => a.gameNumber - b.gameNumber));
+    } catch (err) {
+      console.error('Match list refresh failed:', err);
+    }
+  }, [tournament.id]);
 
   if (isLoading) {
     return (
@@ -125,20 +186,23 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
               </button>
             )}
 
-            {matches.length === 0 ? (
+            {matchInfos.length === 0 ? (
               <div className="no-matches-card"><p>Игр пока нет</p></div>
             ) : (
               <div className="matches-accordion">
-                {matches.map(match => (
+                {matchInfos.map(mi => (
                   <MatchCard
-                    key={match.id}
-                    match={match}
-                    isExpanded={expandedMatchId === match.id}
-                    canExpand={canExpand(match.state)}
-                    onToggle={() => handleToggleMatch(match)}
+                    key={mi.id}
+                    matchInfo={mi}
+                    blobState={blobStates[mi.id] ?? null}
+                    prediction={predictions[String(mi.id)] ?? null}
+                    isExpanded={expandedMatchId === mi.id}
+                    canExpand={canExpand(getEffectiveState(mi))}
+                    onToggle={() => handleToggleMatch(mi)}
                     isAdmin={isAdmin}
-                    onRefresh={handleMatchRefresh}
-                    onResolve={() => setResolvingMatchId(match.id)}
+                    onPredictionChange={(p) => handlePredictionChange(mi.id, p)}
+                    onRefresh={refreshMatchList}
+                    onResolve={() => setResolvingMatchId(mi.id)}
                   />
                 ))}
               </div>
@@ -154,7 +218,7 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
       {showCreateForm && (
         <CreateMatchForm
           tournamentId={tournament.id}
-          onSuccess={() => { setShowCreateForm(false); loadData(); }}
+          onSuccess={() => { setShowCreateForm(false); refreshMatchList(); }}
           onCancel={() => setShowCreateForm(false)}
         />
       )}
@@ -162,7 +226,7 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
       {resolvingMatchId !== null && (
         <ResolveForm
           matchId={resolvingMatchId}
-          onSuccess={() => { setResolvingMatchId(null); loadData(); }}
+          onSuccess={() => { setResolvingMatchId(null); refreshMatchList(); }}
           onCancel={() => setResolvingMatchId(null)}
         />
       )}

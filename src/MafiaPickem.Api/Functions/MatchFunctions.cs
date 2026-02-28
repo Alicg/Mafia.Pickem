@@ -52,7 +52,6 @@ public class MatchFunctions
             }
 
             PredictionDto? myPrediction = null;
-            VoteStatsDto? voteStats = null;
 
             // Load user's prediction if user is registered
             if (_userContext.IsRegistered)
@@ -80,20 +79,13 @@ public class MatchFunctions
                 }
             }
 
-            // Load vote stats if match is Open, Locked, or Resolved
-            if (match.State == MatchState.Open || match.State == MatchState.Locked || match.State == MatchState.Resolved)
-            {
-                voteStats = await _predictionRepository.GetVoteStatsAsync(id);
-            }
-
             var matchDto = new MatchDto
             {
                 Id = match.Id,
                 GameNumber = match.GameNumber,
                 TableNumber = match.TableNumber,
                 State = match.State,
-                MyPrediction = myPrediction,
-                VoteStats = voteStats
+                MyPrediction = myPrediction
             };
 
             var response = req.CreateResponse(HttpStatusCode.OK);

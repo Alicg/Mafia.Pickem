@@ -1,5 +1,7 @@
+using MafiaPickem.Api.Auth;
 using MafiaPickem.Api.Data;
 using MafiaPickem.Api.Models.Domain;
+using MafiaPickem.Api.Models.Enums;
 using MafiaPickem.Api.Models.Responses;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -12,15 +14,21 @@ public class TournamentFunctions
 {
     private readonly ITournamentRepository _tournamentRepository;
     private readonly IMatchRepository _matchRepository;
+    private readonly IPredictionRepository _predictionRepository;
+    private readonly IUserContext _userContext;
     private readonly ILogger<TournamentFunctions> _logger;
 
     public TournamentFunctions(
         ITournamentRepository tournamentRepository,
         IMatchRepository matchRepository,
+        IPredictionRepository predictionRepository,
+        IUserContext userContext,
         ILogger<TournamentFunctions>? logger = null)
     {
         _tournamentRepository = tournamentRepository;
         _matchRepository = matchRepository;
+        _predictionRepository = predictionRepository;
+        _userContext = userContext;
         _logger = logger ?? null!;
     }
 
@@ -106,6 +114,56 @@ public class TournamentFunctions
         }
     }
 
+    [Function("GetMyPredictions")]
+    public async Task<HttpResponseData> GetMyPredictionsHttp(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "tournaments/{id}/my-predictions")] HttpRequestData req,
+        int id)
+    {
+        try
+        {
+            if (!_userContext.IsRegistered)
+            {
+                var response = req.CreateResponse(HttpStatusCode.OK);
+                await response.WriteAsJsonAsync(new Dictionary<string, PredictionDto>());
+                return response;
+            }
+
+            var predictions = await _predictionRepository.GetByTournamentAndUserAsync(id, _userContext.UserId);
+            var result = new Dictionary<string, PredictionDto>();
+
+            foreach (var p in predictions)
+            {
+                var dto = new PredictionDto
+                {
+                    PredictedWinner = p.PredictedWinner,
+                    PredictedVotedOut = p.PredictedVotedOut
+                };
+
+                // Load scores for resolved matches
+                var score = await _predictionRepository.GetScoreByPredictionIdAsync(p.Id);
+                if (score != null)
+                {
+                    dto.WinnerPoints = score.WinnerPoints;
+                    dto.VotedOutPoints = score.VotedOutPoints;
+                    dto.TotalPoints = score.TotalPoints;
+                }
+
+                result[p.MatchId.ToString()] = dto;
+            }
+
+            var resp = req.CreateResponse(HttpStatusCode.OK);
+            await resp.WriteAsJsonAsync(result);
+            return resp;
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Error getting predictions for tournament {TournamentId}", id);
+            var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await errorResponse.WriteStringAsync("An error occurred");
+            return errorResponse;
+        }
+    }
+
     private static TournamentDto MapToDto(Tournament tournament, Match? currentMatch)
     {
         return new TournamentDto
@@ -125,9 +183,7 @@ public class TournamentFunctions
             Id = match.Id,
             GameNumber = match.GameNumber,
             TableNumber = match.TableNumber,
-            State = match.State,
-            MyPrediction = null, // Will be implemented in Phase 4
-            VoteStats = null     // Will be implemented in Phase 4
+            State = match.State
         };
     }
 }

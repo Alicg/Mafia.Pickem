@@ -26,6 +26,21 @@ public class PredictionRepository : IPredictionRepository
         return await connection.QuerySingleOrDefaultAsync<Prediction>(sql, new { MatchId = matchId, UserId = userId });
     }
 
+    public async Task<List<Prediction>> GetByTournamentAndUserAsync(int tournamentId, int userId)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        const string sql = """
+            SELECT p.Id, p.MatchId, p.UserId, p.PredictedWinner, p.PredictedVotedOut, p.DateCreated, p.DateUpdated
+            FROM pickem.Prediction p
+            INNER JOIN pickem.Match m ON m.Id = p.MatchId
+            WHERE m.TournamentId = @TournamentId AND p.UserId = @UserId
+            """;
+
+        var results = await connection.QueryAsync<Prediction>(sql, new { TournamentId = tournamentId, UserId = userId });
+        return results.ToList();
+    }
+
     public async Task UpsertAsync(int matchId, int userId, byte predictedWinner, byte predictedVotedOut)
     {
         using var connection = _connectionFactory.CreateConnection();

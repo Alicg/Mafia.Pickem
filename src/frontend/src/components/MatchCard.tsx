@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './MatchCard.css';
-import { MatchDto, MatchState, PredictionDto } from '../types';
-import { useMatchState } from '../hooks/useMatchState';
+import { MatchInfo, MatchState, PredictionDto, BlobMatchState } from '../types';
 import { PredictionForm } from './PredictionForm';
 import { CrowdStats } from './CrowdStats';
 import { MatchStateControls } from './admin/MatchStateControls';
@@ -9,43 +8,38 @@ import { submitPrediction, deletePrediction } from '../lib/api';
 import { hapticFeedback } from '../lib/telegram';
 
 interface MatchCardProps {
-  match: MatchDto;
+  matchInfo: MatchInfo;
+  blobState: BlobMatchState | null;
+  prediction: PredictionDto | null;
   isExpanded: boolean;
   canExpand: boolean;
   onToggle: () => void;
   isAdmin: boolean;
+  onPredictionChange: (prediction: PredictionDto | null) => void;
   onRefresh: () => void;
   onResolve: () => void;
 }
 
-export const MatchCard: React.FC<MatchCardProps> = ({
-  match, isExpanded, canExpand, onToggle, isAdmin, onRefresh, onResolve
-}) => {
-  // Use polling only for expanded match
-  const { blobState } = useMatchState(isExpanded ? match.id : null);
+function parseState(s: string): MatchState {
+  const lower = s.toLowerCase();
+  if (lower === 'upcoming' || lower === '0') return MatchState.Upcoming;
+  if (lower === 'open' || lower === '1') return MatchState.Open;
+  if (lower === 'locked' || lower === '2') return MatchState.Locked;
+  if (lower === 'resolved' || lower === '3') return MatchState.Resolved;
+  if (lower === 'canceled' || lower === '4') return MatchState.Canceled;
+  return MatchState.Upcoming;
+}
 
-  // Local state for user prediction (optimistic UI)
-  const [prediction, setPrediction] = useState<PredictionDto | null>(match.myPrediction);
-  const [selectedWinner, setSelectedWinner] = useState<number | null>(match.myPrediction?.predictedWinner ?? null);
-  const [selectedVotedOut, setSelectedVotedOut] = useState<number | null>(match.myPrediction?.predictedVotedOut ?? null);
+export const MatchCard: React.FC<MatchCardProps> = ({
+  matchInfo, blobState, prediction, isExpanded, canExpand, onToggle, isAdmin, onPredictionChange, onRefresh, onResolve
+}) => {
+  const [selectedWinner, setSelectedWinner] = useState<number | null>(prediction?.predictedWinner ?? null);
+  const [selectedVotedOut, setSelectedVotedOut] = useState<number | null>(prediction?.predictedVotedOut ?? null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
-  const currentState = blobState ? parseState(blobState.state) : match.state;
-
-  function parseState(s: string): MatchState {
-    const lower = s.toLowerCase();
-    if (lower === 'upcoming' || lower === '0') return MatchState.Upcoming;
-    if (lower === 'open' || lower === '1') return MatchState.Open;
-    if (lower === 'locked' || lower === '2') return MatchState.Locked;
-    if (lower === 'resolved' || lower === '3') return MatchState.Resolved;
-    if (lower === 'canceled' || lower === '4') return MatchState.Canceled;
-    return MatchState.Upcoming;
-  }
-
-  useEffect(() => {
-    setPrediction(match.myPrediction);
-  }, [match.myPrediction]);
+  const currentState = blobState ? parseState(blobState.state) : matchInfo.state;
+  const isBlobLoading = blobState === null;
 
   useEffect(() => {
     if (!hasChanges) {
@@ -84,14 +78,15 @@ export const MatchCard: React.FC<MatchCardProps> = ({
     try {
       setIsSubmitting(true);
       hapticFeedback('soft');
-      await submitPrediction(match.id, selectedWinner, selectedVotedOut);
-      setPrediction({
+      await submitPrediction(matchInfo.id, selectedWinner, selectedVotedOut);
+      const newPrediction: PredictionDto = {
         predictedWinner: selectedWinner,
         predictedVotedOut: selectedVotedOut,
         winnerPoints: null,
         votedOutPoints: null,
         totalPoints: null
-      });
+      };
+      onPredictionChange(newPrediction);
       setHasChanges(false);
       hapticFeedback('success');
     } catch (err) {
@@ -106,8 +101,8 @@ export const MatchCard: React.FC<MatchCardProps> = ({
     try {
       setIsSubmitting(true);
       hapticFeedback('soft');
-      await deletePrediction(match.id);
-      setPrediction(null);
+      await deletePrediction(matchInfo.id);
+      onPredictionChange(null);
       setSelectedWinner(null);
       setSelectedVotedOut(null);
       setHasChanges(false);
@@ -128,10 +123,11 @@ export const MatchCard: React.FC<MatchCardProps> = ({
         disabled={!canExpand}
       >
         <div className="game-info">
-          <span className="game-number">Игра #{match.gameNumber}</span>
-          {match.tableNumber && <span className="table-number">Стол {match.tableNumber}</span>}
+          <span className="game-number">Игра #{matchInfo.gameNumber}</span>
+          {matchInfo.tableNumber && <span className="table-number">Стол {matchInfo.tableNumber}</span>}
         </div>
         <div className="header-right">
+          {isBlobLoading && <span className="blob-spinner" />}
           {getStatusBadge()}
           {canExpand && (
             <span className={`expand-arrow ${isExpanded ? 'open' : ''}`}>▼</span>
@@ -165,7 +161,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
           )}
           {currentState === MatchState.Open && prediction && (
             <>
-              <CrowdStats apiStats={match.voteStats} blobState={blobState} prediction={prediction} />
+              <CrowdStats blobState={blobState} prediction={prediction} />
               <button
                 className="inline-submit-btn cancel-vote-btn"
                 onClick={handleCancelVote}
@@ -179,13 +175,13 @@ export const MatchCard: React.FC<MatchCardProps> = ({
 
           {/* Locked: stats only */}
           {currentState === MatchState.Locked && (
-            <CrowdStats apiStats={match.voteStats} blobState={blobState} prediction={prediction} />
+            <CrowdStats blobState={blobState} prediction={prediction} />
           )}
 
           {/* Resolved: stats + results */}
           {currentState === MatchState.Resolved && (
             <>
-              <CrowdStats apiStats={match.voteStats} blobState={blobState} prediction={prediction} />
+              <CrowdStats blobState={blobState} prediction={prediction} />
               {prediction && (
                 <div className="results-summary">
                   <div className="points-badge">
@@ -199,7 +195,8 @@ export const MatchCard: React.FC<MatchCardProps> = ({
           {/* Admin controls inline */}
           {isAdmin && (
             <MatchStateControls
-              match={match}
+              matchId={matchInfo.id}
+              currentState={currentState}
               onRefresh={onRefresh}
               onResolve={onResolve}
             />

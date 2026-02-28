@@ -17,17 +17,28 @@ export interface TournamentDto {
   name: string;
   description: string | null;
   imageUrl: string | null;
-  currentMatch: MatchDto | null;
+  currentMatch: MatchInfo | null;
 }
 
+/** Basic match info returned by GET /tournaments/{id}/matches */
+export interface MatchInfo {
+  id: number;
+  gameNumber: number;
+  tableNumber: number | null;
+  state: MatchState;
+}
+
+/** @deprecated Full match DTO used by GET /matches/{id} — prefer MatchInfo + blob + predictions */
 export interface MatchDto {
   id: number;
   gameNumber: number;
   tableNumber: number | null;
   state: MatchState;
   myPrediction: PredictionDto | null;
-  voteStats: VoteStatsDto | null;
 }
+
+/** Map of matchId → PredictionDto returned by GET /tournaments/{id}/my-predictions */
+export type PredictionsMap = Record<string, PredictionDto>;
 
 export enum MatchState {
   Upcoming = 0,
@@ -43,19 +54,6 @@ export interface PredictionDto {
   winnerPoints: number | null;
   votedOutPoints: number | null;
   totalPoints: number | null;
-}
-
-export interface VoteStatsDto {
-  totalVotes: number;
-  townPercentage: number;
-  mafiaPercentage: number;
-  slotVotes: SlotVoteDto[];
-}
-
-export interface SlotVoteDto {
-  slot: number;
-  count: number;
-  percentage: number;
 }
 
 export interface LeaderboardResponse {

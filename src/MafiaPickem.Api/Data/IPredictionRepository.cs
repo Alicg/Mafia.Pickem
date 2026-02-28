@@ -6,6 +6,7 @@ namespace MafiaPickem.Api.Data;
 public interface IPredictionRepository
 {
     Task<Prediction?> GetByMatchAndUserAsync(int matchId, int userId);
+    Task<List<Prediction>> GetByTournamentAndUserAsync(int tournamentId, int userId);
     Task UpsertAsync(int matchId, int userId, byte predictedWinner, byte predictedVotedOut);
     Task<VoteStatsDto> GetVoteStatsAsync(int matchId);
     Task<int> GetTotalVotesAsync(int matchId);

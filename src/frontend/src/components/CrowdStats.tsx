@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import './CrowdStats.css';
-import { BlobMatchState, PredictionDto, VoteStatsDto } from '../types';
+import { BlobMatchState, PredictionDto } from '../types';
 
 type LegendStatus = 'correct' | 'wrong' | 'pending';
 
@@ -31,37 +31,25 @@ const LegendItem: React.FC<{ label: string; status: LegendStatus }> = ({ label, 
 );
 
 interface CrowdStatsProps {
-  apiStats: VoteStatsDto | null;
   blobState: BlobMatchState | null;
   prediction?: PredictionDto | null;
 }
 
-export const CrowdStats: React.FC<CrowdStatsProps> = ({ apiStats, blobState, prediction }) => {
+export const CrowdStats: React.FC<CrowdStatsProps> = ({ blobState, prediction }) => {
   const matchResult = blobState?.matchResult ?? null;
 
-  // Prefer blob state for real-time updates, fallback to API stats
   const stats = useMemo(() => {
-    if (blobState) {
-      // Normalize from Blob
-      const w = blobState.winnerVotes;
-      const v = blobState.votedOutVotes;
-      if (!w || !v) return null;
+    if (!blobState) return null;
+    const w = blobState.winnerVotes;
+    const v = blobState.votedOutVotes;
+    if (!w || !v) return null;
 
-      return {
-        townPct: w.town.percent, // Assuming 0-1 or 0-100? Let's check usage. Usually 0.627
-        mafiaPct: w.mafia.percent,
-        slots: v.map(s => ({ slot: s.slot, percent: s.percent }))
-      };
-    } else if (apiStats) {
-      // Normalize from API
-      return {
-        townPct: apiStats.townPercentage,
-        mafiaPct: apiStats.mafiaPercentage,
-        slots: apiStats.slotVotes.map(s => ({ slot: s.slot, percent: s.percentage }))
-      };
-    }
-    return null;
-  }, [blobState, apiStats]);
+    return {
+      townPct: w.town.percent,
+      mafiaPct: w.mafia.percent,
+      slots: v.map(s => ({ slot: s.slot, percent: s.percent }))
+    };
+  }, [blobState]);
 
   if (!stats) return null;
 

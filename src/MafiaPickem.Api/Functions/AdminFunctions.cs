@@ -100,6 +100,9 @@ public class AdminFunctions
             request.TableNumber,
             request.ExternalMatchRef);
 
+        // Publish initial blob state so polling clients can discover this match
+        await _statePublishService.PublishMatchStateAsync(match.Id, forcePublish: true);
+
         var matchDto = new MatchDto
         {
             Id = match.Id,

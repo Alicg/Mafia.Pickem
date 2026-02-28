@@ -1,10 +1,10 @@
 import React from 'react';
-import { MatchDto, MatchState } from '../../types';
+import { MatchInfo, MatchState } from '../../types';
 import { MatchStateControls } from './MatchStateControls';
 import './admin.css';
 
 interface MatchListProps {
-  matches: MatchDto[];
+  matches: MatchInfo[];
   onRefresh: () => void;
   onResolve: (matchId: number) => void;
 }
@@ -54,9 +54,10 @@ export const MatchList: React.FC<MatchListProps> = ({ matches, onRefresh, onReso
           </div>
           
           <MatchStateControls 
-            match={match} 
+            matchId={match.id}
+            currentState={match.state}
             onRefresh={onRefresh}
-            onResolve={() => onResolve(match.id)} // Open modal in parent
+            onResolve={() => onResolve(match.id)}
           />
         </div>
       ))}

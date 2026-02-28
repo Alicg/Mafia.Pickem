@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MatchDto, MatchState } from '../../types';
+import { MatchState } from '../../types';
 import { 
   adminOpenMatch, 
   adminRevertToUpcoming, 
@@ -10,12 +10,13 @@ import { hapticFeedback } from '../../lib/telegram';
 import './admin.css';
 
 interface MatchStateControlsProps {
-  match: MatchDto;
+  matchId: number;
+  currentState: MatchState;
   onRefresh: () => void;
   onResolve: () => void; // Callback to open resolve modal
 }
 
-export const MatchStateControls: React.FC<MatchStateControlsProps> = ({ match, onRefresh, onResolve }) => {
+export const MatchStateControls: React.FC<MatchStateControlsProps> = ({ matchId, currentState, onRefresh, onResolve }) => {
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
   const handleAction = async (actionKey: string, action: () => Promise<any>, confirmMessage?: string) => {
@@ -41,17 +42,17 @@ export const MatchStateControls: React.FC<MatchStateControlsProps> = ({ match, o
 
   const isLoading = loadingAction !== null;
 
-  if (match.state === MatchState.Resolved || match.state === MatchState.Canceled) {
+  if (currentState === MatchState.Resolved || currentState === MatchState.Canceled) {
     return null;
   }
 
   return (
     <div className="match-controls">
       {/* Upcoming -> Open */}
-      {match.state === MatchState.Upcoming && (
+      {currentState === MatchState.Upcoming && (
         <button 
           className="btn btn-success"
-          onClick={() => handleAction('open', () => adminOpenMatch(match.id))}
+          onClick={() => handleAction('open', () => adminOpenMatch(matchId))}
           disabled={isLoading}
         >
           {loadingAction === 'open' && <span className="btn-spinner" />}
@@ -60,12 +61,12 @@ export const MatchStateControls: React.FC<MatchStateControlsProps> = ({ match, o
       )}
 
       {/* Open -> Upcoming */}
-      {match.state === MatchState.Open && (
+      {currentState === MatchState.Open && (
         <button 
           className="btn btn-secondary"
           onClick={() => handleAction(
             'revert',
-            () => adminRevertToUpcoming(match.id),
+            () => adminRevertToUpcoming(matchId),
             'Вернуть игру в статус "Ожидание"?'
           )}
           disabled={isLoading}
@@ -76,10 +77,10 @@ export const MatchStateControls: React.FC<MatchStateControlsProps> = ({ match, o
       )}
 
       {/* Open -> Lock */}
-      {match.state === MatchState.Open && (
+      {currentState === MatchState.Open && (
         <button 
           className="btn btn-warning"
-          onClick={() => handleAction('lock', () => adminLockMatch(match.id))}
+          onClick={() => handleAction('lock', () => adminLockMatch(matchId))}
           disabled={isLoading}
         >
           {loadingAction === 'lock' && <span className="btn-spinner" />}
@@ -88,7 +89,7 @@ export const MatchStateControls: React.FC<MatchStateControlsProps> = ({ match, o
       )}
 
       {/* Locked -> Resolve */}
-      {match.state === MatchState.Locked && (
+      {currentState === MatchState.Locked && (
         <button 
           className="btn btn-primary"
           onClick={onResolve}
@@ -103,7 +104,7 @@ export const MatchStateControls: React.FC<MatchStateControlsProps> = ({ match, o
         className="btn btn-danger"
         onClick={() => handleAction(
           'cancel',
-          () => adminCancelMatch(match.id), 
+          () => adminCancelMatch(matchId), 
           'Вы уверены, что хотите отменить эту игру? Это действие нельзя отменить.'
         )}
         disabled={isLoading}

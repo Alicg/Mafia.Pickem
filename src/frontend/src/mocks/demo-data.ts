@@ -2,7 +2,9 @@ import {
   UserProfile,
   TournamentDto,
   MatchDto,
+  MatchInfo,
   MatchState,
+  PredictionsMap,
   LeaderboardResponse,
   TournamentStats,
   BlobMatchState,
@@ -30,23 +32,6 @@ export const demoMatches: MatchDto[] = [
       votedOutPoints: 5,
       totalPoints: 15,
     },
-    voteStats: {
-      totalVotes: 42,
-      townPercentage: 62,
-      mafiaPercentage: 38,
-      slotVotes: [
-        { slot: 1, count: 3, percentage: 7 },
-        { slot: 2, count: 5, percentage: 12 },
-        { slot: 3, count: 12, percentage: 29 },
-        { slot: 4, count: 2, percentage: 5 },
-        { slot: 5, count: 6, percentage: 14 },
-        { slot: 6, count: 1, percentage: 2 },
-        { slot: 7, count: 4, percentage: 10 },
-        { slot: 8, count: 3, percentage: 7 },
-        { slot: 9, count: 2, percentage: 5 },
-        { slot: 10, count: 4, percentage: 10 },
-      ],
-    },
   },
   {
     id: 2,
@@ -60,23 +45,6 @@ export const demoMatches: MatchDto[] = [
       votedOutPoints: 0,
       totalPoints: 0,
     },
-    voteStats: {
-      totalVotes: 38,
-      townPercentage: 71,
-      mafiaPercentage: 29,
-      slotVotes: [
-        { slot: 1, count: 5, percentage: 13 },
-        { slot: 2, count: 2, percentage: 5 },
-        { slot: 3, count: 4, percentage: 11 },
-        { slot: 4, count: 7, percentage: 18 },
-        { slot: 5, count: 3, percentage: 8 },
-        { slot: 6, count: 6, percentage: 16 },
-        { slot: 7, count: 2, percentage: 5 },
-        { slot: 8, count: 4, percentage: 11 },
-        { slot: 9, count: 3, percentage: 8 },
-        { slot: 10, count: 2, percentage: 5 },
-      ],
-    },
   },
   {
     id: 3,
@@ -84,23 +52,6 @@ export const demoMatches: MatchDto[] = [
     tableNumber: 2,
     state: MatchState.Open,
     myPrediction: null,
-    voteStats: {
-      totalVotes: 15,
-      townPercentage: 53,
-      mafiaPercentage: 47,
-      slotVotes: [
-        { slot: 1, count: 2, percentage: 13 },
-        { slot: 2, count: 1, percentage: 7 },
-        { slot: 3, count: 3, percentage: 20 },
-        { slot: 4, count: 1, percentage: 7 },
-        { slot: 5, count: 2, percentage: 13 },
-        { slot: 6, count: 0, percentage: 0 },
-        { slot: 7, count: 2, percentage: 13 },
-        { slot: 8, count: 1, percentage: 7 },
-        { slot: 9, count: 1, percentage: 7 },
-        { slot: 10, count: 2, percentage: 13 },
-      ],
-    },
   },
   {
     id: 4,
@@ -108,7 +59,6 @@ export const demoMatches: MatchDto[] = [
     tableNumber: 2,
     state: MatchState.Upcoming,
     myPrediction: null,
-    voteStats: null,
   },
   {
     id: 5,
@@ -122,23 +72,6 @@ export const demoMatches: MatchDto[] = [
       votedOutPoints: null,
       totalPoints: null,
     },
-    voteStats: {
-      totalVotes: 27,
-      townPercentage: 44,
-      mafiaPercentage: 56,
-      slotVotes: [
-        { slot: 1, count: 1, percentage: 4 },
-        { slot: 2, count: 3, percentage: 11 },
-        { slot: 3, count: 2, percentage: 7 },
-        { slot: 4, count: 5, percentage: 19 },
-        { slot: 5, count: 4, percentage: 15 },
-        { slot: 6, count: 2, percentage: 7 },
-        { slot: 7, count: 3, percentage: 11 },
-        { slot: 8, count: 2, percentage: 7 },
-        { slot: 9, count: 4, percentage: 15 },
-        { slot: 10, count: 1, percentage: 4 },
-      ],
-    },
   },
 ];
 
@@ -147,7 +80,7 @@ export const demoTournament: TournamentDto = {
   name: 'Мафия Кубок Зимы 2026',
   description: 'Зимний турнир по мафии — сделай свой прогноз!',
   imageUrl: null,
-  currentMatch: demoMatches[2], // Game #3 (Open)
+  currentMatch: { id: 3, gameNumber: 3, tableNumber: 2, state: MatchState.Open }, // Game #3
 };
 
 export const demoTournaments: TournamentDto[] = [
@@ -184,9 +117,27 @@ export const demoStats: TournamentStats = {
   totalPredictions: 122,
 };
 
+/** Basic match info (no predictions, no voteStats) */
+export const demoMatchInfos: MatchInfo[] = demoMatches.map(m => ({
+  id: m.id,
+  gameNumber: m.gameNumber,
+  tableNumber: m.tableNumber,
+  state: m.state,
+}));
+
+/** Predictions keyed by matchId */
+export const demoPredictionsMap: PredictionsMap = Object.fromEntries(
+  demoMatches
+    .filter(m => m.myPrediction != null)
+    .map(m => [String(m.id), m.myPrediction!])
+);
+
 // Demo blob states with match results for resolved matches
-function buildDemoBlobState(match: MatchDto): BlobMatchState {
-  const stats = match.voteStats;
+function makeBlobState(
+  match: MatchDto,
+  votes: { total: number; town: number; mafia: number; slots: { slot: number; count: number; percent: number }[] } | null,
+  result: { winningSide: number; votedOutSlots: number[] } | null = null,
+): BlobMatchState {
   return {
     matchId: match.id,
     tournamentId: 1,
@@ -194,23 +145,39 @@ function buildDemoBlobState(match: MatchDto): BlobMatchState {
     state: MatchState[match.state],
     updatedAt: new Date().toISOString(),
     tableSize: 10,
-    totalPredictions: stats?.totalVotes ?? 0,
-    winnerVotes: stats ? {
-      town: { count: Math.round(stats.totalVotes * stats.townPercentage / 100), percent: stats.townPercentage },
-      mafia: { count: Math.round(stats.totalVotes * stats.mafiaPercentage / 100), percent: stats.mafiaPercentage },
+    totalPredictions: votes?.total ?? 0,
+    winnerVotes: votes ? {
+      town: { count: Math.round(votes.total * votes.town / 100), percent: votes.town },
+      mafia: { count: Math.round(votes.total * votes.mafia / 100), percent: votes.mafia },
     } : null,
-    votedOutVotes: stats ? stats.slotVotes.map(s => ({ slot: s.slot, count: s.count, percent: s.percentage })) : null,
-    matchResult: null,
+    votedOutVotes: votes?.slots ?? null,
+    matchResult: result,
   };
 }
 
 export const demoBlobStates: Record<number, BlobMatchState> = {
-  // Match 1 (Resolved): Town won, slots 3 and 7 voted out
-  1: { ...buildDemoBlobState(demoMatches[0]), matchResult: { winningSide: 0, votedOutSlots: [3, 7] } },
-  // Match 2 (Resolved): Town won, slot 4 voted out
-  2: { ...buildDemoBlobState(demoMatches[1]), matchResult: { winningSide: 0, votedOutSlots: [4] } },
-  // Match 3 (Open): no result yet
-  3: buildDemoBlobState(demoMatches[2]),
-  // Match 5 (Locked): no result yet
-  5: buildDemoBlobState(demoMatches[4]),
+  1: makeBlobState(demoMatches[0], { total: 42, town: 62, mafia: 38, slots: [
+    { slot: 1, count: 3, percent: 7 }, { slot: 2, count: 5, percent: 12 }, { slot: 3, count: 12, percent: 29 },
+    { slot: 4, count: 2, percent: 5 }, { slot: 5, count: 6, percent: 14 }, { slot: 6, count: 1, percent: 2 },
+    { slot: 7, count: 4, percent: 10 }, { slot: 8, count: 3, percent: 7 }, { slot: 9, count: 2, percent: 5 },
+    { slot: 10, count: 4, percent: 10 },
+  ]}, { winningSide: 0, votedOutSlots: [3, 7] }),
+  2: makeBlobState(demoMatches[1], { total: 38, town: 71, mafia: 29, slots: [
+    { slot: 1, count: 5, percent: 13 }, { slot: 2, count: 2, percent: 5 }, { slot: 3, count: 4, percent: 11 },
+    { slot: 4, count: 7, percent: 18 }, { slot: 5, count: 3, percent: 8 }, { slot: 6, count: 6, percent: 16 },
+    { slot: 7, count: 2, percent: 5 }, { slot: 8, count: 4, percent: 11 }, { slot: 9, count: 3, percent: 8 },
+    { slot: 10, count: 2, percent: 5 },
+  ]}, { winningSide: 0, votedOutSlots: [4] }),
+  3: makeBlobState(demoMatches[2], { total: 15, town: 53, mafia: 47, slots: [
+    { slot: 1, count: 2, percent: 13 }, { slot: 2, count: 1, percent: 7 }, { slot: 3, count: 3, percent: 20 },
+    { slot: 4, count: 1, percent: 7 }, { slot: 5, count: 2, percent: 13 }, { slot: 6, count: 0, percent: 0 },
+    { slot: 7, count: 2, percent: 13 }, { slot: 8, count: 1, percent: 7 }, { slot: 9, count: 1, percent: 7 },
+    { slot: 10, count: 2, percent: 13 },
+  ]}),
+  5: makeBlobState(demoMatches[4], { total: 27, town: 44, mafia: 56, slots: [
+    { slot: 1, count: 1, percent: 4 }, { slot: 2, count: 3, percent: 11 }, { slot: 3, count: 2, percent: 7 },
+    { slot: 4, count: 5, percent: 19 }, { slot: 5, count: 4, percent: 15 }, { slot: 6, count: 2, percent: 7 },
+    { slot: 7, count: 3, percent: 11 }, { slot: 8, count: 2, percent: 7 }, { slot: 9, count: 4, percent: 15 },
+    { slot: 10, count: 1, percent: 4 },
+  ]}),
 };

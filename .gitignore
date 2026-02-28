@@ -16,3 +16,4 @@ __azurite_db_table__.json
 azurite-debug.log
 AzuriteConfig
 __blobstorage__/
+*.png

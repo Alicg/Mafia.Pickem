@@ -3,7 +3,7 @@ import {
   getTournamentMatches, 
   adminGetTournamentStats
 } from '../lib/api';
-import { MatchDto, TournamentStats as TournamentStatsType } from '../types';
+import { MatchInfo, TournamentStats as TournamentStatsType } from '../types';
 import { MatchList } from '../components/admin/MatchList';
 import { CreateMatchForm } from '../components/admin/CreateMatchForm';
 import { ResolveForm } from '../components/admin/ResolveForm';
@@ -16,7 +16,7 @@ interface AdminPageProps {
 }
 
 export const AdminPage: React.FC<AdminPageProps> = ({ tournamentId, onBack }) => {
-  const [matches, setMatches] = useState<MatchDto[]>([]);
+  const [matches, setMatches] = useState<MatchInfo[]>([]);
   const [stats, setStats] = useState<TournamentStatsType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);

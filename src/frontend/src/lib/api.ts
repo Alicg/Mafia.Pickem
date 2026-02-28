@@ -2,7 +2,9 @@ import {
   AuthResponse, 
   UserProfile, 
   TournamentDto, 
-  MatchDto, 
+  MatchDto,
+  MatchInfo,
+  PredictionsMap,
   LeaderboardResponse,
   CreateMatchRequest,
   CreateTournamentRequest,
@@ -10,7 +12,7 @@ import {
   TournamentStats
 } from '../types';
 import { isDemoMode } from '../mocks/demo-mode';
-import { demoUser, demoTournament, demoTournaments, demoMatches, demoLeaderboard, demoStats } from '../mocks/demo-data';
+import { demoUser, demoTournament, demoTournaments, demoMatchInfos, demoMatches, demoPredictionsMap, demoLeaderboard, demoStats } from '../mocks/demo-data';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -89,17 +91,17 @@ export async function getTournament(id: number): Promise<TournamentDto> {
   return apiFetch(`/tournaments/${encodeURIComponent(id)}`);
 }
 
-export async function getTournamentMatches(id: number): Promise<MatchDto[]> {
-  if (isDemoMode) return [...demoMatches];
+export async function getTournamentMatches(id: number): Promise<MatchInfo[]> {
+  if (isDemoMode) return [...demoMatchInfos];
   return apiFetch(`/tournaments/${encodeURIComponent(id)}/matches`);
 }
 
-// Matches
-export async function getMatch(id: number): Promise<MatchDto> {
-  if (isDemoMode) return demoMatches.find(m => m.id === id) || demoMatches[0];
-  return apiFetch(`/matches/${encodeURIComponent(id)}`);
+export async function getMyPredictions(tournamentId: number): Promise<PredictionsMap> {
+  if (isDemoMode) return { ...demoPredictionsMap };
+  return apiFetch(`/tournaments/${encodeURIComponent(tournamentId)}/my-predictions`);
 }
 
+// Matches
 export async function submitPrediction(matchId: number, predictedWinner: number, predictedVotedOut: number): Promise<void> {
   if (isDemoMode) {
     console.log('[DEMO] submitPrediction', { matchId, predictedWinner, predictedVotedOut });
@@ -142,7 +144,7 @@ export async function adminCreateTournament(request: CreateTournamentRequest): P
 export async function adminCreateMatch(request: CreateMatchRequest): Promise<MatchDto> {
   if (isDemoMode) {
     console.log('[DEMO] adminCreateMatch', request);
-    return { id: 99, gameNumber: request.gameNumber, tableNumber: request.tableNumber ?? null, state: 0, myPrediction: null, voteStats: null };
+    return { id: 99, gameNumber: request.gameNumber, tableNumber: request.tableNumber ?? null, state: 0, myPrediction: null };
   }
   return apiFetch('/manage/matches', {
     method: 'POST',
