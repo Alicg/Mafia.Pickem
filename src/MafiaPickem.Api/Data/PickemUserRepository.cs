@@ -18,7 +18,7 @@ public class PickemUserRepository : IPickemUserRepository
 
         const string sql = """
             SELECT Id, TelegramId, GameNickname, PhotoUrl, DateCreated
-            FROM PickemUsers
+            FROM pickem.PickemUser
             WHERE TelegramId = @TelegramId
             """;
 
@@ -31,7 +31,7 @@ public class PickemUserRepository : IPickemUserRepository
 
         const string sql = """
             SELECT Id, TelegramId, GameNickname, PhotoUrl, DateCreated
-            FROM PickemUsers
+            FROM pickem.PickemUser
             WHERE Id = @Id
             """;
 
@@ -46,7 +46,7 @@ public class PickemUserRepository : IPickemUserRepository
         var placeholderNickname = $"_unregistered_{telegramId}";
 
         const string sql = """
-            MERGE INTO PickemUsers AS target
+            MERGE INTO pickem.PickemUser AS target
             USING (SELECT @TelegramId AS TelegramId, @PhotoUrl AS PhotoUrl, @PlaceholderNickname AS GameNickname) AS source
             ON target.TelegramId = source.TelegramId
             WHEN MATCHED THEN
@@ -56,7 +56,7 @@ public class PickemUserRepository : IPickemUserRepository
                 VALUES (source.TelegramId, source.GameNickname, source.PhotoUrl, GETUTCDATE());
 
             SELECT Id, TelegramId, GameNickname, PhotoUrl, DateCreated
-            FROM PickemUsers
+            FROM pickem.PickemUser
             WHERE TelegramId = @TelegramId;
             """;
 
@@ -73,7 +73,7 @@ public class PickemUserRepository : IPickemUserRepository
         using var connection = _connectionFactory.CreateConnection();
 
         const string sql = """
-            UPDATE PickemUsers
+            UPDATE pickem.PickemUser
             SET GameNickname = @Nickname
             WHERE Id = @UserId
             """;
@@ -87,7 +87,7 @@ public class PickemUserRepository : IPickemUserRepository
 
         const string sql = """
             SELECT COUNT(1)
-            FROM PickemUsers
+            FROM pickem.PickemUser
             WHERE GameNickname = @Nickname
               AND (@ExcludeUserId IS NULL OR Id != @ExcludeUserId)
             """;

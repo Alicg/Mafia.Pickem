@@ -18,7 +18,7 @@ public class TournamentRepository : ITournamentRepository
 
         const string sql = """
             SELECT Id, Name, Description, ImageUrl, Active, DateCreated
-            FROM Tournaments
+            FROM pickem.Tournament
             WHERE Active = 1
             ORDER BY DateCreated DESC
             """;
@@ -32,7 +32,7 @@ public class TournamentRepository : ITournamentRepository
 
         const string sql = """
             SELECT Id, Name, Description, ImageUrl, Active, DateCreated
-            FROM Tournaments
+            FROM pickem.Tournament
             WHERE Id = @Id
             """;
 
@@ -44,7 +44,7 @@ public class TournamentRepository : ITournamentRepository
         using var connection = _connectionFactory.CreateConnection();
 
         const string sql = """
-            INSERT INTO Tournaments (Name, Description, ImageUrl)
+            INSERT INTO pickem.Tournament (Name, Description, ImageUrl)
             VALUES (@Name, @Description, @ImageUrl);
             SELECT CAST(SCOPE_IDENTITY() AS int);
             """;

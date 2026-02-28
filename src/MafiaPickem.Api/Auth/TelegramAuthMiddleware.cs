@@ -11,7 +11,6 @@ namespace MafiaPickem.Api.Auth;
 public class TelegramAuthMiddleware : IFunctionsWorkerMiddleware
 {
     private readonly IJwtService _jwtService;
-    private readonly IPickemUserRepository _userRepository;
     private readonly IConfiguration _configuration;
     private readonly ILogger<TelegramAuthMiddleware> _logger;
     private readonly HashSet<long> _adminTelegramIds;
@@ -20,17 +19,16 @@ public class TelegramAuthMiddleware : IFunctionsWorkerMiddleware
     private readonly HashSet<string> _publicRoutes = new(StringComparer.OrdinalIgnoreCase)
     {
         "/api/auth/telegram",
+        "/api/auth/dev",
         "/api/bot/webhook"
     };
 
     public TelegramAuthMiddleware(
         IJwtService jwtService,
-        IPickemUserRepository userRepository,
         IConfiguration configuration,
         ILogger<TelegramAuthMiddleware> logger)
     {
         _jwtService = jwtService;
-        _userRepository = userRepository;
         _configuration = configuration;
         _logger = logger;
 
@@ -88,7 +86,8 @@ public class TelegramAuthMiddleware : IFunctionsWorkerMiddleware
         }
 
         // Load user from database
-        var user = await _userRepository.GetByIdAsync(userId);
+        var userRepository = context.InstanceServices.GetService(typeof(IPickemUserRepository)) as IPickemUserRepository;
+        var user = await userRepository!.GetByIdAsync(userId);
         if (user == null)
         {
             throw new UnauthorizedAccessException("User not found");

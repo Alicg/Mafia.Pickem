@@ -52,6 +52,9 @@
   box-shadow: 0 0 8px rgba(251, 113, 133, 0.3);
 }
 
+.match-card.state-resolved {
+  opacity: 0.45;
+}
 .match-card.state-resolved::before {
   background: #60a5fa;
   box-shadow: 0 0 8px rgba(96, 165, 250, 0.2);

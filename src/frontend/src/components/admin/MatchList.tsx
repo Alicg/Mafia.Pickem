@@ -15,7 +15,7 @@ export const MatchList: React.FC<MatchListProps> = ({ matches, onRefresh, onReso
   }
 
   // Sort by game number descending (newest first)
-  const sortedMatches = [...matches].sort((a, b) => b.gameNumber - a.gameNumber);
+  const sortedMatches = [...matches].sort((a, b) => a.gameNumber - b.gameNumber);
 
   const getStateBadgeClass = (state: MatchState) => {
     switch (state) {

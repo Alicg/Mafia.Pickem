@@ -19,7 +19,7 @@ public class PredictionRepository : IPredictionRepository
 
         const string sql = """
             SELECT Id, MatchId, UserId, PredictedWinner, PredictedVotedOut, DateCreated, DateUpdated
-            FROM Predictions
+            FROM pickem.Prediction
             WHERE MatchId = @MatchId AND UserId = @UserId
             """;
 
@@ -31,7 +31,7 @@ public class PredictionRepository : IPredictionRepository
         using var connection = _connectionFactory.CreateConnection();
 
         const string sql = """
-            MERGE INTO Predictions AS target
+            MERGE INTO pickem.Prediction AS target
             USING (SELECT @MatchId AS MatchId, @UserId AS UserId) AS source
             ON target.MatchId = source.MatchId AND target.UserId = source.UserId
             WHEN MATCHED THEN
@@ -63,7 +63,7 @@ public class PredictionRepository : IPredictionRepository
                 COUNT(*) AS TotalVotes,
                 CAST(SUM(CASE WHEN PredictedWinner = 0 THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(*), 0) AS DECIMAL(5,2)) AS TownPercentage,
                 CAST(SUM(CASE WHEN PredictedWinner = 1 THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(*), 0) AS DECIMAL(5,2)) AS MafiaPercentage
-            FROM Predictions
+            FROM pickem.Prediction
             WHERE MatchId = @MatchId
             """;
 
@@ -75,8 +75,8 @@ public class PredictionRepository : IPredictionRepository
             SELECT 
                 PredictedVotedOut AS Slot,
                 COUNT(*) AS Count,
-                CAST(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM Predictions WHERE MatchId = @MatchId) AS DECIMAL(5,2)) AS Percentage
-            FROM Predictions
+                CAST(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM pickem.Prediction WHERE MatchId = @MatchId) AS DECIMAL(5,2)) AS Percentage
+            FROM pickem.Prediction
             WHERE MatchId = @MatchId
             GROUP BY PredictedVotedOut
             ORDER BY PredictedVotedOut
@@ -99,7 +99,7 @@ public class PredictionRepository : IPredictionRepository
 
         const string sql = """
             SELECT COUNT(*)
-            FROM Predictions
+            FROM pickem.Prediction
             WHERE MatchId = @MatchId
             """;
 
@@ -112,7 +112,7 @@ public class PredictionRepository : IPredictionRepository
 
         const string sql = """
             SELECT COUNT(*)
-            FROM Predictions
+            FROM pickem.Prediction
             WHERE MatchId = @MatchId AND PredictedWinner = @WinningSide
             """;
 
@@ -125,7 +125,7 @@ public class PredictionRepository : IPredictionRepository
 
         const string sql = """
             SELECT COUNT(*)
-            FROM Predictions p
+            FROM pickem.Prediction p
             WHERE p.MatchId = @MatchId 
               AND (
                   @CorrectVotedOutCsv = CAST(p.PredictedVotedOut AS NVARCHAR(10))
@@ -143,7 +143,7 @@ public class PredictionRepository : IPredictionRepository
         using var connection = _connectionFactory.CreateConnection();
 
         const string sql = """
-            INSERT INTO PredictionScores (PredictionId, WinnerPoints, VotedOutPoints, TotalPoints, 
+            INSERT INTO pickem.PredictionScore (PredictionId, WinnerPoints, VotedOutPoints, TotalPoints, 
                                           TotalVotes, CorrectWinnerVotes, CorrectVotedOutVotes, DateCalculated)
             SELECT 
                 p.Id AS PredictionId,
@@ -181,8 +181,8 @@ public class PredictionRepository : IPredictionRepository
                 @CorrectWinnerVotes AS CorrectWinnerVotes,
                 @CorrectVotedOutVotes AS CorrectVotedOutVotes,
                 GETUTCDATE() AS DateCalculated
-            FROM Predictions p
-            INNER JOIN MatchResults mr ON p.MatchId = mr.MatchId
+            FROM pickem.Prediction p
+            INNER JOIN pickem.MatchResult mr ON p.MatchId = mr.MatchId
             WHERE p.MatchId = @MatchId
             """;
 
@@ -202,7 +202,7 @@ public class PredictionRepository : IPredictionRepository
         const string sql = """
             SELECT Id, PredictionId, WinnerPoints, VotedOutPoints, TotalPoints, 
                    TotalVotes, CorrectWinnerVotes, CorrectVotedOutVotes, DateCalculated
-            FROM PredictionScores
+            FROM pickem.PredictionScore
             WHERE PredictionId = @PredictionId
             """;
 
@@ -215,7 +215,7 @@ public class PredictionRepository : IPredictionRepository
 
         const string sql = """
             SELECT WinningSide, CorrectVotedOutCsv
-            FROM MatchResults
+            FROM pickem.MatchResult
             WHERE MatchId = @MatchId
             """;
 
@@ -230,7 +230,7 @@ public class PredictionRepository : IPredictionRepository
         using var connection = _connectionFactory.CreateConnection();
 
         const string sql = """
-            MERGE INTO MatchResults AS target
+            MERGE INTO pickem.MatchResult AS target
             USING (SELECT @MatchId AS MatchId) AS source
             ON target.MatchId = source.MatchId
             WHEN MATCHED THEN
@@ -256,9 +256,9 @@ public class PredictionRepository : IPredictionRepository
         using var connection = _connectionFactory.CreateConnection();
 
         const string sql = """
-            DELETE FROM PredictionScores
+            DELETE FROM pickem.PredictionScore
             WHERE PredictionId IN (
-                SELECT Id FROM Predictions WHERE MatchId = @MatchId
+                SELECT Id FROM pickem.Prediction WHERE MatchId = @MatchId
             )
             """;
 

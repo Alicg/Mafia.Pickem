@@ -31,7 +31,7 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
         getTournamentMatches(tournament.id)
       ]);
       setProfile(userProfile);
-      setMatches(tournamentMatches.sort((a, b) => b.gameNumber - a.gameNumber));
+      setMatches(tournamentMatches.sort((a, b) => a.gameNumber - b.gameNumber));
     } catch (err) {
       console.error('Failed to init tournament page:', err);
     } finally {
@@ -60,8 +60,10 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
     setActiveTab(tab);
   };
 
+  const isAdmin = profile?.isAdmin ?? false;
+
   const canExpand = (state: MatchState) =>
-    state !== MatchState.Upcoming && state !== MatchState.Canceled;
+    state !== MatchState.Canceled && (state !== MatchState.Upcoming || isAdmin);
 
   const handleToggleMatch = (match: MatchDto) => {
     if (!canExpand(match.state)) return;
@@ -114,7 +116,7 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
       <div className="page-content">
         {activeTab === 'games' && (
           <div className="games-tab">
-            {profile?.isAdmin && (
+            {isAdmin && (
               <button
                 className="create-match-btn"
                 onClick={() => { hapticFeedback('selection'); setShowCreateForm(true); }}
@@ -134,7 +136,7 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
                     isExpanded={expandedMatchId === match.id}
                     canExpand={canExpand(match.state)}
                     onToggle={() => handleToggleMatch(match)}
-                    isAdmin={profile?.isAdmin ?? false}
+                    isAdmin={isAdmin}
                     onRefresh={handleMatchRefresh}
                     onResolve={() => setResolvingMatchId(match.id)}
                   />

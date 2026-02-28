@@ -7,3 +7,12 @@ src/node_modules/
 .vite/deps/
 src/frontend/.playwright-cli/
 .playwright-cli/
+node_modules/
+__azurite_db_blob__.json
+__azurite_db_blob_extent__.json
+__azurite_db_queue__.json
+__azurite_db_queue_extent__.json
+__azurite_db_table__.json
+azurite-debug.log
+AzuriteConfig
+__blobstorage__/

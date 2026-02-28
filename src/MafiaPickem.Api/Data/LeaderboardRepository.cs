@@ -18,7 +18,7 @@ public class LeaderboardRepository : ILeaderboardRepository
 
         // First, MERGE to update or insert leaderboard entries
         const string mergeSql = """
-            MERGE INTO Leaderboards AS target
+            MERGE INTO pickem.Leaderboard AS target
             USING (
                 SELECT 
                     m.TournamentId,
@@ -26,9 +26,9 @@ public class LeaderboardRepository : ILeaderboardRepository
                     ISNULL(SUM(ps.TotalPoints), 0) AS TotalPoints,
                     SUM(CASE WHEN ps.TotalPoints > 0 THEN 1 ELSE 0 END) AS CorrectPredictions,
                     COUNT(p.Id) AS TotalPredictions
-                FROM Predictions p
-                INNER JOIN Matches m ON p.MatchId = m.Id
-                LEFT JOIN PredictionScores ps ON p.Id = ps.PredictionId
+                FROM pickem.Prediction p
+                INNER JOIN pickem.Match m ON p.MatchId = m.Id
+                LEFT JOIN pickem.PredictionScore ps ON p.Id = ps.PredictionId
                 WHERE m.TournamentId = @TournamentId
                 GROUP BY m.TournamentId, p.UserId
             ) AS source
@@ -52,12 +52,12 @@ public class LeaderboardRepository : ILeaderboardRepository
                 SELECT 
                     Id,
                     ROW_NUMBER() OVER (ORDER BY TotalPoints DESC, UserId ASC) AS NewRank
-                FROM Leaderboards
+                FROM pickem.Leaderboard
                 WHERE TournamentId = @TournamentId
             )
             UPDATE l
             SET l.Rank = r.NewRank
-            FROM Leaderboards l
+            FROM pickem.Leaderboard l
             INNER JOIN RankedLeaderboard r ON l.Id = r.Id
             """;
 
@@ -77,8 +77,8 @@ public class LeaderboardRepository : ILeaderboardRepository
                 l.CorrectPredictions,
                 l.TotalPredictions,
                 CAST(CASE WHEN l.UserId = @CurrentUserId THEN 1 ELSE 0 END AS BIT) AS IsCurrentUser
-            FROM Leaderboards l
-            INNER JOIN PickemUsers u ON l.UserId = u.Id
+            FROM pickem.Leaderboard l
+            INNER JOIN pickem.PickemUser u ON l.UserId = u.Id
             WHERE l.TournamentId = @TournamentId
             ORDER BY l.Rank
             """;

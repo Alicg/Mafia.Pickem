@@ -20,7 +20,7 @@ public class MatchRepository : IMatchRepository
         const string sql = """
             SELECT Id, TournamentId, ExternalMatchRef, GameNumber, TableNumber, State, 
                    DateCreated, DateOpened, DateLocked, DateResolved
-            FROM Matches
+            FROM pickem.Match
             WHERE Id = @Id
             """;
 
@@ -34,7 +34,7 @@ public class MatchRepository : IMatchRepository
         const string sql = """
             SELECT Id, TournamentId, ExternalMatchRef, GameNumber, TableNumber, State, 
                    DateCreated, DateOpened, DateLocked, DateResolved
-            FROM Matches
+            FROM pickem.Match
             WHERE TournamentId = @TournamentId
             ORDER BY Id DESC
             """;
@@ -49,7 +49,7 @@ public class MatchRepository : IMatchRepository
         const string sql = """
             SELECT TOP 1 Id, TournamentId, ExternalMatchRef, GameNumber, TableNumber, State, 
                    DateCreated, DateOpened, DateLocked, DateResolved
-            FROM Matches
+            FROM pickem.Match
             WHERE TournamentId = @TournamentId 
               AND State <> @CanceledState
             ORDER BY Id DESC
@@ -67,12 +67,12 @@ public class MatchRepository : IMatchRepository
         using var connection = _connectionFactory.CreateConnection();
 
         const string sql = """
-            INSERT INTO Matches (TournamentId, GameNumber, TableNumber, ExternalMatchRef, State, DateCreated)
+            INSERT INTO pickem.Match (TournamentId, GameNumber, TableNumber, ExternalMatchRef, State, DateCreated)
             VALUES (@TournamentId, @GameNumber, @TableNumber, @ExternalMatchRef, @State, GETUTCDATE());
 
             SELECT Id, TournamentId, ExternalMatchRef, GameNumber, TableNumber, State, 
                    DateCreated, DateOpened, DateLocked, DateResolved
-            FROM Matches
+            FROM pickem.Match
             WHERE Id = SCOPE_IDENTITY();
             """;
 
@@ -101,12 +101,12 @@ public class MatchRepository : IMatchRepository
 
         var sql = dateColumn != null
             ? $"""
-                UPDATE Matches
+                UPDATE pickem.Match
                 SET State = @NewState, {dateColumn} = GETUTCDATE()
                 WHERE Id = @MatchId
                 """
             : """
-                UPDATE Matches
+                UPDATE pickem.Match
                 SET State = @NewState
                 WHERE Id = @MatchId
                 """;
@@ -127,7 +127,7 @@ public class MatchRepository : IMatchRepository
         const string sql = """
             SELECT Id, TournamentId, ExternalMatchRef, GameNumber, TableNumber, State, 
                    DateCreated, DateOpened, DateLocked, DateResolved
-            FROM Matches
+            FROM pickem.Match
             WHERE TournamentId = @TournamentId
               AND State IN @States
             ORDER BY Id DESC

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { MatchDto, MatchState } from '../../types';
 import { 
   adminOpenMatch, 
+  adminRevertToUpcoming, 
   adminLockMatch, 
   adminCancelMatch 
 } from '../../lib/api';
@@ -52,6 +53,20 @@ export const MatchStateControls: React.FC<MatchStateControlsProps> = ({ match, o
           disabled={isLoading}
         >
           Открыть
+        </button>
+      )}
+
+      {/* Open -> Upcoming */}
+      {match.state === MatchState.Open && (
+        <button 
+          className="btn btn-secondary"
+          onClick={() => handleAction(
+            () => adminRevertToUpcoming(match.id),
+            'Вернуть игру в статус "Ожидание"?'
+          )}
+          disabled={isLoading}
+        >
+          ← Ожидание
         </button>
       )}
 

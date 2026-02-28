@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { authenticateTelegram, setAuthToken, getProfile } from '../lib/api';
+import { authenticateTelegram, devAuthenticate, setAuthToken, getProfile } from '../lib/api';
 import { getInitData, expandApp } from '../lib/telegram';
+
+const isDevAuth = import.meta.env.VITE_DEV_AUTH === 'true';
 import { UserProfile } from '../types';
 import { isDemoMode } from '../mocks/demo-mode';
 import { demoUser } from '../mocks/demo-data';
@@ -52,19 +54,24 @@ export function useAuth() {
     const initAuth = async () => {
       expandApp(); // Start expanded
       
-      const initData = getInitData();
-      if (!initData) {
-        setState({
-          user: null,
-          isLoading: false,
-          error: 'No Telegram initData found. Please open in Telegram.',
-          isAuthenticated: false,
-        });
-        return;
-      }
-
       try {
-        const response = await authenticateTelegram(initData);
+        let response;
+        if (isDevAuth) {
+          // Dev mode: bypass Telegram, authenticate directly
+          response = await devAuthenticate();
+        } else {
+          const initData = getInitData();
+          if (!initData) {
+            setState({
+              user: null,
+              isLoading: false,
+              error: 'No Telegram initData found. Please open in Telegram.',
+              isAuthenticated: false,
+            });
+            return;
+          }
+          response = await authenticateTelegram(initData);
+        }
         setAuthToken(response.token);
         
         setState({

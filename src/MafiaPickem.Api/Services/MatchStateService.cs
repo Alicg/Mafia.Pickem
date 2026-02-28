@@ -26,6 +26,19 @@ public class MatchStateService : IMatchStateService
         return (await _matchRepository.GetByIdAsync(matchId))!;
     }
 
+    public async Task<Match> RevertToUpcomingAsync(int matchId)
+    {
+        var match = await GetMatchOrThrowAsync(matchId);
+
+        if (match.State != MatchState.Open)
+        {
+            throw new InvalidOperationException($"Cannot transition match from {match.State} to Upcoming");
+        }
+
+        await _matchRepository.UpdateStateAsync(matchId, MatchState.Upcoming);
+        return (await _matchRepository.GetByIdAsync(matchId))!;
+    }
+
     public async Task<Match> LockMatchAsync(int matchId)
     {
         var match = await GetMatchOrThrowAsync(matchId);

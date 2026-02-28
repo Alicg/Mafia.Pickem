@@ -14,10 +14,11 @@ import { demoUser, demoTournament, demoTournaments, demoMatches, demoLeaderboard
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
-let authToken: string | null = null;
+let authToken: string | null = sessionStorage.getItem('pickem_auth_token');
 
 export function setAuthToken(token: string): void {
   authToken = token;
+  sessionStorage.setItem('pickem_auth_token', token);
 }
 
 export function getAuthToken(): string | null {
@@ -57,6 +58,10 @@ export async function authenticateTelegram(initData: string): Promise<AuthRespon
     method: 'POST',
     body: JSON.stringify({ initData }),
   });
+}
+
+export async function devAuthenticate(): Promise<AuthResponse> {
+  return apiFetch('/auth/dev', { method: 'POST' });
 }
 
 // Profile
@@ -128,7 +133,7 @@ export async function adminCreateTournament(request: CreateTournamentRequest): P
     console.log('[DEMO] adminCreateTournament', request);
     return { id: 99, name: request.name, description: request.description ?? null, imageUrl: request.imageUrl ?? null, currentMatch: null };
   }
-  return apiFetch('/admin/tournaments', {
+  return apiFetch('/manage/tournaments', {
     method: 'POST',
     body: JSON.stringify(request),
   });
@@ -139,7 +144,7 @@ export async function adminCreateMatch(request: CreateMatchRequest): Promise<Mat
     console.log('[DEMO] adminCreateMatch', request);
     return { id: 99, gameNumber: request.gameNumber, tableNumber: request.tableNumber ?? null, state: 0, myPrediction: null, voteStats: null };
   }
-  return apiFetch('/admin/matches', {
+  return apiFetch('/manage/matches', {
     method: 'POST',
     body: JSON.stringify(request),
   });
@@ -147,12 +152,17 @@ export async function adminCreateMatch(request: CreateMatchRequest): Promise<Mat
 
 export async function adminOpenMatch(matchId: number): Promise<MatchDto> {
   if (isDemoMode) return { ...demoMatches[0], id: matchId, state: 1 };
-  return apiFetch(`/admin/matches/${encodeURIComponent(matchId)}/open`, { method: 'POST' });
+  return apiFetch(`/manage/open-match/${encodeURIComponent(matchId)}`, { method: 'POST' });
+}
+
+export async function adminRevertToUpcoming(matchId: number): Promise<MatchDto> {
+  if (isDemoMode) return { ...demoMatches[0], id: matchId, state: 0 };
+  return apiFetch(`/manage/revert-to-upcoming/${encodeURIComponent(matchId)}`, { method: 'POST' });
 }
 
 export async function adminLockMatch(matchId: number): Promise<MatchDto> {
   if (isDemoMode) return { ...demoMatches[0], id: matchId, state: 2 };
-  return apiFetch(`/admin/matches/${encodeURIComponent(matchId)}/lock`, { method: 'POST' });
+  return apiFetch(`/manage/lock-match/${encodeURIComponent(matchId)}`, { method: 'POST' });
 }
 
 export async function adminResolveMatch(matchId: number, request: ResolveMatchRequest): Promise<MatchDto> {
@@ -160,7 +170,7 @@ export async function adminResolveMatch(matchId: number, request: ResolveMatchRe
     console.log('[DEMO] adminResolveMatch', matchId, request);
     return { ...demoMatches[0], id: matchId, state: 3 };
   }
-  return apiFetch(`/admin/matches/${encodeURIComponent(matchId)}/resolve`, {
+  return apiFetch(`/manage/resolve-match/${encodeURIComponent(matchId)}`, {
     method: 'POST',
     body: JSON.stringify(request),
   });
@@ -168,15 +178,15 @@ export async function adminResolveMatch(matchId: number, request: ResolveMatchRe
 
 export async function adminCancelMatch(matchId: number): Promise<MatchDto> {
   if (isDemoMode) return { ...demoMatches[0], id: matchId, state: 4 };
-  return apiFetch(`/admin/matches/${encodeURIComponent(matchId)}/cancel`, { method: 'POST' });
+  return apiFetch(`/manage/cancel-match/${encodeURIComponent(matchId)}`, { method: 'POST' });
 }
 
 export async function adminPublishState(matchId: number): Promise<void> {
   if (isDemoMode) { console.log('[DEMO] adminPublishState', matchId); return; }
-  await apiFetch(`/admin/matches/${encodeURIComponent(matchId)}/publish-state`, { method: 'POST' });
+  await apiFetch(`/manage/publish-match-state/${encodeURIComponent(matchId)}`, { method: 'POST' });
 }
 
 export async function adminGetTournamentStats(tournamentId: number): Promise<TournamentStats> {
   if (isDemoMode) return demoStats;
-  return apiFetch(`/admin/tournaments/${encodeURIComponent(tournamentId)}/stats`);
+  return apiFetch(`/manage/tournament-stats/${encodeURIComponent(tournamentId)}`);
 }

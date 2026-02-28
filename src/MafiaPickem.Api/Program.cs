@@ -1,3 +1,5 @@
+using System.Text.Json;
+using Azure.Core.Serialization;
 using MafiaPickem.Api.Auth;
 using MafiaPickem.Api.Bot;
 using MafiaPickem.Api.Data;
@@ -15,6 +17,13 @@ var host = new HostBuilder()
     })
     .ConfigureServices(services =>
     {
+        services.Configure<WorkerOptions>(options =>
+        {
+            options.Serializer = new JsonObjectSerializer(new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            });
+        });
         // Infrastructure
         services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
 

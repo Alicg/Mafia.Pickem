@@ -40,7 +40,7 @@ public class AdminFunctions
 
     [Function("AdminCreateTournament")]
     public async Task<HttpResponseData> CreateTournamentHttp(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "admin/tournaments")] HttpRequestData req)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/tournaments")] HttpRequestData req)
     {
         if (!_userContext.IsAdmin)
         {
@@ -77,7 +77,7 @@ public class AdminFunctions
 
     [Function("AdminCreateMatch")]
     public async Task<HttpResponseData> CreateMatchHttp(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "admin/matches")] HttpRequestData req)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/matches")] HttpRequestData req)
     {
         if (!_userContext.IsAdmin)
         {
@@ -115,7 +115,7 @@ public class AdminFunctions
 
     [Function("AdminOpenMatch")]
     public async Task<HttpResponseData> OpenMatchHttp(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "admin/matches/{id}/open")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/open-match/{id}")] HttpRequestData req,
         int id)
     {
         if (!_userContext.IsAdmin)
@@ -141,9 +141,37 @@ public class AdminFunctions
         return response;
     }
 
+    [Function("AdminRevertToUpcoming")]
+    public async Task<HttpResponseData> RevertToUpcomingHttp(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/revert-to-upcoming/{id}")] HttpRequestData req,
+        int id)
+    {
+        if (!_userContext.IsAdmin)
+        {
+            var forbiddenResponse = req.CreateResponse(HttpStatusCode.Forbidden);
+            await forbiddenResponse.WriteStringAsync("Admin access required");
+            return forbiddenResponse;
+        }
+
+        var match = await _matchStateService.RevertToUpcomingAsync(id);
+        await _statePublishService.PublishMatchStateAsync(id, forcePublish: true);
+
+        var matchDto = new MatchDto
+        {
+            Id = match.Id,
+            GameNumber = match.GameNumber,
+            TableNumber = match.TableNumber,
+            State = match.State
+        };
+
+        var response = req.CreateResponse(HttpStatusCode.OK);
+        await response.WriteAsJsonAsync(matchDto);
+        return response;
+    }
+
     [Function("AdminLockMatch")]
     public async Task<HttpResponseData> LockMatchHttp(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "admin/matches/{id}/lock")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/lock-match/{id}")] HttpRequestData req,
         int id)
     {
         if (!_userContext.IsAdmin)
@@ -171,7 +199,7 @@ public class AdminFunctions
 
     [Function("AdminResolveMatch")]
     public async Task<HttpResponseData> ResolveMatchHttp(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "admin/matches/{id}/resolve")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/resolve-match/{id}")] HttpRequestData req,
         int id)
     {
         if (!_userContext.IsAdmin)
@@ -233,7 +261,7 @@ public class AdminFunctions
 
     [Function("AdminCancelMatch")]
     public async Task<HttpResponseData> CancelMatchHttp(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "admin/matches/{id}/cancel")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/cancel-match/{id}")] HttpRequestData req,
         int id)
     {
         if (!_userContext.IsAdmin)
@@ -267,7 +295,7 @@ public class AdminFunctions
 
     [Function("AdminPublishState")]
     public async Task<HttpResponseData> PublishStateHttp(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "admin/matches/{id}/publish-state")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/publish-match-state/{id}")] HttpRequestData req,
         int id)
     {
         if (!_userContext.IsAdmin)
@@ -286,7 +314,7 @@ public class AdminFunctions
 
     [Function("AdminGetTournamentStats")]
     public async Task<HttpResponseData> GetTournamentStatsHttp(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "admin/tournaments/{id}/stats")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "manage/tournament-stats/{id}")] HttpRequestData req,
         int id)
     {
         if (!_userContext.IsAdmin)
