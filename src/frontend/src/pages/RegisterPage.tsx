@@ -15,7 +15,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
   const validateNickname = (val: string): string | null => {
     if (val.length < 2) return 'Минимум 2 символа';
     if (val.length > 30) return 'Максимум 30 символов';
-    if (!/^[a-zA-Z0-9_-]+$/.test(val)) return 'Только буквы, цифры, - и _';
+    if (!/^[a-zA-Z0-9 _-]+$/.test(val)) return 'Только буквы, цифры, пробел, - и _';
     return null;
   };
 
