@@ -19,7 +19,6 @@
 
 | Роль | Описание |
 |------|----------|
-| **Viewer** (неавторизованный) | Видит публичные данные (турниры, матчи, статистика голосов, лидерборд). Не может делать прогнозы. |
 | **Registered User** | Прошел Telegram-авторизацию и указал `GameNickname`. Делает прогнозы, участвует в рейтинге. |
 | **Admin** | `TelegramId` входит в конфигурационный allowlist (`PickemAdminTelegramIds`). Управляет турнирами, матчами, переключает статусы, фиксирует результаты. Функции админа встроены прямо в интерфейс Mini App (не отдельная панель). |
 
@@ -27,11 +26,12 @@
 
 ### 4.1. Аутентификация
 
-1. Mini App запускается через Telegram-бота.
+1. Mini App запускается по прямой ссылке `t.me/...` (Web App link).
 2. Telegram WebApp SDK передает `initData` с подписью.
 3. Backend валидирует HMAC-SHA256 подпись `initData` с использованием Bot Token.
 4. При успешной валидации выполняется upsert пользователя (по `TelegramId`) и выдается JWT-токен (HS256, срок жизни — 48 часов).
 5. JWT содержит claims: `UserId`, `telegram_id`, `is_admin`, `nickname`.
+6. Авторизация обязательна на старте приложения: до успешного получения JWT доступ к игровым и информационным API не предоставляется.
 
 ### 4.2. Регистрация (GameNickname)
 
@@ -91,7 +91,6 @@ TotalPoints   = WinnerPoints + VotedOutPoints
 | **Open** | `1` | Прием прогнозов открыт. Отображается crowd-статистика в реальном времени. |
 | **Locked** | `2` | Прогнозы заблокированы. Отображается финальная crowd-статистика. |
 | **Resolved** | `3` | Результаты зафиксированы, очки начислены, лидерборд обновлен. |
-| **Canceled** | `4` | Матч отменен, 0 баллов всем. |
 
 ### 6.2. Допустимые переходы
 
@@ -232,7 +231,7 @@ App
 |----------|----------|
 | Матч `Open` или `Locked` | 2 сек |
 | Матч `Resolved` | 15 сек |
-| Матч `Canceled` / `Upcoming` | 10–20 сек |
+| Матч `Upcoming` | 10–20 сек |
 | Вкладка браузера неактивна | 20 сек |
 
 Список матчей обновляется каждые 60 секунд. Первый `Open`-матч автоматически раскрывается со скроллом.
@@ -263,8 +262,8 @@ App
 | **ORM / Data Access** | Dapper (микро-ORM для SQL) |
 | **База данных** | Azure SQL, схема `pickem` |
 | **Распределение состояния** | Azure Blob Storage (`match-state-{id}.json`, `leaderboard-{id}.json`) |
-| **Аутентификация** | Telegram HMAC-SHA256 → JWT (HS256, 24h) |
-| **Бот** | Telegram Bot Webhook (приём и валидация, обработка — TODO) |
+| **Аутентификация** | Telegram HMAC-SHA256 → JWT (HS256, 48h) |
+| **Бот** | Опционально (вне MVP): webhook/команды/уведомления Telegram |
 | **Демо-режим** | `VITE_DEMO=true` — все API-вызовы возвращают mock-данные |
 
 ### 10.1. Индексы БД
@@ -277,22 +276,22 @@ App
 
 ## 11. API-эндпоинты
 
-### 11.1. Публичные
+### 11.1. Без JWT (доступны без авторизации)
 
 | Метод | Путь | Описание |
 |-------|------|----------|
 | `POST` | `/api/auth/telegram` | Аутентификация через Telegram initData |
-| `GET` | `/api/tournaments/active` | Список активных турниров |
-| `GET` | `/api/tournaments/{id}` | Турнир с текущим матчем |
-| `GET` | `/api/tournaments/{id}/matches` | Все матчи турнира |
-| `GET` | `/api/tournaments/{id}/leaderboard` | Лидерборд турнира |
-| `GET` | `/api/matches/{id}` | Матч с прогнозом пользователя (если авторизован) |
-| `POST` | `/api/bot/webhook` | Telegram Bot webhook (валидация secret token) |
+| `POST` | `/api/auth/dev` | Dev-аутентификация (только DEBUG-сборка) |
 
 ### 11.2. Требуют авторизации
 
 | Метод | Путь | Описание |
 |-------|------|----------|
+| `GET` | `/api/tournaments/active` | Список активных турниров (после авторизации) |
+| `GET` | `/api/tournaments/{id}` | Турнир с текущим матчем |
+| `GET` | `/api/tournaments/{id}/matches` | Все матчи турнира |
+| `GET` | `/api/tournaments/{id}/leaderboard` | Лидерборд турнира |
+| `GET` | `/api/matches/{id}` | Матч с прогнозом текущего пользователя |
 | `GET` | `/api/me` | Профиль текущего пользователя |
 | `POST` | `/api/me/nickname` | Обновить GameNickname |
 | `GET` | `/api/tournaments/{id}/my-predictions` | Мои прогнозы по турниру |
@@ -320,9 +319,8 @@ App
 1. **Telegram auth:** Валидация `initData` через HMAC-SHA256 (`secretKey = HMAC("WebAppData", botToken)`).
 2. **JWT:** HS256-подпись, проверка issuer/audience/lifetime, ClockSkew = 0.
 3. **Admin-доступ:** Allowlist `TelegramId` в конфигурации, проверяется при каждом запросе middleware.
-4. **Webhook:** Валидация `X-Telegram-Bot-Api-Secret-Token` заголовка.
-5. **Публичные blob-файлы:** Содержат только агрегированную статистику, никаких персональных данных.
-6. **Middleware pipeline:** `ExceptionHandlingMiddleware` → `TelegramAuthMiddleware` → function handler.
+4. **Публичные blob-файлы:** Содержат только агрегированную статистику, никаких персональных данных.
+5. **Middleware pipeline:** `ExceptionHandlingMiddleware` → `TelegramAuthMiddleware` → function handler.
 
 ## 13. Статус реализации (MVP)
 
@@ -340,12 +338,10 @@ App
 - Тёмная тема Telegram.
 - Haptic feedback.
 - Демо-режим с mock-данными.
-- Bot webhook (приём и заголовочная валидация).
 
 ### Не реализовано / Deferred
 
-- Обработка Telegram bot-команд (webhook принимает, но не обрабатывает).
+- Telegram bot webhook и обработка bot-команд (вынесено за рамки MVP).
 - Push-уведомления через бота (напоминание о начале матча).
-- Статус `Canceled` в UI (admin-кнопка аннулирования матча).
 - Финальные домены Mini App и API для prod-окружения.
 - Мониторинг, алертинг, load testing.
