@@ -64,11 +64,11 @@ Frontend запустится на `http://localhost:5173/`. API-запросы 
 
 ```
 # Терминал 1 — Azurite
-azurite --silent --skipApiVersionCheck
+npx azurite --silent --skipApiVersionCheck
 
 # Терминал 2 — Backend
-cd src/MafiaPickem.Api && func start
+cd src/MafiaPickem.Api && npx func start
 
 # Терминал 3 — Frontend
-cd src/frontend && npm install && npm run dev
+cd src/frontend ; npm install ; npm run dev
 ```

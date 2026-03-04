@@ -139,7 +139,14 @@ public class MatchRepository : IMatchRepository
     {
         using var connection = _connectionFactory.CreateConnection();
 
-        var stateBytes = states.Select(s => (byte)s).ToArray();
+        if (states == null || states.Length == 0)
+        {
+            return Array.Empty<Match>();
+        }
+
+        // Use int[] for Dapper list expansion in "IN @States".
+        // byte[] is treated as binary (varbinary), not as an enumerable list.
+        var stateValues = states.Select(s => (int)s).ToArray();
 
         const string sql = """
             SELECT Id, TournamentId, ExternalMatchRef, GameNumber, TableNumber, State, 
@@ -153,7 +160,7 @@ public class MatchRepository : IMatchRepository
         return await connection.QueryAsync<Match>(sql, new
         {
             TournamentId = tournamentId,
-            States = stateBytes
+            States = stateValues
         });
     }
 

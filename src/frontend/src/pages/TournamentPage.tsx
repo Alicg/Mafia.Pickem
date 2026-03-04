@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { getProfile, getTournamentMatches, getMyPredictions } from '../lib/api';
-import { TournamentDto, UserProfile, MatchInfo, MatchState, PredictionsMap, PredictionDto } from '../types';
+import { adminGetTournamentStats, getProfile, getTournamentMatches, getMyPredictions } from '../lib/api';
+import { TournamentDto, UserProfile, MatchInfo, MatchState, PredictionsMap, PredictionDto, TournamentStats } from '../types';
 import { useMatchStates } from '../hooks/useMatchStates';
 import { MatchCard } from '../components/MatchCard';
 import { LeaderboardTab } from '../components/LeaderboardTab';
@@ -33,10 +33,12 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
   const [matchInfos, setMatchInfos] = useState<MatchInfo[]>([]);
   const [predictions, setPredictions] = useState<PredictionsMap>({});
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [tournamentStats, setTournamentStats] = useState<TournamentStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedMatchId, setExpandedMatchId] = useState<number | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [resolvingMatchId, setResolvingMatchId] = useState<number | null>(null);
+  const isAdmin = profile?.isAdmin ?? false;
 
   // Blob polling for all matches
   const matchIds = useMemo(() => matchInfos.map(m => m.id), [matchInfos]);
@@ -53,6 +55,19 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
       setProfile(userProfile);
       setMatchInfos(matches.sort((a, b) => a.gameNumber - b.gameNumber));
       setPredictions(preds);
+
+      // Admin-only tournament stats shown inline on the main tournament page.
+      if (userProfile.isAdmin) {
+        try {
+          const stats = await adminGetTournamentStats(tournament.id);
+          setTournamentStats(stats);
+        } catch (err) {
+          console.error('Failed to load tournament stats:', err);
+          setTournamentStats(null);
+        }
+      } else {
+        setTournamentStats(null);
+      }
     } catch (err) {
       console.error('Failed to init tournament page:', err);
     } finally {
@@ -70,12 +85,21 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
       try {
         const matches = await getTournamentMatches(tournament.id);
         setMatchInfos(matches.sort((a, b) => a.gameNumber - b.gameNumber));
+
+        if (isAdmin) {
+          try {
+            const stats = await adminGetTournamentStats(tournament.id);
+            setTournamentStats(stats);
+          } catch {
+            // Keep existing UI state when stats endpoint is temporarily unavailable.
+          }
+        }
       } catch (err) {
         console.error('Match list refresh failed:', err);
       }
     }, MATCH_LIST_REFRESH_MS);
     return () => clearInterval(interval);
-  }, [tournament.id]);
+  }, [isAdmin, tournament.id]);
 
   // Get effective match state (blob overrides API)
   const getEffectiveState = useCallback((matchInfo: MatchInfo): MatchState => {
@@ -112,7 +136,13 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
     setActiveTab(tab);
   };
 
-  const isAdmin = profile?.isAdmin ?? false;
+  const getStateCount = useCallback((stateName: string): number => {
+    if (!tournamentStats?.matchesByState) return 0;
+
+    const entries = Object.entries(tournamentStats.matchesByState);
+    const found = entries.find(([key]) => key.toLowerCase() === stateName.toLowerCase());
+    return found ? found[1] : 0;
+  }, [tournamentStats]);
 
   const canExpand = (state: MatchState) =>
     state !== MatchState.Canceled && (state !== MatchState.Upcoming || isAdmin);
@@ -169,10 +199,19 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
     try {
       const matches = await getTournamentMatches(tournament.id);
       setMatchInfos(matches.sort((a, b) => a.gameNumber - b.gameNumber));
+
+      if (isAdmin) {
+        try {
+          const stats = await adminGetTournamentStats(tournament.id);
+          setTournamentStats(stats);
+        } catch {
+          // Keep existing UI state when stats endpoint is temporarily unavailable.
+        }
+      }
     } catch (err) {
       console.error('Match list refresh failed:', err);
     }
-  }, [tournament.id]);
+  }, [isAdmin, tournament.id]);
 
   if (isLoading) {
     return (
@@ -214,6 +253,27 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
       <div className="page-content">
         {activeTab === 'games' && (
           <div className="games-tab">
+            {isAdmin && tournamentStats && (
+              <div className="admin-stats-card">
+                <div className="admin-stats-row">
+                  <div className="admin-stat-item">
+                    <div className="admin-stat-value">{tournamentStats.totalPredictions}</div>
+                    <div className="admin-stat-label">Прогнозов</div>
+                  </div>
+                  <div className="admin-stat-item">
+                    <div className="admin-stat-value">{tournamentStats.totalMatches}</div>
+                    <div className="admin-stat-label">Игр</div>
+                  </div>
+                </div>
+                <div className="admin-state-chips">
+                  <span className="admin-state-chip">Upcoming: {getStateCount('Upcoming')}</span>
+                  <span className="admin-state-chip">Open: {getStateCount('Open')}</span>
+                  <span className="admin-state-chip">Locked: {getStateCount('Locked')}</span>
+                  <span className="admin-state-chip">Resolved: {getStateCount('Resolved')}</span>
+                </div>
+              </div>
+            )}
+
             {isAdmin && (
               <button
                 className="create-match-btn"

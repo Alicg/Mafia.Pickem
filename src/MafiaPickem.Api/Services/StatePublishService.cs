@@ -39,7 +39,13 @@ public class StatePublishService : IStatePublishService
                 var elapsed = DateTime.UtcNow - lastPublish.Value;
                 if (elapsed < _throttleInterval)
                 {
-                    return; // Skip publish
+                    // Allow immediate publish for the first vote so crowd stats appear right away.
+                    // Without this, the initial Open-state publish (0 votes) can suppress the next update.
+                    var totalVotes = await _predictionRepository.GetTotalVotesAsync(matchId);
+                    if (totalVotes > 1)
+                    {
+                        return; // Skip publish for normal high-frequency updates
+                    }
                 }
             }
         }
