@@ -259,6 +259,7 @@ App
 |-----------|-----------|
 | **Frontend** | React 19 + Vite 8 + TypeScript 5.9 + Telegram Web App SDK (`@twa-dev/types`) |
 | **Backend** | Azure Functions (.NET 8 Isolated Worker) |
+| **Локальная оркестрация (план)** | .NET Aspire AppHost (dev-only, без изменения продуктовой архитектуры) |
 | **ORM / Data Access** | Dapper (микро-ORM для SQL) |
 | **База данных** | Azure SQL, схема `pickem` |
 | **Распределение состояния** | Azure Blob Storage (`match-state-{id}.json`, `leaderboard-{id}.json`) |
@@ -345,3 +346,4 @@ App
 - Push-уведомления через бота (напоминание о начале матча).
 - Финальные домены Mini App и API для prod-окружения.
 - Мониторинг, алертинг, load testing.
+- Миграция локального dev-окружения на Aspire AppHost (единый запуск сервисов и централизованный конфиг).
