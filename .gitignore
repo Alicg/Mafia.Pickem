@@ -2,6 +2,8 @@ src/MafiaPickem.Api/bin/
 src/MafiaPickem.Api/obj/
 src/MafiaPickem.Api.Tests/bin/
 src/MafiaPickem.Api.Tests/obj/
+src/**/bin/
+src/**/obj/
 src/MafiaPickem.Api/local.settings.json
 src/node_modules/
 .vite/deps/
