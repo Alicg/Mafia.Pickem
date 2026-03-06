@@ -22,7 +22,7 @@ export const LoadingPage: React.FC = () => {
         WebkitTextFillColor: 'transparent',
         marginBottom: '4px'
       }}>
-        Mafia Pick'em
+        Угадайка
       </div>
       <div className="spinner"></div>
       <p style={{ 
