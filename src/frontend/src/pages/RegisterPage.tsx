@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { setAuthToken, updateNickname } from '../lib/api';
+import { updateNickname } from '../lib/api';
+import { UserProfile } from '../types';
 import { hapticFeedback } from '../lib/telegram';
 import '../App.css';
 
 interface RegisterPageProps {
-  onSuccess: () => void;
+  onSuccess: (user: UserProfile) => void;
 }
 
 export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
@@ -35,9 +36,8 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
       setIsSubmitting(true);
       hapticFeedback('medium');
       const response = await updateNickname(nickname);
-      setAuthToken(response.token);
       hapticFeedback('light'); // Success
-      onSuccess();
+      onSuccess(response.user);
     } catch (err: any) {
       console.error(err);
       const message = err instanceof Error && err.message

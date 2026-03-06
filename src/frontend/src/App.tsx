@@ -8,7 +8,7 @@ import { TournamentsListPage } from './pages/TournamentsListPage';
 import { TournamentPage } from './pages/TournamentPage';
 
 function App() {
-  const { user, isLoading, error, isAuthenticated, refreshAuth } = useAuth();
+  const { user, isLoading, error, isAuthenticated, completeRegistration } = useAuth();
   const [selectedTournament, setSelectedTournament] = useState<TournamentDto | null>(null);
 
   if (isLoading) {
@@ -38,7 +38,7 @@ function App() {
   }
 
   if (!user.isRegistered) {
-    return <RegisterPage onSuccess={refreshAuth} />;
+    return <RegisterPage onSuccess={completeRegistration} />;
   }
 
   if (selectedTournament) {

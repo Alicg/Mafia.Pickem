@@ -45,6 +45,15 @@ export function useAuth() {
     }
   };
 
+  const completeRegistration = (user: UserProfile) => {
+    setState({
+      user,
+      isLoading: false,
+      error: null,
+      isAuthenticated: true,
+    });
+  };
+
   useEffect(() => {
     if (isDemoMode) {
       setState({ user: demoUser, isLoading: false, error: null, isAuthenticated: true });
@@ -97,5 +106,5 @@ export function useAuth() {
     initAuth();
   }, []);
 
-  return { ...state, refreshAuth };
+  return { ...state, refreshAuth, completeRegistration };
 }
