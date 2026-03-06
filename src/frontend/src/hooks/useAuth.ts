@@ -82,10 +82,13 @@ export function useAuth() {
         });
       } catch (err) {
         console.error('Auth failed', err);
+        const message = err instanceof Error && err.message
+          ? err.message
+          : 'Authentication failed. Please try again.';
         setState({
           user: null,
           isLoading: false,
-          error: 'Authentication failed. Please try again.',
+          error: message,
           isAuthenticated: false,
         });
       }

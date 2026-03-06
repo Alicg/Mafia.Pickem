@@ -72,10 +72,10 @@ public class TelegramAuthMiddleware : IFunctionsWorkerMiddleware
         var token = authHeader.Substring("Bearer ".Length).Trim();
 
         // Validate JWT token
-        var principal = _jwtService.ValidateToken(token);
+        var principal = _jwtService.ValidateToken(token, out var validationError);
         if (principal == null)
         {
-            throw new UnauthorizedAccessException("Invalid or expired token");
+            throw new UnauthorizedAccessException($"Invalid or expired token. {validationError ?? "Token validation returned null."}");
         }
 
         // Extract user ID from claims

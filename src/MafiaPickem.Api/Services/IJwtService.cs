@@ -7,4 +7,5 @@ public interface IJwtService
 {
     string GenerateToken(PickemUser user, bool isAdmin);
     ClaimsPrincipal? ValidateToken(string token);
+    ClaimsPrincipal? ValidateToken(string token, out string? errorMessage);
 }
