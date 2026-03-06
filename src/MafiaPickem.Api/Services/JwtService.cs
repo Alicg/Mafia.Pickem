@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using MafiaPickem.Api.Models.Domain;
 using Microsoft.Extensions.Configuration;
@@ -12,6 +13,7 @@ public class JwtService : IJwtService
 {
     private readonly string _secret;
     private readonly string _issuer;
+    private readonly string _keyFingerprint;
     private readonly JwtSecurityTokenHandler _tokenHandler;
     private readonly ILogger<JwtService>? _logger;
 
@@ -21,6 +23,7 @@ public class JwtService : IJwtService
             ?? throw new InvalidOperationException("JwtSecret not configured");
         _issuer = configuration["JwtIssuer"]
             ?? throw new InvalidOperationException("JwtIssuer not configured");
+        _keyFingerprint = ComputeKeyFingerprint(_secret);
         _tokenHandler = new JwtSecurityTokenHandler();
         _logger = logger;
     }
@@ -31,7 +34,9 @@ public class JwtService : IJwtService
         {
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new("telegram_id", user.TelegramId.ToString()),
-            new("is_admin", isAdmin.ToString())
+            new("is_admin", isAdmin.ToString()),
+            // Temporary diagnostic claim to detect secret mismatches across instances.
+            new("jwt_key_fp", _keyFingerprint)
         };
 
         // Only include nickname if user is registered (not using placeholder)
@@ -83,13 +88,33 @@ public class JwtService : IJwtService
         }
         catch (Exception ex)
         {
-            errorMessage = ex.Message;
+            var tokenKeyFingerprint = TryReadTokenKeyFingerprint(token);
+            errorMessage = $"{ex.Message} Current key fp={_keyFingerprint}; token key fp={tokenKeyFingerprint ?? "missing"}.";
             _logger?.LogWarning(
                 ex,
                 "JWT validation failed. Issuer='{Issuer}', tokenLength={TokenLength}, error='{ErrorMessage}'",
                 _issuer,
                 token?.Length ?? 0,
                 errorMessage);
+            return null;
+        }
+    }
+
+    private static string ComputeKeyFingerprint(string secret)
+    {
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(secret));
+        return Convert.ToHexString(hash)[..12];
+    }
+
+    private string? TryReadTokenKeyFingerprint(string token)
+    {
+        try
+        {
+            var jwt = _tokenHandler.ReadJwtToken(token);
+            return jwt.Claims.FirstOrDefault(c => c.Type == "jwt_key_fp")?.Value;
+        }
+        catch
+        {
             return null;
         }
     }
