@@ -14,7 +14,6 @@ public class AuthFunction
 {
     private readonly ITelegramAuthService _telegramAuthService;
     private readonly IPickemUserRepository _userRepository;
-    private readonly IJwtService _jwtService;
     private readonly IConfiguration _configuration;
     private readonly ILogger<AuthFunction> _logger;
     private readonly HashSet<long> _adminTelegramIds;
@@ -22,13 +21,11 @@ public class AuthFunction
     public AuthFunction(
         ITelegramAuthService telegramAuthService,
         IPickemUserRepository userRepository,
-        IJwtService jwtService,
         IConfiguration configuration,
         ILogger<AuthFunction>? logger = null)
     {
         _telegramAuthService = telegramAuthService;
         _userRepository = userRepository;
-        _jwtService = jwtService;
         _configuration = configuration;
         _logger = logger ?? null!;
 
@@ -93,22 +90,23 @@ public class AuthFunction
         // Check if user is admin
         var isAdmin = _adminTelegramIds.Contains(telegramResult.TelegramId);
 
-        // Generate JWT token
-        var token = _jwtService.GenerateToken(user, isAdmin);
-
         // Build response
         return new AuthResponse
         {
-            Token = token,
-            User = new UserProfileResponse
-            {
-                Id = user.Id,
-                TelegramId = user.TelegramId,
-                GameNickname = user.GameNickname,
-                PhotoUrl = user.PhotoUrl,
-                IsRegistered = !user.GameNickname.StartsWith("_unregistered_"),
-                IsAdmin = isAdmin
-            }
+            User = BuildUserProfile(user, isAdmin)
+        };
+    }
+
+    private static UserProfileResponse BuildUserProfile(Models.Domain.PickemUser user, bool isAdmin)
+    {
+        return new UserProfileResponse
+        {
+            Id = user.Id,
+            TelegramId = user.TelegramId,
+            GameNickname = user.GameNickname,
+            PhotoUrl = user.PhotoUrl,
+            IsRegistered = !user.GameNickname.StartsWith("_unregistered_"),
+            IsAdmin = isAdmin
         };
     }
 }

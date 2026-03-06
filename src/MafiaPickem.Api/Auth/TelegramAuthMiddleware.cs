@@ -1,19 +1,24 @@
-using System.Security.Claims;
 using MafiaPickem.Api.Data;
 using MafiaPickem.Api.Services;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Middleware;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace MafiaPickem.Api.Auth;
 
 public class TelegramAuthMiddleware : IFunctionsWorkerMiddleware
 {
-    private readonly IJwtService _jwtService;
+    private readonly ITelegramAuthService _telegramAuthService;
     private readonly IConfiguration _configuration;
     private readonly ILogger<TelegramAuthMiddleware> _logger;
     private readonly HashSet<long> _adminTelegramIds;
+    private const string InitDataHeaderName = "X-Telegram-Init-Data";
+#if DEBUG
+    private const string DevAuthHeaderName = "X-Dev-Auth";
+    private const long DevTelegramId = 999999999;
+#endif
 
     // Routes that don't require authentication
     private readonly HashSet<string> _publicRoutes = new(StringComparer.OrdinalIgnoreCase)
@@ -24,11 +29,11 @@ public class TelegramAuthMiddleware : IFunctionsWorkerMiddleware
     };
 
     public TelegramAuthMiddleware(
-        IJwtService jwtService,
+        ITelegramAuthService telegramAuthService,
         IConfiguration configuration,
         ILogger<TelegramAuthMiddleware> logger)
     {
-        _jwtService = jwtService;
+        _telegramAuthService = telegramAuthService;
         _configuration = configuration;
         _logger = logger;
 
@@ -57,58 +62,60 @@ public class TelegramAuthMiddleware : IFunctionsWorkerMiddleware
             return;
         }
 
-        // Extract Authorization header
-        if (!requestData.Headers.TryGetValues("Authorization", out var authHeaders))
+#if DEBUG
+        if (requestData.Headers.TryGetValues(DevAuthHeaderName, out var devHeaders)
+            && string.Equals(devHeaders.FirstOrDefault(), "true", StringComparison.OrdinalIgnoreCase))
         {
-            throw new UnauthorizedAccessException("Missing Authorization header");
+            await AuthenticateDevUserAsync(context);
+            await next(context);
+            return;
+        }
+#endif
+
+        if (!requestData.Headers.TryGetValues(InitDataHeaderName, out var initDataHeaders))
+        {
+            throw new UnauthorizedAccessException($"Missing {InitDataHeaderName} header");
         }
 
-        var authHeader = authHeaders.FirstOrDefault();
-        if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        var initData = initDataHeaders.FirstOrDefault();
+        var telegramResult = _telegramAuthService.ValidateInitData(initData ?? string.Empty);
+        if (telegramResult == null)
         {
-            throw new UnauthorizedAccessException("Invalid Authorization header format");
+            throw new UnauthorizedAccessException("Invalid Telegram initData");
         }
 
-        var token = authHeader.Substring("Bearer ".Length).Trim();
+        var userRepository = context.InstanceServices.GetRequiredService<IPickemUserRepository>();
+        var user = await userRepository.UpsertByTelegramIdAsync(telegramResult.TelegramId, telegramResult.PhotoUrl);
 
-        // Validate JWT token
-        var principal = _jwtService.ValidateToken(token, out var validationError);
-        if (principal == null)
-        {
-            throw new UnauthorizedAccessException($"Invalid or expired token. {validationError ?? "Token validation returned null."}");
-        }
+        var isAdmin = _adminTelegramIds.Contains(telegramResult.TelegramId);
 
-        // Extract user ID from claims
-        var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier);
-        if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId))
-        {
-            throw new UnauthorizedAccessException("Invalid token claims");
-        }
-
-        // Load user from database
-        var userRepository = context.InstanceServices.GetService(typeof(IPickemUserRepository)) as IPickemUserRepository;
-        var user = await userRepository!.GetByIdAsync(userId);
-        if (user == null)
-        {
-            throw new UnauthorizedAccessException("User not found");
-        }
-
-        // Check admin status
-        var isAdmin = _adminTelegramIds.Contains(user.TelegramId);
-
-        // Set user context
-        var userContext = context.InstanceServices.GetService(typeof(IUserContext)) as IUserContext;
-        if (userContext != null)
-        {
-            userContext.Set(user, isAdmin);
-        }
-        else
-        {
-            _logger.LogWarning("IUserContext not found in service provider");
-        }
+        SetUserContext(context, user, isAdmin);
 
         await next(context);
     }
+
+    private void SetUserContext(FunctionContext context, Models.Domain.PickemUser user, bool isAdmin)
+    {
+        var userContext = context.InstanceServices.GetService<IUserContext>();
+        if (userContext == null)
+        {
+            _logger.LogWarning("IUserContext not found in service provider");
+            return;
+        }
+
+        userContext.Set(user, isAdmin);
+    }
+
+#if DEBUG
+    private async Task AuthenticateDevUserAsync(FunctionContext context)
+    {
+        var userRepository = context.InstanceServices.GetRequiredService<IPickemUserRepository>();
+        var user = await userRepository.UpsertByTelegramIdAsync(DevTelegramId, null);
+        var isAdmin = _adminTelegramIds.Contains(DevTelegramId);
+
+        SetUserContext(context, user, isAdmin);
+    }
+#endif
 }
 
 public class UnauthorizedAccessException : Exception

@@ -13,22 +13,13 @@ import {
 } from '../types';
 import { isDemoMode } from '../mocks/demo-mode';
 import { demoUser, demoTournament, demoTournaments, demoMatchInfos, demoMatches, demoPredictionsMap, demoLeaderboard, demoStats } from '../mocks/demo-data';
+import { getInitData } from './telegram';
 
 // Browser runtime base: where the browser should send API requests.
 const API_BASE_URL = import.meta.env.VITE_BROWSER_API_BASE_URL || '/api';
 // Browser runtime base: where the browser should send blob requests.
 const BLOB_BASE_URL = import.meta.env.VITE_BROWSER_BLOB_BASE_URL || '/blob';
-
-let authToken: string | null = sessionStorage.getItem('pickem_auth_token');
-
-export function setAuthToken(token: string): void {
-  authToken = token;
-  sessionStorage.setItem('pickem_auth_token', token);
-}
-
-export function getAuthToken(): string | null {
-  return authToken;
-}
+const isDevAuth = import.meta.env.VITE_DEV_AUTH === 'true';
 
 async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {
@@ -36,8 +27,13 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
     ...(options.headers as Record<string, string> || {}),
   };
 
-  if (authToken) {
-    headers['Authorization'] = `Bearer ${authToken}`;
+  if (isDevAuth) {
+    headers['X-Dev-Auth'] = 'true';
+  } else {
+    const initData = getInitData();
+    if (initData) {
+      headers['X-Telegram-Init-Data'] = initData;
+    }
   }
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -58,7 +54,7 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
 
 // Auth
 export async function authenticateTelegram(initData: string): Promise<AuthResponse> {
-  if (isDemoMode) return { token: 'demo-token', user: demoUser };
+  if (isDemoMode) return { user: demoUser };
   return apiFetch('/auth/telegram', {
     method: 'POST',
     body: JSON.stringify({ initData }),
@@ -76,7 +72,7 @@ export async function getProfile(): Promise<UserProfile> {
 }
 
 export async function updateNickname(gameNickname: string): Promise<AuthResponse> {
-  if (isDemoMode) return { token: 'demo-token', user: { ...demoUser, gameNickname } };
+  if (isDemoMode) return { user: { ...demoUser, gameNickname } };
   return apiFetch('/me/nickname', {
     method: 'POST',
     body: JSON.stringify({ gameNickname }),

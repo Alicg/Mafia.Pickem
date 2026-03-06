@@ -14,20 +14,17 @@ public class ProfileFunction
 {
     private readonly IUserContext _userContext;
     private readonly INicknameService _nicknameService;
-    private readonly IJwtService _jwtService;
     private readonly IPickemUserRepository _userRepository;
     private readonly ILogger<ProfileFunction> _logger;
 
     public ProfileFunction(
         IUserContext userContext,
         INicknameService nicknameService,
-        IJwtService jwtService,
         IPickemUserRepository userRepository,
         ILogger<ProfileFunction>? logger = null)
     {
         _userContext = userContext;
         _nicknameService = nicknameService;
-        _jwtService = jwtService;
         _userRepository = userRepository;
         _logger = logger ?? null!;
     }
@@ -121,13 +118,8 @@ public class ProfileFunction
             throw new InvalidOperationException("User not found after update");
         }
 
-        // Generate new JWT token with updated nickname
-        var token = _jwtService.GenerateToken(updatedUser, _userContext.IsAdmin);
-
-        // Return auth response with new token
         return new AuthResponse
         {
-            Token = token,
             User = new UserProfileResponse
             {
                 Id = updatedUser.Id,

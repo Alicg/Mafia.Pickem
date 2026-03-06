@@ -40,7 +40,6 @@ var host = new HostBuilder()
         // Services
         services.AddHttpClient();
         services.AddSingleton<ITelegramAuthService, TelegramAuthService>();
-        services.AddSingleton<IJwtService, JwtService>();
         services.AddSingleton<ITelegramWebhookValidator, TelegramWebhookValidator>();
         services.AddHostedService<TelegramWebhookRegistrationService>();
         services.AddSingleton<IMatchStateBlobWriter, MatchStateBlobWriter>();

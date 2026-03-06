@@ -14,7 +14,6 @@ public class AuthFunctionTests
 {
     private readonly Mock<ITelegramAuthService> _telegramAuthMock;
     private readonly Mock<IPickemUserRepository> _repositoryMock;
-    private readonly Mock<IJwtService> _jwtServiceMock;
     private readonly IConfiguration _configuration;
     private readonly AuthFunction _function;
 
@@ -22,7 +21,6 @@ public class AuthFunctionTests
     {
         _telegramAuthMock = new Mock<ITelegramAuthService>();
         _repositoryMock = new Mock<IPickemUserRepository>();
-        _jwtServiceMock = new Mock<IJwtService>();
 
         var configValues = new Dictionary<string, string>
         {
@@ -35,7 +33,6 @@ public class AuthFunctionTests
         _function = new AuthFunction(
             _telegramAuthMock.Object,
             _repositoryMock.Object,
-            _jwtServiceMock.Object,
             _configuration
         );
     }
@@ -60,21 +57,17 @@ public class AuthFunctionTests
             GameNickname = "_unregistered_12345",
             PhotoUrl = "https://example.com/photo.jpg"
         };
-        var token = "jwt_token_here";
 
         _telegramAuthMock.Setup(x => x.ValidateInitData(request.InitData))
             .Returns(telegramResult);
         _repositoryMock.Setup(x => x.UpsertByTelegramIdAsync(12345, "https://example.com/photo.jpg"))
             .ReturnsAsync(user);
-        _jwtServiceMock.Setup(x => x.GenerateToken(user, false))
-            .Returns(token);
 
         // Act
         var result = await _function.AuthenticateTelegram(request);
 
         // Assert
         result.Should().NotBeNull();
-        result.Token.Should().Be(token);
         result.User.Should().NotBeNull();
         result.User.Id.Should().Be(1);
         result.User.TelegramId.Should().Be(12345);
@@ -99,21 +92,17 @@ public class AuthFunctionTests
             TelegramId = 111,
             GameNickname = "_unregistered_111"
         };
-        var token = "admin_jwt_token";
 
         _telegramAuthMock.Setup(x => x.ValidateInitData(request.InitData))
             .Returns(telegramResult);
         _repositoryMock.Setup(x => x.UpsertByTelegramIdAsync(111, null))
             .ReturnsAsync(user);
-        _jwtServiceMock.Setup(x => x.GenerateToken(user, true))
-            .Returns(token);
 
         // Act
         var result = await _function.AuthenticateTelegram(request);
 
         // Assert
         result.User.IsAdmin.Should().BeTrue();
-        _jwtServiceMock.Verify(x => x.GenerateToken(user, true), Times.Once);
     }
 
     [Fact]
@@ -133,14 +122,11 @@ public class AuthFunctionTests
             GameNickname = "JaneDoe", // Registered nickname
             PhotoUrl = null
         };
-        var token = "jwt_token_registered";
 
         _telegramAuthMock.Setup(x => x.ValidateInitData(request.InitData))
             .Returns(telegramResult);
         _repositoryMock.Setup(x => x.UpsertByTelegramIdAsync(54321, null))
             .ReturnsAsync(user);
-        _jwtServiceMock.Setup(x => x.GenerateToken(user, false))
-            .Returns(token);
 
         // Act
         var result = await _function.AuthenticateTelegram(request);
@@ -179,7 +165,6 @@ public class AuthFunctionTests
         var function = new AuthFunction(
             _telegramAuthMock.Object,
             _repositoryMock.Object,
-            _jwtServiceMock.Object,
             config
         );
 
@@ -191,14 +176,11 @@ public class AuthFunctionTests
             TelegramId = 12345,
             GameNickname = "_unregistered_12345"
         };
-        var token = "jwt_token";
 
         _telegramAuthMock.Setup(x => x.ValidateInitData(request.InitData))
             .Returns(telegramResult);
         _repositoryMock.Setup(x => x.UpsertByTelegramIdAsync(12345, null))
             .ReturnsAsync(user);
-        _jwtServiceMock.Setup(x => x.GenerateToken(user, false))
-            .Returns(token);
 
         // Act
         var result = await function.AuthenticateTelegram(request);

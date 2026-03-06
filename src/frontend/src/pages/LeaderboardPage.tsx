@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './LeaderboardPage.css';
 import { LeaderboardResponse, LeaderboardEntryDto } from '../types';
-import { getLeaderboard } from '../lib/api';
+import { getLeaderboard, getProfile } from '../lib/api';
 import { hapticFeedback } from '../lib/telegram';
 
 interface LeaderboardPageProps {
@@ -59,24 +59,16 @@ export const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ tournamentId, 
   }, [tournamentId]);
 
   useEffect(() => {
-    try {
-      const token = sessionStorage.getItem('pickem_auth_token');
-      if (!token) return;
-
-      const payloadBase64 = token.split('.')[1];
-      if (!payloadBase64) return;
-
-      const normalized = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
-      const padded = normalized.padEnd(normalized.length + ((4 - normalized.length % 4) % 4), '=');
-      const payload = JSON.parse(window.atob(padded));
-      const rawId = payload.sub ?? payload.nameid ?? payload.userId;
-      const parsedId = Number(rawId);
-      if (!Number.isNaN(parsedId) && parsedId > 0) {
-        setCurrentUserId(parsedId);
+    async function fetchCurrentUser() {
+      try {
+        const profile = await getProfile();
+        setCurrentUserId(profile.id);
+      } catch (err) {
+        console.warn('Failed to fetch current user for leaderboard', err);
       }
-    } catch (err) {
-      console.warn('Failed to parse current user from auth token', err);
     }
+
+    fetchCurrentUser();
   }, []);
 
   const handleBack = () => {

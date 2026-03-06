@@ -14,7 +14,6 @@ public class ProfileFunctionTests
 {
     private readonly Mock<IUserContext> _userContextMock;
     private readonly Mock<INicknameService> _nicknameServiceMock;
-    private readonly Mock<IJwtService> _jwtServiceMock;
     private readonly Mock<IPickemUserRepository> _repositoryMock;
     private readonly ProfileFunction _function;
 
@@ -22,13 +21,11 @@ public class ProfileFunctionTests
     {
         _userContextMock = new Mock<IUserContext>();
         _nicknameServiceMock = new Mock<INicknameService>();
-        _jwtServiceMock = new Mock<IJwtService>();
         _repositoryMock = new Mock<IPickemUserRepository>();
 
         _function = new ProfileFunction(
             _userContextMock.Object,
             _nicknameServiceMock.Object,
-            _jwtServiceMock.Object,
             _repositoryMock.Object
         );
     }
@@ -91,7 +88,7 @@ public class ProfileFunctionTests
     }
 
     [Fact]
-    public async Task UpdateNickname_WithValidNickname_ShouldReturnAuthResponseWithNewToken()
+    public async Task UpdateNickname_WithValidNickname_ShouldReturnUpdatedUser()
     {
         // Arrange
         var request = new UpdateNicknameRequest { GameNickname = "NewNickname" };
@@ -103,7 +100,6 @@ public class ProfileFunctionTests
             GameNickname = "NewNickname",
             PhotoUrl = "https://example.com/photo.jpg"
         };
-        var newToken = "new_jwt_token";
 
         _userContextMock.Setup(x => x.UserId).Returns(userId);
         _userContextMock.Setup(x => x.IsAdmin).Returns(false);
@@ -111,15 +107,12 @@ public class ProfileFunctionTests
             .ReturnsAsync(NicknameValidationResult.Success());
         _repositoryMock.Setup(x => x.GetByIdAsync(userId))
             .ReturnsAsync(updatedUser);
-        _jwtServiceMock.Setup(x => x.GenerateToken(updatedUser, false))
-            .Returns(newToken);
 
         // Act
         var result = await _function.UpdateNickname(request);
 
         // Assert
         result.Should().NotBeNull();
-        result.Token.Should().Be(newToken);
         result.User.GameNickname.Should().Be("NewNickname");
         result.User.IsRegistered.Should().BeTrue();
     }
@@ -159,7 +152,7 @@ public class ProfileFunctionTests
     }
 
     [Fact]
-    public async Task UpdateNickname_WithAdminUser_ShouldGenerateTokenWithAdminFlag()
+    public async Task UpdateNickname_WithAdminUser_ShouldPreserveAdminFlag()
     {
         // Arrange
         var request = new UpdateNicknameRequest { GameNickname = "AdminNick" };
@@ -170,7 +163,6 @@ public class ProfileFunctionTests
             TelegramId = 111,
             GameNickname = "AdminNick"
         };
-        var newToken = "admin_jwt_token";
 
         _userContextMock.Setup(x => x.UserId).Returns(userId);
         _userContextMock.Setup(x => x.IsAdmin).Returns(true);
@@ -178,14 +170,11 @@ public class ProfileFunctionTests
             .ReturnsAsync(NicknameValidationResult.Success());
         _repositoryMock.Setup(x => x.GetByIdAsync(userId))
             .ReturnsAsync(updatedUser);
-        _jwtServiceMock.Setup(x => x.GenerateToken(updatedUser, true))
-            .Returns(newToken);
 
         // Act
         var result = await _function.UpdateNickname(request);
 
         // Assert
-        result.Token.Should().Be(newToken);
-        _jwtServiceMock.Verify(x => x.GenerateToken(updatedUser, true), Times.Once);
+        result.User.IsAdmin.Should().BeTrue();
     }
 }

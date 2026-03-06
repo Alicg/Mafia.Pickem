@@ -5,8 +5,6 @@ var sqlConnectionString = GetConfigValue(
     "Server=localhost;Database=MafiaPickem;Trusted_Connection=True;TrustServerCertificate=True;");
 var blobStorageConnectionString = GetConfigValue("BlobStorageConnectionString", "UseDevelopmentStorage=true");
 var blobContainerName = GetConfigValue("BlobContainerName", "match-states");
-var jwtSecret = GetConfigValue("JwtSecret", "your-local-dev-jwt-secret-at-least-32-characters-long");
-var jwtIssuer = GetConfigValue("JwtIssuer", "MafiaPickem");
 var pickemAdminTelegramIds = GetConfigValue("PickemAdminTelegramIds", "999999999");
 var telegramBotToken = GetConfigValue("TelegramBotToken", "YOUR_BOT_TOKEN_HERE");
 var telegramWebhookSecretToken = GetConfigValue("TelegramWebhookSecretToken", "your-webhook-secret-token-here");
@@ -24,8 +22,6 @@ var backend = builder.AddExecutable("backend", "npx", "../MafiaPickem.Api", "fun
     .WithEnvironment("SqlConnectionString", sqlConnectionString)
     .WithEnvironment("BlobStorageConnectionString", blobStorageConnectionString)
     .WithEnvironment("BlobContainerName", blobContainerName)
-    .WithEnvironment("JwtSecret", jwtSecret)
-    .WithEnvironment("JwtIssuer", jwtIssuer)
     .WithEnvironment("PickemAdminTelegramIds", pickemAdminTelegramIds)
     .WithEnvironment("TelegramBotToken", telegramBotToken)
     .WithEnvironment("TelegramWebhookSecretToken", telegramWebhookSecretToken)

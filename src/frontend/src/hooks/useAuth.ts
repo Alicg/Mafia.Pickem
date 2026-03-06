@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { authenticateTelegram, devAuthenticate, setAuthToken, getProfile } from '../lib/api';
+import { getProfile } from '../lib/api';
 import { getInitData, expandApp } from '../lib/telegram';
 
 const isDevAuth = import.meta.env.VITE_DEV_AUTH === 'true';
@@ -64,11 +64,7 @@ export function useAuth() {
       expandApp(); // Start expanded
       
       try {
-        let response;
-        if (isDevAuth) {
-          // Dev mode: bypass Telegram, authenticate directly
-          response = await devAuthenticate();
-        } else {
+        if (!isDevAuth) {
           const initData = getInitData();
           if (!initData) {
             setState({
@@ -79,12 +75,11 @@ export function useAuth() {
             });
             return;
           }
-          response = await authenticateTelegram(initData);
         }
-        setAuthToken(response.token);
+        const user = await getProfile();
         
         setState({
-          user: response.user,
+          user,
           isLoading: false,
           error: null,
           isAuthenticated: true,

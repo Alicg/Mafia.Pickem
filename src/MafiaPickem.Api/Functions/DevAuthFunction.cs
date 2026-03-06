@@ -17,7 +17,6 @@ namespace MafiaPickem.Api.Functions;
 public class DevAuthFunction
 {
     private readonly IPickemUserRepository _userRepository;
-    private readonly IJwtService _jwtService;
     private readonly IConfiguration _configuration;
     private readonly ILogger<DevAuthFunction> _logger;
 
@@ -25,12 +24,10 @@ public class DevAuthFunction
 
     public DevAuthFunction(
         IPickemUserRepository userRepository,
-        IJwtService jwtService,
         IConfiguration configuration,
         ILogger<DevAuthFunction> logger)
     {
         _userRepository = userRepository;
-        _jwtService = jwtService;
         _configuration = configuration;
         _logger = logger;
     }
@@ -52,11 +49,8 @@ public class DevAuthFunction
         var user = await _userRepository.UpsertByTelegramIdAsync(DevTelegramId, null);
         var isAdmin = adminTelegramIds.Contains(DevTelegramId);
 
-        var token = _jwtService.GenerateToken(user, isAdmin);
-
         var result = new AuthResponse
         {
-            Token = token,
             User = new UserProfileResponse
             {
                 Id = user.Id,
