@@ -4,8 +4,8 @@ namespace MafiaPickem.Api.Bot;
 
 public sealed class TelegramBotOptions
 {
-    public const string DefaultMiniAppButtonText = "Open Mafia Pick'em";
-    public const string DefaultMiniAppPromptText = "Tap the button below to open Mafia Pick'em.";
+    public const string DefaultMiniAppButtonText = "Угадайка";
+    public const string DefaultMiniAppPromptText = "Нажмите кнопку ниже, чтобы открыть приложение.";
 
     public string? BotToken { get; init; }
     public string? WebhookUrl { get; init; }
