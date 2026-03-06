@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { updateNickname } from '../lib/api';
+import { setAuthToken, updateNickname } from '../lib/api';
 import { hapticFeedback } from '../lib/telegram';
 import '../App.css';
 
@@ -34,7 +34,8 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
     try {
       setIsSubmitting(true);
       hapticFeedback('medium');
-      await updateNickname(nickname);
+      const response = await updateNickname(nickname);
+      setAuthToken(response.token);
       hapticFeedback('light'); // Success
       onSuccess();
     } catch (err: any) {
