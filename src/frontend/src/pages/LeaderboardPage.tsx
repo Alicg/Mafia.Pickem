@@ -9,14 +9,14 @@ interface LeaderboardPageProps {
   onBack: () => void;
 }
 
-const LeaderboardRow: React.FC<{ entry: LeaderboardEntryDto; isSticky?: boolean }> = ({ entry, isSticky }) => {
+const LeaderboardRow: React.FC<{ entry: LeaderboardEntryDto; isCurrentUser: boolean }> = ({ entry, isCurrentUser }) => {
   let rankDisplay: React.ReactNode = entry.rank;
   if (entry.rank === 1) rankDisplay = '🥇';
   if (entry.rank === 2) rankDisplay = '🥈';
   if (entry.rank === 3) rankDisplay = '🥉';
 
   return (
-    <div className={`leaderboard-row ${entry.isCurrentUser ? 'current-user' : ''} ${isSticky ? 'sticky-inner' : ''}`}>
+    <div className={`leaderboard-row ${isCurrentUser ? 'current-user' : ''}`}>
       <span className="rank-col">{rankDisplay}</span>
       <div className="player-col">
           <div className="avatar-placeholder">
@@ -28,7 +28,7 @@ const LeaderboardRow: React.FC<{ entry: LeaderboardEntryDto; isSticky?: boolean 
           </div>
           <div className="player-info">
              <span className="player-name">{entry.displayName}</span>
-             {isSticky && <span className="you-badge">(Вы)</span>}
+             {isCurrentUser && <span className="you-badge">(Вы)</span>}
           </div>
       </div>
       <span className="points-col">{entry.totalPoints}</span>
@@ -40,6 +40,7 @@ export const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ tournamentId, 
   const [data, setData] = useState<LeaderboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchLeaderboard() {
@@ -56,6 +57,27 @@ export const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ tournamentId, 
     }
     fetchLeaderboard();
   }, [tournamentId]);
+
+  useEffect(() => {
+    try {
+      const token = sessionStorage.getItem('pickem_auth_token');
+      if (!token) return;
+
+      const payloadBase64 = token.split('.')[1];
+      if (!payloadBase64) return;
+
+      const normalized = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = normalized.padEnd(normalized.length + ((4 - normalized.length % 4) % 4), '=');
+      const payload = JSON.parse(window.atob(padded));
+      const rawId = payload.sub ?? payload.nameid ?? payload.userId;
+      const parsedId = Number(rawId);
+      if (!Number.isNaN(parsedId) && parsedId > 0) {
+        setCurrentUserId(parsedId);
+      }
+    } catch (err) {
+      console.warn('Failed to parse current user from auth token', err);
+    }
+  }, []);
 
   const handleBack = () => {
     hapticFeedback('selection');
@@ -79,9 +101,6 @@ export const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ tournamentId, 
     );
   }
 
-  // Check if current user is in top list (visible)
-  const isUserInList = data.currentUser && data.entries.some(e => e.isCurrentUser);
-
   return (
     <div className="leaderboard-page">
       <div className="leaderboard-header">
@@ -100,24 +119,14 @@ export const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ tournamentId, 
           
           <div className="leaderboard-scroll-area">
             {data.entries.map((entry) => (
-              <LeaderboardRow key={entry.rank} entry={entry} />
+              <LeaderboardRow key={entry.rank} entry={entry} isCurrentUser={entry.userId === currentUserId} />
             ))}
             
             {data.entries.length === 0 && (
                 <div className="empty-state">Пока нет результатов</div>
             )}
-            
-            {/* Spacer for sticky footer */}
-            {data.currentUser && !isUserInList && <div style={{ height: '60px' }}></div>}
           </div>
       </div>
-
-      {/* Sticky footer for current user if not in list */}
-      {data.currentUser && !isUserInList && (
-        <div className="sticky-user-row">
-           <LeaderboardRow entry={data.currentUser} isSticky />
-        </div>
-      )}
     </div>
   );
 };

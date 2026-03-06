@@ -16,7 +16,7 @@ interface MatchStateControlsProps {
   currentState: MatchState;
   onRefresh: () => void;
   onResolve: () => void; // Callback to open resolve modal
-  onRefetchState: () => Promise<void>;
+  onRefetchState?: () => Promise<void>;
 }
 
 export const MatchStateControls: React.FC<MatchStateControlsProps> = ({ matchId, currentState, onRefresh, onResolve, onRefetchState }) => {
@@ -33,7 +33,9 @@ export const MatchStateControls: React.FC<MatchStateControlsProps> = ({ matchId,
     try {
       await action();
       hapticFeedback('success');
-      await onRefetchState();
+      if (onRefetchState) {
+        await onRefetchState();
+      }
       onRefresh();
     } catch (error) {
       console.error('Action failed', error);
