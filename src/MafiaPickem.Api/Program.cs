@@ -7,6 +7,7 @@ using MafiaPickem.Api.Services;
 using MafiaPickem.Api.State;
 using MafiaPickem.ServiceDefaults;
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -39,7 +40,9 @@ var host = new HostBuilder()
 
         // Services
         services.AddHttpClient();
+        services.AddSingleton(sp => TelegramBotOptions.Create(sp.GetRequiredService<IConfiguration>()));
         services.AddSingleton<ITelegramAuthService, TelegramAuthService>();
+        services.AddSingleton<ITelegramBotClient, TelegramBotClient>();
         services.AddSingleton<ITelegramWebhookValidator, TelegramWebhookValidator>();
         services.AddHostedService<TelegramWebhookRegistrationService>();
         services.AddSingleton<IMatchStateBlobWriter, MatchStateBlobWriter>();

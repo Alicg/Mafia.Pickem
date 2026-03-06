@@ -24,3 +24,5 @@ artifacts/
 # Vite env: local overrides not committed to repo
 .env.local
 src/frontend/.env.local
+plan/
+plans/

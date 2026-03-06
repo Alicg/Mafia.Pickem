@@ -11,19 +11,23 @@ namespace MafiaPickem.Api.Functions;
 public class BotWebhookFunction
 {
     private readonly ITelegramWebhookValidator _webhookValidator;
+    private readonly ITelegramBotClient _telegramBotClient;
     private readonly ILogger<BotWebhookFunction> _logger;
 
     public BotWebhookFunction(
         ITelegramWebhookValidator webhookValidator,
+        ITelegramBotClient telegramBotClient,
         ILogger<BotWebhookFunction>? logger = null)
     {
         _webhookValidator = webhookValidator;
+        _telegramBotClient = telegramBotClient;
         _logger = logger ?? null!;
     }
 
     [Function("BotWebhook")]
     public async Task<HttpResponseData> HandleWebhook(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "bot/webhook")] HttpRequestData req)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "bot/webhook")] HttpRequestData req,
+        CancellationToken cancellationToken)
     {
         // 1. Read the secret token header
         var secretToken = req.Headers.GetValues("X-Telegram-Bot-Api-Secret-Token").FirstOrDefault();
@@ -48,11 +52,17 @@ public class BotWebhookFunction
             
             _logger?.LogInformation("Received Telegram webhook update: {Update}", body);
 
-            // Parse to validate JSON structure (optional, but good practice)
+            long? privateChatId = null;
+
             if (!string.IsNullOrEmpty(body))
             {
                 using var jsonDoc = JsonDocument.Parse(body);
-                // Just validate it's valid JSON - actual processing will be implemented later
+                privateChatId = TryGetPrivateChatId(jsonDoc.RootElement);
+            }
+
+            if (privateChatId.HasValue)
+            {
+                await _telegramBotClient.SendMiniAppPromptAsync(privateChatId.Value, cancellationToken);
             }
 
             // 4. Return 200 OK
@@ -74,5 +84,37 @@ public class BotWebhookFunction
             await errorResponse.WriteStringAsync("Internal server error");
             return errorResponse;
         }
+    }
+
+    private static long? TryGetPrivateChatId(JsonElement root)
+    {
+        if (!TryGetMessage(root, out var message) ||
+            !message.TryGetProperty("chat", out var chat) ||
+            !chat.TryGetProperty("id", out var chatIdElement) ||
+            !chatIdElement.TryGetInt64(out var chatId) ||
+            !chat.TryGetProperty("type", out var chatTypeElement))
+        {
+            return null;
+        }
+
+        return string.Equals(chatTypeElement.GetString(), "private", StringComparison.OrdinalIgnoreCase)
+            ? chatId
+            : null;
+    }
+
+    private static bool TryGetMessage(JsonElement root, out JsonElement message)
+    {
+        if (root.TryGetProperty("message", out message))
+        {
+            return true;
+        }
+
+        if (root.TryGetProperty("edited_message", out message))
+        {
+            return true;
+        }
+
+        message = default;
+        return false;
     }
 }

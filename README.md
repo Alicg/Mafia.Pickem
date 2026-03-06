@@ -57,6 +57,8 @@ dotnet user-secrets set --project src/MafiaPickem.AppHost JwtIssuer "MafiaPickem
 dotnet user-secrets set --project src/MafiaPickem.AppHost PickemAdminTelegramIds "999999999"
 dotnet user-secrets set --project src/MafiaPickem.AppHost TelegramBotToken "YOUR_BOT_TOKEN_HERE"
 dotnet user-secrets set --project src/MafiaPickem.AppHost TelegramWebhookSecretToken "your-webhook-secret-token-here"
+dotnet user-secrets set --project src/MafiaPickem.AppHost TelegramWebhookUrl "https://pickem.markery.online/api/bot/webhook"
+dotnet user-secrets set --project src/MafiaPickem.AppHost TelegramMiniAppUrl "https://pickem.markery.online"
 ```
 
 Прокси-переменные для frontend (опционально, у них есть дефолты):

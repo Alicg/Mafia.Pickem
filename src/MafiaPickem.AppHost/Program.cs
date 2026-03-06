@@ -8,6 +8,8 @@ var blobContainerName = GetConfigValue("BlobContainerName", "match-states");
 var pickemAdminTelegramIds = GetConfigValue("PickemAdminTelegramIds", "999999999");
 var telegramBotToken = GetConfigValue("TelegramBotToken", "YOUR_BOT_TOKEN_HERE");
 var telegramWebhookSecretToken = GetConfigValue("TelegramWebhookSecretToken", "your-webhook-secret-token-here");
+var telegramWebhookUrl = GetConfigValue("TelegramWebhookUrl", "https://pickem.markery.online/api/bot/webhook");
+var telegramMiniAppUrl = GetConfigValue("TelegramMiniAppUrl", "https://pickem.markery.online");
 
 var frontendApiProxyTarget = GetConfigValue("VITE_DEV_PROXY_API_TARGET", "http://localhost:7071");
 var frontendBlobProxyTarget = GetConfigValue("VITE_DEV_PROXY_BLOB_TARGET", "http://127.0.0.1:10000");
@@ -25,6 +27,8 @@ var backend = builder.AddExecutable("backend", "npx", "../MafiaPickem.Api", "fun
     .WithEnvironment("PickemAdminTelegramIds", pickemAdminTelegramIds)
     .WithEnvironment("TelegramBotToken", telegramBotToken)
     .WithEnvironment("TelegramWebhookSecretToken", telegramWebhookSecretToken)
+    .WithEnvironment("TelegramWebhookUrl", telegramWebhookUrl)
+    .WithEnvironment("TelegramMiniAppUrl", telegramMiniAppUrl)
     .WaitFor(azurite);
 
 // 3. Frontend - Vite dev server
