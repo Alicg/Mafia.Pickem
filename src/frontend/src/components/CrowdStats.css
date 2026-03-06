@@ -44,7 +44,7 @@
 .winner-label-right {
   font-size: 12px;
   font-weight: 700;
-  color: var(--tg-theme-text-color, #fff);
+  color: var(--pm-text-primary);
 }
 
 .winner-label-left {

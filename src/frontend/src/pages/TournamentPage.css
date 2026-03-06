@@ -54,7 +54,7 @@
   font-size: 18px;
   font-weight: 800;
   margin: 0;
-  color: var(--tg-theme-text-color);
+  color: var(--pm-text-primary);
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -144,7 +144,7 @@
 .admin-stat-value {
   font-size: 18px;
   font-weight: 800;
-  color: var(--tg-theme-text-color);
+  color: var(--pm-text-primary);
   line-height: 1.1;
 }
 

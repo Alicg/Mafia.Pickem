@@ -16,7 +16,7 @@
   font-size: 26px;
   font-weight: 800;
   margin: 0 0 4px;
-  color: var(--tg-theme-text-color);
+  color: var(--pm-text-primary);
   letter-spacing: -0.03em;
 }
 
@@ -84,7 +84,7 @@
 .tournament-card-name {
   font-size: 18px;
   font-weight: 700;
-  color: var(--tg-theme-text-color);
+  color: var(--pm-text-primary);
   margin-bottom: 6px;
   letter-spacing: 0;
 }

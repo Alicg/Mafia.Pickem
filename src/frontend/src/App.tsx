@@ -18,7 +18,7 @@ function App() {
   if (error) {
     return (
       <div className="center-container">
-        <div style={{ color: 'var(--tg-theme-text-color)', textAlign: 'center' }}>
+        <div style={{ color: 'var(--pm-text-primary)', textAlign: 'center' }}>
           <h3>Ошибка</h3>
           <p>{error}</p>
           <button 

@@ -10,7 +10,7 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
   -moz-osx-font-smoothing: grayscale;
   background: var(--tg-theme-bg-gradient);
-  color: var(--tg-theme-text-color);
+  color: var(--pm-text-primary);
   line-height: 1.5;
   width: 100vw;
   height: 100vh;
@@ -109,7 +109,7 @@ body {
 h1 {
   font-size: 1.6rem;
   margin-bottom: 0.75rem;
-  color: var(--tg-theme-text-color);
+  color: var(--pm-text-primary);
   letter-spacing: -0.02em;
   font-weight: 800;
 }
@@ -142,7 +142,7 @@ input[type="text"] {
   border: 1px solid var(--pm-divider);
   border-radius: 12px;
   background-color: var(--pm-card-bg);
-  color: var(--tg-theme-text-color);
+  color: var(--pm-text-primary);
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
 }

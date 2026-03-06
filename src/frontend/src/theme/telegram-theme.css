@@ -4,6 +4,7 @@
   --tg-theme-bg-gradient: linear-gradient(180deg, #0a0e27 0%, #131840 50%, #0d1333 100%);
   --tg-theme-text-color: #f7fbff;
   --tg-theme-hint-color: #a9c8f7;
+  --pm-text-primary: #f7fbff;
   --tg-theme-link-color: #7eb4ff;
   --tg-theme-button-color: #4f7cff;
   --tg-theme-button-text-color: #ffffff;
@@ -34,6 +35,6 @@
 
 body {
   background: var(--tg-theme-bg-gradient);
-  color: var(--tg-theme-text-color);
+  color: var(--pm-text-primary);
   min-height: 100vh;
 }
