@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using MafiaPickem.Api.Data;
+using Microsoft.Data.SqlClient;
 
 namespace MafiaPickem.Api.Services;
 
@@ -9,6 +10,8 @@ public partial class NicknameService : INicknameService
 
     private const int MinLength = 2;
     private const int MaxLength = 30;
+    private const int DuplicateKeyErrorNumber = 2601;
+    private const int UniqueConstraintViolationErrorNumber = 2627;
 
     [GeneratedRegex(@"^[a-zA-Z0-9 _-]+$")]
     private static partial Regex NicknameRegex();
@@ -48,7 +51,14 @@ public partial class NicknameService : INicknameService
         }
 
         // Save nickname
-        await _userRepository.UpdateNicknameAsync(userId, nickname);
+        try
+        {
+            await _userRepository.UpdateNicknameAsync(userId, nickname);
+        }
+        catch (SqlException ex) when (ex.Number is DuplicateKeyErrorNumber or UniqueConstraintViolationErrorNumber)
+        {
+            return NicknameValidationResult.Fail("This nickname is already taken.");
+        }
 
         return NicknameValidationResult.Success();
     }

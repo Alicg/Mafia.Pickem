@@ -39,7 +39,10 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
       onSuccess();
     } catch (err: any) {
       console.error(err);
-      setError('Ошибка регистрации. Возможно, ник занят.');
+      const message = err instanceof Error && err.message
+        ? err.message
+        : 'Ошибка регистрации. Возможно, ник занят.';
+      setError(message);
       hapticFeedback('heavy'); // Error
     } finally {
       setIsSubmitting(false);
