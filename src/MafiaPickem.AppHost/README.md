@@ -37,10 +37,10 @@ The services start in this order:
 ## Endpoints
 
 - **Aspire Dashboard**: http://localhost:15000
-- **Azurite Blob**: http://localhost:10000
-- **Azurite Queue**: http://localhost:10001
-- **Azurite Table**: http://localhost:10002
-- **Backend API**: http://localhost:7071
+- **Azurite Blob**: http://127.0.0.1:10000
+- **Azurite Queue**: http://127.0.0.1:10001
+- **Azurite Table**: http://127.0.0.1:10002
+- **Backend API**: http://localhost:7071/api/
 - **Frontend**: http://localhost:5173
 
 ## Requirements
@@ -49,8 +49,24 @@ The services start in this order:
 - Node.js and npm
 - Azure Functions Core Tools v4 (`npx func start` must be available)
 
+## User-Secrets
+
+AppHost supports configuration from user-secrets. Example:
+
+```bash
+dotnet user-secrets set --project src/MafiaPickem.AppHost SqlConnectionString "Server=localhost;Database=MafiaPickem;Trusted_Connection=True;TrustServerCertificate=True;"
+dotnet user-secrets set --project src/MafiaPickem.AppHost TelegramBotToken "YOUR_BOT_TOKEN_HERE"
+```
+
+You can list configured values with:
+
+```bash
+dotnet user-secrets list --project src/MafiaPickem.AppHost
+```
+
 ## Notes
 
 - All services are managed by Aspire and will be terminated when the AppHost stops
 - Logs and telemetry for all services are available in the Aspire dashboard
 - The AppHost automatically handles service lifecycle and health monitoring
+- If Azurite is not recognized globally, AppHost still uses `npx --yes azurite`

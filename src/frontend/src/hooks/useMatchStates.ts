@@ -3,7 +3,8 @@ import { BlobMatchState } from '../types';
 import { isDemoMode } from '../mocks/demo-mode';
 import { demoBlobStates } from '../mocks/demo-data';
 
-const VITE_BLOB_BASE_URL = import.meta.env.VITE_BLOB_BASE_URL || 'https://mafiapickem.blob.core.windows.net/match-state';
+// Browser runtime base: where the browser should send blob polling requests.
+const BROWSER_BLOB_BASE_URL = import.meta.env.VITE_BROWSER_BLOB_BASE_URL || '/blob';
 
 interface MatchPollEntry {
   matchId: number;
@@ -67,7 +68,7 @@ export function useMatchStates(matchIds: number[]): UseMatchStatesResult {
       const signalTimeout = setTimeout(() => controller.abort(), 5000);
 
       const response = await fetch(
-        `${VITE_BLOB_BASE_URL}/match-state-${matchId}.json?t=${Date.now()}`,
+        `${BROWSER_BLOB_BASE_URL}/match-state-${matchId}.json?t=${Date.now()}`,
         { signal: controller.signal }
       );
       clearTimeout(signalTimeout);
@@ -166,7 +167,7 @@ export function useMatchStates(matchIds: number[]): UseMatchStatesResult {
 
     try {
       const response = await fetch(
-        `${VITE_BLOB_BASE_URL}/match-state-${matchId}.json?t=${Date.now()}`
+        `${BROWSER_BLOB_BASE_URL}/match-state-${matchId}.json?t=${Date.now()}`
       );
       if (response.ok) {
         const data: BlobMatchState = await response.json();

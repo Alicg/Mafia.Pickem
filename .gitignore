@@ -20,3 +20,7 @@ AzuriteConfig
 __blobstorage__/
 *.png
 .vs/
+artifacts/
+# Vite env: local overrides not committed to repo
+.env.local
+src/frontend/.env.local

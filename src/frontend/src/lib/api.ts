@@ -14,7 +14,10 @@ import {
 import { isDemoMode } from '../mocks/demo-mode';
 import { demoUser, demoTournament, demoTournaments, demoMatchInfos, demoMatches, demoPredictionsMap, demoLeaderboard, demoStats } from '../mocks/demo-data';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+// Browser runtime base: where the browser should send API requests.
+const API_BASE_URL = import.meta.env.VITE_BROWSER_API_BASE_URL || '/api';
+// Browser runtime base: where the browser should send blob requests.
+const BLOB_BASE_URL = import.meta.env.VITE_BROWSER_BLOB_BASE_URL || '/blob';
 
 let authToken: string | null = sessionStorage.getItem('pickem_auth_token');
 
@@ -125,8 +128,7 @@ export async function deletePrediction(matchId: number): Promise<void> {
 
 export async function getLeaderboard(tournamentId: number): Promise<LeaderboardResponse> {
   if (isDemoMode) return demoLeaderboard;
-  const blobBaseUrl = import.meta.env.VITE_BLOB_BASE_URL || '/blob';
-  const res = await fetch(`${blobBaseUrl}/leaderboard-${tournamentId}.json?t=${Date.now()}`);
+  const res = await fetch(`${BLOB_BASE_URL}/leaderboard-${tournamentId}.json?t=${Date.now()}`);
   if (!res.ok) {
     if (res.status === 404) return { entries: [] };
     throw new Error(`Leaderboard fetch failed: ${res.status}`);

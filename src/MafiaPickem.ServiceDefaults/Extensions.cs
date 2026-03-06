@@ -1,5 +1,5 @@
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MafiaPickem.ServiceDefaults;
 
@@ -16,12 +16,14 @@ public static class Extensions
     /// </summary>
     public static IHostApplicationBuilder AddServiceDefaults(this IHostApplicationBuilder builder)
     {
-        // Placeholder for future service defaults configuration
-        // This will be expanded to include:
-        // - OpenTelemetry configuration
-        // - Health checks
-        // - Service discovery
-        // - Resilience policies
+        builder.Services.AddMafiaPickemServiceDefaults();
         return builder;
+    }
+
+    public static IServiceCollection AddMafiaPickemServiceDefaults(this IServiceCollection services)
+    {
+        // Minimum shared baseline for local observability and diagnostics.
+        services.AddHealthChecks();
+        return services;
     }
 }

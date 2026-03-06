@@ -5,6 +5,7 @@
     <OutputType>Exe</OutputType>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <UserSecretsId>mafiapickem-apphost-5d4ad117-bf20-4eb1-8f6d-c6f6533dcfc7</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

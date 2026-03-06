@@ -5,6 +5,7 @@ using MafiaPickem.Api.Bot;
 using MafiaPickem.Api.Data;
 using MafiaPickem.Api.Services;
 using MafiaPickem.Api.State;
+using MafiaPickem.ServiceDefaults;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -17,6 +18,8 @@ var host = new HostBuilder()
     })
     .ConfigureServices(services =>
     {
+        services.AddMafiaPickemServiceDefaults();
+
         services.Configure<WorkerOptions>(options =>
         {
             options.Serializer = new JsonObjectSerializer(new JsonSerializerOptions
