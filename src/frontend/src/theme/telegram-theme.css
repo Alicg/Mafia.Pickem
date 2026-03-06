@@ -2,30 +2,30 @@
   /* Navy Gradient base */
   --tg-theme-bg-color: #0a0e27;
   --tg-theme-bg-gradient: linear-gradient(180deg, #0a0e27 0%, #131840 50%, #0d1333 100%);
-  --tg-theme-text-color: #e8ecf4;
-  --tg-theme-hint-color: #7eb4ff80;
+  --tg-theme-text-color: #f7fbff;
+  --tg-theme-hint-color: #a9c8f7;
   --tg-theme-link-color: #7eb4ff;
   --tg-theme-button-color: #4f7cff;
   --tg-theme-button-text-color: #ffffff;
-  --tg-theme-secondary-bg-color: rgba(30, 40, 80, 0.55);
+  --tg-theme-secondary-bg-color: rgba(30, 40, 80, 0.82);
 
   /* Extended palette */
-  --pm-card-bg: rgba(22, 32, 72, 0.6);
-  --pm-card-border: rgba(100, 140, 255, 0.1);
+  --pm-card-bg: rgba(16, 24, 56, 0.9);
+  --pm-card-border: rgba(130, 170, 255, 0.22);
   --pm-glow: rgba(79, 124, 255, 0.2);
   --pm-accent-gold: #fbbf24;
   --pm-accent-red: #fb7185;
   --pm-accent-green: #4ade80;
   --pm-accent-orange: #f59e0b;
   --pm-surface-hover: rgba(100, 140, 255, 0.07);
-  --pm-divider: rgba(100, 140, 255, 0.08);
+  --pm-divider: rgba(130, 170, 255, 0.18);
   --pm-shadow: rgba(0, 0, 0, 0.4);
   --pm-town-color: #ef4444;
   --pm-mafia-color: #3a3a3a;
   --pm-gradient-accent: linear-gradient(135deg, #4f7cff, #7c5cff);
   --pm-gradient-accent-shadow: rgba(79, 124, 255, 0.3);
-  --pm-glass-blur: blur(12px);
-  --pm-header-bg: rgba(13, 19, 51, 0.95);
+  --pm-glass-blur: blur(8px);
+  --pm-header-bg: rgba(10, 16, 43, 0.98);
 
   /* Timing */
   --pm-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
