@@ -64,9 +64,35 @@ You can list configured values with:
 dotnet user-secrets list --project src/MafiaPickem.AppHost
 ```
 
+## Telemetry
+
+The backend now emits OpenTelemetry logs, metrics, and traces.
+
+- Local development uses Aspire only.
+- `backend` gets its OTLP endpoint from `.WithOtlpExporter()`, so logs, metrics, and traces appear in the Aspire dashboard.
+- AppHost does not forward any external Grafana OTLP settings in local development.
+
+Production is separate from AppHost.
+
+- `src/MafiaPickem.AppHost` is a local orchestrator and should not be deployed.
+- In production, configure the Function App with the standard OpenTelemetry settings:
+  - `OTEL_EXPORTER_OTLP_ENDPOINT`
+  - `OTEL_EXPORTER_OTLP_HEADERS`
+  - `OTEL_EXPORTER_OTLP_PROTOCOL` (optional)
+- With those settings, both the Functions host and the .NET isolated worker send telemetry to Grafana.
+
+Example production configuration:
+
+```bash
+OTEL_EXPORTER_OTLP_ENDPOINT=https://your-grafana-otlp-endpoint
+OTEL_EXPORTER_OTLP_HEADERS=Authorization=Basic ...
+OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+```
+
 ## Notes
 
 - All services are managed by Aspire and will be terminated when the AppHost stops
 - Logs and telemetry for all services are available in the Aspire dashboard
+- Azure Functions `host.json` uses `telemetryMode: OpenTelemetry`, and the .NET isolated worker is instrumented with OpenTelemetry as well
 - The AppHost automatically handles service lifecycle and health monitoring
 - If Azurite is not recognized globally, AppHost still uses `npx --yes azurite`

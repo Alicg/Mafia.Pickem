@@ -21,6 +21,7 @@ var azurite = builder.AddExecutable("azurite", "npx", "../..", "--yes", "azurite
 
 // 2. Backend - Azure Functions API
 var backend = builder.AddExecutable("backend", "npx", "../MafiaPickem.Api", "func", "start", "--port", "7071")
+    .WithOtlpExporter()
     .WithEnvironment("SqlConnectionString", sqlConnectionString)
     .WithEnvironment("BlobStorageConnectionString", blobStorageConnectionString)
     .WithEnvironment("BlobContainerName", blobContainerName)

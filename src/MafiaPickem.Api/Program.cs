@@ -7,6 +7,7 @@ using MafiaPickem.Api.Services;
 using MafiaPickem.Api.State;
 using MafiaPickem.ServiceDefaults;
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.OpenTelemetry;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -17,9 +18,10 @@ var host = new HostBuilder()
         builder.UseMiddleware<ExceptionHandlingMiddleware>();
         builder.UseMiddleware<TelegramAuthMiddleware>();
     })
-    .ConfigureServices(services =>
+    .ConfigureServices((context, services) =>
     {
-        services.AddMafiaPickemServiceDefaults();
+        services.AddMafiaPickemServiceDefaults(context.Configuration, context.HostingEnvironment);
+        services.AddOpenTelemetry().UseFunctionsWorkerDefaults();
 
         services.Configure<WorkerOptions>(options =>
         {
