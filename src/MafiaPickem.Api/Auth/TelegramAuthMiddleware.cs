@@ -28,6 +28,11 @@ public class TelegramAuthMiddleware : IFunctionsWorkerMiddleware
         "/api/bot/webhook"
     };
 
+    private readonly string[] _publicRoutePrefixes =
+    [
+        "/api/overlay/tournaments/"
+    ];
+
     public TelegramAuthMiddleware(
         ITelegramAuthService telegramAuthService,
         IConfiguration configuration,
@@ -56,7 +61,7 @@ public class TelegramAuthMiddleware : IFunctionsWorkerMiddleware
 
         // Check if route requires authentication
         var url = requestData.Url.AbsolutePath;
-        if (_publicRoutes.Contains(url))
+        if (IsPublicRoute(url))
         {
             await next(context);
             return;
@@ -92,6 +97,16 @@ public class TelegramAuthMiddleware : IFunctionsWorkerMiddleware
         SetUserContext(context, user, isAdmin);
 
         await next(context);
+    }
+
+    private bool IsPublicRoute(string url)
+    {
+        if (_publicRoutes.Contains(url))
+        {
+            return true;
+        }
+
+        return _publicRoutePrefixes.Any(prefix => url.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
     }
 
     private void SetUserContext(FunctionContext context, Models.Domain.PickemUser user, bool isAdmin)
