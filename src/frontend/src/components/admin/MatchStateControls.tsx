@@ -6,7 +6,8 @@ import {
   adminLockMatch, 
   adminReopenMatch,
   adminDeleteMatch,
-  adminUnresolveMatch
+  adminUnresolveMatch,
+  adminUndoFirstVoted
 } from '../../lib/api';
 import { hapticFeedback } from '../../lib/telegram';
 import './admin.css';
@@ -15,11 +16,12 @@ interface MatchStateControlsProps {
   matchId: number;
   currentState: MatchState;
   onRefresh: () => void;
-  onResolve: () => void; // Callback to open resolve modal
+  onResolve: (currentState: MatchState) => void; // Callback to open resolve modal
+  onSetFirstVoted: () => void; // Callback to open set-first-voted modal
   onRefetchState?: () => Promise<void>;
 }
 
-export const MatchStateControls: React.FC<MatchStateControlsProps> = ({ matchId, currentState, onRefresh, onResolve, onRefetchState }) => {
+export const MatchStateControls: React.FC<MatchStateControlsProps> = ({ matchId, currentState, onRefresh, onResolve, onSetFirstVoted, onRefetchState }) => {
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
   const handleAction = async (actionKey: string, action: () => Promise<any>, confirmMessage?: string) => {
@@ -110,6 +112,28 @@ export const MatchStateControls: React.FC<MatchStateControlsProps> = ({ matchId,
         </button>
       )}
 
+      {/* Locked -> SetFirstVoted */}
+      {currentState === MatchState.Locked && (
+        <button 
+          className="btn btn-primary"
+          onClick={onSetFirstVoted}
+          disabled={isLoading}
+        >
+          Заголосовать игрока
+        </button>
+      )}
+
+      {/* Locked -> Resolve */}
+      {currentState === MatchState.Locked && (
+        <button 
+          className="btn btn-primary"
+          onClick={() => onResolve(currentState)}
+          disabled={isLoading}
+        >
+          Завершить
+        </button>
+      )}
+
       {/* Locked -> Open */}
       {currentState === MatchState.Locked && (
         <button 
@@ -126,19 +150,35 @@ export const MatchStateControls: React.FC<MatchStateControlsProps> = ({ matchId,
         </button>
       )}
 
-      {/* Locked -> Resolve */}
-      {currentState === MatchState.Locked && (
+      {/* FirstVoted -> Locked (Undo first voted) */}
+      {currentState === MatchState.FirstVoted && (
+        <button 
+          className="btn btn-secondary"
+          onClick={() => handleAction(
+            'undoFirstVoted',
+            () => adminUndoFirstVoted(matchId),
+            'Отменить первого заголосованного и вернуть игру в статус "Заблокировано"?'
+          )}
+          disabled={isLoading}
+        >
+          {loadingAction === 'undoFirstVoted' && <span className="btn-spinner" />}
+          ← Отменить 9-ку
+        </button>
+      )}
+
+      {/* FirstVoted -> Resolve */}
+      {currentState === MatchState.FirstVoted && (
         <button 
           className="btn btn-primary"
-          onClick={onResolve}
+          onClick={() => onResolve(currentState)}
           disabled={isLoading}
         >
           Завершить
         </button>
       )}
 
-      {/* Delete (Available in all active states) */}
-      {currentState !== MatchState.Resolved && (
+      {/* Delete (Available in all active states except Resolved) */}
+      {currentState !== MatchState.Resolved && currentState !== MatchState.FirstVoted && (
         <button 
           className="btn btn-danger"
           onClick={() => handleAction(

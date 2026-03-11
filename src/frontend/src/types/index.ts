@@ -45,7 +45,10 @@ export enum MatchState {
   Locked = 2,
   Resolved = 3,
   Canceled = 4,
+  FirstVoted = 5,
 }
+
+export const UNKNOWN_WINNING_SIDE = 255;
 
 export interface PredictionDto {
   predictedWinner: number;
@@ -88,6 +91,10 @@ export interface ResolveMatchRequest {
   votedOutSlots: number[];  // [0]=Nobody, [3,7]=Players
 }
 
+export interface SetFirstVotedRequest {
+  votedOutSlots: number[];  // [0]=Nobody, [3,7]=Players
+}
+
 export interface TournamentStats {
   tournamentId: number;
   totalMatches: number;
@@ -110,7 +117,7 @@ export interface BlobMatchState {
   } | null;
   votedOutVotes: { slot: number; count: number; percent: number }[] | null;
   matchResult: {
-    winningSide: number;   // 0=Town, 1=Mafia
+    winningSide: number;   // 0=Town, 1=Mafia, 255=Unknown for FirstVoted
     votedOutSlots: number[];
   } | null;
 }

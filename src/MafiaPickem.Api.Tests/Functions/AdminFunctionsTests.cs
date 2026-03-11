@@ -273,7 +273,7 @@ public class AdminFunctionsTests
 
         _mockMatchRepository.Setup(r => r.GetByTournamentAndStateAsync(
             tournamentId,
-            MatchState.Upcoming, MatchState.Open, MatchState.Locked, MatchState.Resolved, MatchState.Canceled))
+            MatchState.Upcoming, MatchState.Open, MatchState.Locked, MatchState.FirstVoted, MatchState.Resolved, MatchState.Canceled))
             .ReturnsAsync(matches);
 
         _mockPredictionRepository.Setup(r => r.GetTotalVotesAsync(It.IsAny<int>()))

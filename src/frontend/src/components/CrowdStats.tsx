@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import './CrowdStats.css';
-import { BlobMatchState, PredictionDto } from '../types';
+import { BlobMatchState, PredictionDto, UNKNOWN_WINNING_SIDE } from '../types';
 
 type LegendStatus = 'correct' | 'wrong' | 'pending';
 
@@ -37,6 +37,7 @@ interface CrowdStatsProps {
 
 export const CrowdStats: React.FC<CrowdStatsProps> = ({ blobState, prediction }) => {
   const matchResult = blobState?.matchResult ?? null;
+  const hasWinningSide = matchResult != null && matchResult.winningSide !== UNKNOWN_WINNING_SIDE;
 
   const stats = useMemo(() => {
     if (!blobState) return null;
@@ -81,21 +82,21 @@ export const CrowdStats: React.FC<CrowdStatsProps> = ({ blobState, prediction })
           <span className="winner-label-right">Мафия {mafiaDisplay}%</span>
         </div>
         <div className="winner-bar-container">
-           <div className={`winner-bar town${matchResult?.winningSide === 0 ? ' actual-winner' : ''}`} style={{ width: `${townDisplay}%` }} />
-           <div className={`winner-bar mafia${matchResult?.winningSide === 1 ? ' actual-winner' : ''}`} style={{ width: `${mafiaDisplay}%` }} />
+           <div className={`winner-bar town${hasWinningSide && matchResult?.winningSide === 0 ? ' actual-winner' : ''}`} style={{ width: `${townDisplay}%` }} />
+           <div className={`winner-bar mafia${hasWinningSide && matchResult?.winningSide === 1 ? ' actual-winner' : ''}`} style={{ width: `${mafiaDisplay}%` }} />
         </div>
         {prediction != null && (
           <div className="legend-row">
             <LegendItem
               label={`Ваш выбор: ${prediction.predictedWinner === 0 ? 'Мирные' : 'Мафия'}`}
-              status={matchResult ? (matchResult.winningSide === prediction.predictedWinner ? 'correct' : 'wrong') : 'pending'}
+              status={hasWinningSide ? (matchResult!.winningSide === prediction.predictedWinner ? 'correct' : 'wrong') : 'pending'}
             />
             {prediction.winnerPoints != null && (
               <span className={`legend-pts ${prediction.winnerPoints > 0 ? 'positive' : ''}`}>+{prediction.winnerPoints}</span>
             )}
-            {matchResult && (
+            {hasWinningSide && (
               <LegendItem
-                label={`Результат: ${matchResult.winningSide === 0 ? 'Мирные' : 'Мафия'}`}
+                label={`Результат: ${matchResult!.winningSide === 0 ? 'Мирные' : 'Мафия'}`}
                 status="correct"
               />
             )}

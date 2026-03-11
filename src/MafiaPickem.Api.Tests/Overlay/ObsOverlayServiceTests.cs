@@ -48,7 +48,7 @@ public class ObsOverlayServiceTests
         };
 
         _matchRepositoryMock
-            .Setup(repository => repository.GetByTournamentAndStateAsync(tournamentId, MatchState.Open, MatchState.Resolved))
+            .Setup(repository => repository.GetByTournamentAndStateAsync(tournamentId, MatchState.Open, MatchState.Locked, MatchState.FirstVoted, MatchState.Resolved))
             .ReturnsAsync(new[] { resolvedMatch, openMatch });
 
         _blobReaderMock
@@ -119,7 +119,7 @@ public class ObsOverlayServiceTests
         };
 
         _matchRepositoryMock
-            .Setup(repository => repository.GetByTournamentAndStateAsync(tournamentId, MatchState.Open, MatchState.Resolved))
+            .Setup(repository => repository.GetByTournamentAndStateAsync(tournamentId, MatchState.Open, MatchState.Locked, MatchState.FirstVoted, MatchState.Resolved))
             .ReturnsAsync(new[] { olderResolved, latestResolved });
 
         _blobReaderMock
@@ -173,7 +173,7 @@ public class ObsOverlayServiceTests
         };
 
         _matchRepositoryMock
-            .Setup(repository => repository.GetByTournamentAndStateAsync(tournamentId, MatchState.Open, MatchState.Resolved))
+            .Setup(repository => repository.GetByTournamentAndStateAsync(tournamentId, MatchState.Open, MatchState.Locked, MatchState.FirstVoted, MatchState.Resolved))
             .ReturnsAsync(new[] { openMatch });
         _blobReaderMock
             .Setup(reader => reader.ReadStateAsync(openMatch.Id))
@@ -189,5 +189,115 @@ public class ObsOverlayServiceTests
         payload.TableNumber.Should().Be(openMatch.TableNumber);
         payload.SeatVotes.Should().HaveCount(10);
         payload.TotalPredictions.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task GetOverlayPayloadAsync_ShouldExposeFirstVotedResult()
+    {
+        // Arrange
+        const int tournamentId = 92;
+        var firstVotedMatch = new DomainMatch
+        {
+            Id = 13,
+            TournamentId = tournamentId,
+            GameNumber = 7,
+            TableNumber = 1,
+            State = MatchState.FirstVoted,
+            DateLocked = DateTime.UtcNow.AddMinutes(-3),
+            DateCreated = DateTime.UtcNow.AddHours(-1)
+        };
+
+        _matchRepositoryMock
+            .Setup(repository => repository.GetByTournamentAndStateAsync(tournamentId, MatchState.Open, MatchState.Locked, MatchState.FirstVoted, MatchState.Resolved))
+            .ReturnsAsync(new[] { firstVotedMatch });
+
+        _blobReaderMock
+            .Setup(reader => reader.ReadStateAsync(firstVotedMatch.Id))
+            .ReturnsAsync(new BlobMatchState
+            {
+                MatchId = firstVotedMatch.Id,
+                TournamentId = tournamentId,
+                State = "FirstVoted",
+                UpdatedAt = DateTime.UtcNow,
+                TotalPredictions = 11,
+                WinnerVotes = new WinnerVotesDto
+                {
+                    Town = new VoteEntry { Count = 5, Percent = 45.5m },
+                    Mafia = new VoteEntry { Count = 6, Percent = 54.5m }
+                },
+                MatchResult = new MatchResultDto
+                {
+                    WinningSide = 255,
+                    VotedOutSlots = new List<int> { 7 }
+                },
+                VotedOutVotes = new List<SlotVoteEntry>
+                {
+                    new() { Slot = 7, Count = 4, Percent = 36.4m }
+                }
+            });
+
+        // Act
+        var payload = await _service.GetOverlayPayloadAsync(tournamentId);
+
+        // Assert
+        payload.Status.Should().Be("ready");
+        payload.MatchId.Should().Be(firstVotedMatch.Id);
+        payload.MatchState.Should().Be("FirstVoted");
+        payload.ResolvedSlots.Should().Equal(7);
+        payload.SeatVotes.Single(seat => seat.Slot == 7).IsResolved.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GetOverlayPayloadAsync_ShouldFallbackToLockedMatchAndExposeOpenStyleStats()
+    {
+        // Arrange
+        const int tournamentId = 93;
+        var lockedMatch = new DomainMatch
+        {
+            Id = 14,
+            TournamentId = tournamentId,
+            GameNumber = 8,
+            TableNumber = 5,
+            State = MatchState.Locked,
+            DateLocked = DateTime.UtcNow.AddMinutes(-2),
+            DateCreated = DateTime.UtcNow.AddHours(-1)
+        };
+
+        _matchRepositoryMock
+            .Setup(repository => repository.GetByTournamentAndStateAsync(tournamentId, MatchState.Open, MatchState.Locked, MatchState.FirstVoted, MatchState.Resolved))
+            .ReturnsAsync(new[] { lockedMatch });
+
+        _blobReaderMock
+            .Setup(reader => reader.ReadStateAsync(lockedMatch.Id))
+            .ReturnsAsync(new BlobMatchState
+            {
+                MatchId = lockedMatch.Id,
+                TournamentId = tournamentId,
+                State = "Locked",
+                UpdatedAt = DateTime.UtcNow,
+                TotalPredictions = 20,
+                WinnerVotes = new WinnerVotesDto
+                {
+                    Town = new VoteEntry { Count = 12, Percent = 60m },
+                    Mafia = new VoteEntry { Count = 8, Percent = 40m }
+                },
+                VotedOutVotes = new List<SlotVoteEntry>
+                {
+                    new() { Slot = 3, Count = 9, Percent = 45m },
+                    new() { Slot = 6, Count = 5, Percent = 25m }
+                }
+            });
+
+        // Act
+        var payload = await _service.GetOverlayPayloadAsync(tournamentId);
+
+        // Assert
+        payload.Status.Should().Be("ready");
+        payload.MatchId.Should().Be(lockedMatch.Id);
+        payload.MatchState.Should().Be("Locked");
+        payload.TotalPredictions.Should().Be(20);
+        payload.RedSide.Percent.Should().Be(60m);
+        payload.SeatVotes.Single(seat => seat.Slot == 3).Count.Should().Be(9);
+        payload.SeatVotes.Single(seat => seat.Slot == 6).Percent.Should().Be(25m);
     }
 }

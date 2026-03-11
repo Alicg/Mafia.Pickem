@@ -52,6 +52,11 @@
   box-shadow: 0 0 8px rgba(251, 113, 133, 0.3);
 }
 
+.match-card.state-firstvoted::before {
+  background: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+}
+
 .match-card.state-resolved {
   opacity: 0.45;
 }
@@ -153,6 +158,12 @@
   background: rgba(239, 68, 68, 0.1);
   color: #fb7185;
   border-color: rgba(239, 68, 68, 0.25);
+}
+
+.status-badge.firstvoted {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.25);
 }
 
 .status-badge.resolved {

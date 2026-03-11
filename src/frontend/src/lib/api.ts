@@ -4,15 +4,17 @@ import {
   TournamentDto, 
   MatchDto,
   MatchInfo,
+  BlobMatchState,
   PredictionsMap,
   LeaderboardResponse,
   CreateMatchRequest,
   CreateTournamentRequest,
   ResolveMatchRequest,
+  SetFirstVotedRequest,
   TournamentStats
 } from '../types';
 import { isDemoMode } from '../mocks/demo-mode';
-import { demoUser, demoTournament, demoTournaments, demoMatchInfos, demoMatches, demoPredictionsMap, demoLeaderboard, demoStats } from '../mocks/demo-data';
+import { demoUser, demoTournament, demoTournaments, demoMatchInfos, demoMatches, demoPredictionsMap, demoLeaderboard, demoStats, demoBlobStates } from '../mocks/demo-data';
 import { getInitData } from './telegram';
 
 // Browser runtime base: where the browser should send API requests.
@@ -132,6 +134,18 @@ export async function getLeaderboard(tournamentId: number): Promise<LeaderboardR
   return res.json();
 }
 
+export async function getMatchStateBlob(matchId: number): Promise<BlobMatchState | null> {
+  if (isDemoMode) return demoBlobStates[matchId] ?? null;
+
+  const res = await fetch(`${BLOB_BASE_URL}/match-state-${encodeURIComponent(matchId)}.json?t=${Date.now()}`);
+  if (!res.ok) {
+    if (res.status === 404) return null;
+    throw new Error(`Match state fetch failed: ${res.status}`);
+  }
+
+  return res.json();
+}
+
 // Admin API
 export async function adminCreateTournament(request: CreateTournamentRequest): Promise<TournamentDto> {
   if (isDemoMode) {
@@ -192,6 +206,25 @@ export async function adminUnresolveMatch(matchId: number): Promise<MatchDto> {
     return { ...demoMatches[0], id: matchId, state: 2 };
   }
   return apiFetch(`/manage/unresolve-match/${encodeURIComponent(matchId)}`, { method: 'POST' });
+}
+
+export async function adminSetFirstVoted(matchId: number, request: SetFirstVotedRequest): Promise<MatchDto> {
+  if (isDemoMode) {
+    console.log('[DEMO] adminSetFirstVoted', matchId, request);
+    return { ...demoMatches[0], id: matchId, state: 5 };
+  }
+  return apiFetch(`/manage/set-first-voted/${encodeURIComponent(matchId)}`, {
+    method: 'POST',
+    body: JSON.stringify(request),
+  });
+}
+
+export async function adminUndoFirstVoted(matchId: number): Promise<MatchDto> {
+  if (isDemoMode) {
+    console.log('[DEMO] adminUndoFirstVoted', matchId);
+    return { ...demoMatches[0], id: matchId, state: 2 };
+  }
+  return apiFetch(`/manage/undo-first-voted/${encodeURIComponent(matchId)}`, { method: 'POST' });
 }
 
 export async function adminDeleteMatch(matchId: number): Promise<void> {

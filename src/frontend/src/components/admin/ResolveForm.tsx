@@ -1,22 +1,74 @@
-import React, { useState } from 'react';
-import { adminResolveMatch } from '../../lib/api';
-import { ResolveMatchRequest } from '../../types';
+import React, { useEffect, useState } from 'react';
+import { adminResolveMatch, getMatchStateBlob } from '../../lib/api';
+import { MatchState, ResolveMatchRequest } from '../../types';
 import { hapticFeedback } from '../../lib/telegram';
 import './admin.css';
 
 interface ResolveFormProps {
   matchId: number;
+  currentState: MatchState;
   onSuccess: () => void;
   onCancel: () => void;
 }
 
-export const ResolveForm: React.FC<ResolveFormProps> = ({ matchId, onSuccess, onCancel }) => {
+export const ResolveForm: React.FC<ResolveFormProps> = ({ matchId, currentState, onSuccess, onCancel }) => {
   const [winningSide, setWinningSide] = useState<number>(0); // 0 = Town, 1 = Mafia
   const [votedOutSlots, setVotedOutSlots] = useState<number[]>([]);
+  const [isInitializing, setIsInitializing] = useState(currentState === MatchState.FirstVoted);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    let isActive = true;
+
+    const loadInitialResult = async () => {
+      if (currentState !== MatchState.FirstVoted) {
+        setIsInitializing(false);
+        return;
+      }
+
+      setIsInitializing(true);
+      setError(null);
+
+      try {
+        const blobState = await getMatchStateBlob(matchId);
+        const initialVotedOutSlots = blobState?.matchResult?.votedOutSlots;
+
+        if (!isActive) {
+          return;
+        }
+
+        if (!initialVotedOutSlots || initialVotedOutSlots.length === 0) {
+          return;
+        }
+
+        setVotedOutSlots(initialVotedOutSlots);
+      } catch (err) {
+        if (isActive) {
+          console.error('Failed to load initial resolve data:', err);
+          setError('Не удалось загрузить заголосованного игрока. Выберите его вручную.');
+        }
+      } finally {
+        if (isActive) {
+          setIsInitializing(false);
+        }
+      }
+    };
+
+    loadInitialResult();
+
+    return () => {
+      isActive = false;
+    };
+  }, [currentState, matchId]);
+
+  const isBusy = isInitializing || isLoading;
+
   const toggleSlot = (slot: number) => {
+    if (isBusy) {
+      return;
+    }
+
     hapticFeedback('selection');
     if (slot === 0) {
       // Toggle "Nobody"
@@ -44,6 +96,10 @@ export const ResolveForm: React.FC<ResolveFormProps> = ({ matchId, onSuccess, on
   };
 
   const handleResolve = async () => {
+    if (isBusy) {
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     hapticFeedback();
@@ -74,6 +130,16 @@ export const ResolveForm: React.FC<ResolveFormProps> = ({ matchId, onSuccess, on
     <div className="modal-overlay">
       <div className="modal-content">
         <h2 className="modal-title">Завершение игры #{matchId}</h2>
+
+        {isInitializing ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '220px', gap: '12px' }}>
+            <div className="spinner"></div>
+            <div style={{ color: 'var(--tg-theme-hint-color)', textAlign: 'center' }}>
+              Загружаем выбранного заголосованного игрока...
+            </div>
+          </div>
+        ) : (
+          <>
         
         {error && <div className="error-message" style={{color: 'red', marginBottom: '10px'}}>{error}</div>}
         
@@ -82,13 +148,13 @@ export const ResolveForm: React.FC<ResolveFormProps> = ({ matchId, onSuccess, on
           <div className="side-toggle">
             <div 
               className={`side-option ${winningSide === 0 ? 'active' : ''}`}
-              onClick={() => { setWinningSide(0); hapticFeedback('selection'); }}
+              onClick={() => { if (!isBusy) { setWinningSide(0); hapticFeedback('selection'); } }}
             >
               Мирные
             </div>
             <div 
               className={`side-option ${winningSide === 1 ? 'active' : ''}`}
-              onClick={() => { setWinningSide(1); hapticFeedback('selection'); }}
+              onClick={() => { if (!isBusy) { setWinningSide(1); hapticFeedback('selection'); } }}
             >
               Мафия
             </div>
@@ -122,7 +188,7 @@ export const ResolveForm: React.FC<ResolveFormProps> = ({ matchId, onSuccess, on
             type="button" 
             className="btn btn-secondary" 
             onClick={onCancel}
-            disabled={isLoading}
+            disabled={isBusy}
           >
             Отмена
           </button>
@@ -130,12 +196,14 @@ export const ResolveForm: React.FC<ResolveFormProps> = ({ matchId, onSuccess, on
             type="button" 
             className="btn btn-primary"
             onClick={handleResolve}
-            disabled={isLoading}
+            disabled={isBusy}
           >
             {isLoading && <span className="btn-spinner" />}
             {isLoading ? 'Сохранение...' : 'Завершить'}
           </button>
         </div>
+          </>
+        )}
       </div>
     </div>
   );

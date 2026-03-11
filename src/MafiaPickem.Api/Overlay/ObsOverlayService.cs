@@ -23,12 +23,14 @@ public class ObsOverlayService : IObsOverlayService
         var matches = (await _matchRepository.GetByTournamentAndStateAsync(
             tournamentId,
             MatchState.Open,
+            MatchState.Locked,
+            MatchState.FirstVoted,
             MatchState.Resolved)).ToList();
 
         var selectedMatch = SelectMatch(matches);
         if (selectedMatch == null)
         {
-            return CreateBasePayload(tournamentId, "no-match", "No open or resolved match is available for this tournament.");
+            return CreateBasePayload(tournamentId, "no-match", "No open, locked, or resolved match is available for this tournament.");
         }
 
         var blobState = await _matchStateBlobReader.ReadStateAsync(selectedMatch.Id);
@@ -93,6 +95,29 @@ public class ObsOverlayService : IObsOverlayService
             return openMatch;
         }
 
+        var lockedMatch = matches
+            .Where(match => match.State == MatchState.Locked)
+            .OrderByDescending(match => match.DateLocked ?? match.DateCreated)
+            .ThenByDescending(match => match.Id)
+            .FirstOrDefault();
+
+        if (lockedMatch != null)
+        {
+            return lockedMatch;
+        }
+
+        // Prefer FirstVoted over Resolved (game still in progress)
+        var firstVotedMatch = matches
+            .Where(match => match.State == MatchState.FirstVoted)
+            .OrderByDescending(match => match.DateLocked ?? match.DateCreated)
+            .ThenByDescending(match => match.Id)
+            .FirstOrDefault();
+
+        if (firstVotedMatch != null)
+        {
+            return firstVotedMatch;
+        }
+
         return matches
             .Where(match => match.State == MatchState.Resolved)
             .OrderByDescending(match => match.DateResolved ?? match.DateCreated)
@@ -125,6 +150,7 @@ public class ObsOverlayService : IObsOverlayService
             nameof(MatchState.Open) => "Open",
             nameof(MatchState.Resolved) => "Resolved",
             nameof(MatchState.Locked) => "Locked",
+            nameof(MatchState.FirstVoted) => "FirstVoted",
             nameof(MatchState.Upcoming) => "Upcoming",
             nameof(MatchState.Canceled) => "Canceled",
             _ => state

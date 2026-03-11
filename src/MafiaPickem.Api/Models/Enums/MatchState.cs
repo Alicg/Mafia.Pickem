@@ -6,5 +6,6 @@ public enum MatchState : byte
     Open = 1,
     Locked = 2,
     Resolved = 3,
-    Canceled = 4
+    Canceled = 4,
+    FirstVoted = 5
 }

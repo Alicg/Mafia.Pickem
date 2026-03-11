@@ -6,6 +6,7 @@ import { MatchCard } from '../components/MatchCard';
 import { LeaderboardTab } from '../components/LeaderboardTab';
 import { CreateMatchForm } from '../components/admin/CreateMatchForm';
 import { ResolveForm } from '../components/admin/ResolveForm';
+import { SetFirstVotedForm } from '../components/admin/SetFirstVotedForm';
 import { hapticFeedback } from '../lib/telegram';
 import './TournamentPage.css';
 
@@ -25,6 +26,7 @@ function parseState(s: string): MatchState {
   if (lower === 'locked' || lower === '2') return MatchState.Locked;
   if (lower === 'resolved' || lower === '3') return MatchState.Resolved;
   if (lower === 'canceled' || lower === '4') return MatchState.Canceled;
+  if (lower === 'firstvoted' || lower === '5') return MatchState.FirstVoted;
   return MatchState.Upcoming;
 }
 
@@ -37,7 +39,8 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
   const [isLoading, setIsLoading] = useState(true);
   const [expandedMatchId, setExpandedMatchId] = useState<number | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [resolvingMatchId, setResolvingMatchId] = useState<number | null>(null);
+  const [resolvingMatch, setResolvingMatch] = useState<{ matchId: number; currentState: MatchState } | null>(null);
+  const [firstVotedMatchId, setFirstVotedMatchId] = useState<number | null>(null);
   const isAdmin = profile?.isAdmin ?? false;
 
   // Blob polling for all matches
@@ -299,7 +302,8 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
                       isAdmin={isAdmin}
                       onPredictionChange={(p) => handlePredictionChange(mi.id, p)}
                       onRefresh={refreshMatchList}
-                      onResolve={() => setResolvingMatchId(mi.id)}
+                      onResolve={(currentState) => setResolvingMatch({ matchId: mi.id, currentState })}
+                      onSetFirstVoted={() => setFirstVotedMatchId(mi.id)}
                       onRefetchState={() => refetchMatch(mi.id)}
                     />
                   </div>
@@ -322,11 +326,20 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
         />
       )}
 
-      {resolvingMatchId !== null && (
+      {resolvingMatch !== null && (
         <ResolveForm
-          matchId={resolvingMatchId}
-          onSuccess={() => { setResolvingMatchId(null); refreshMatchList(); }}
-          onCancel={() => setResolvingMatchId(null)}
+          matchId={resolvingMatch.matchId}
+          currentState={resolvingMatch.currentState}
+          onSuccess={() => { setResolvingMatch(null); refreshMatchList(); }}
+          onCancel={() => setResolvingMatch(null)}
+        />
+      )}
+
+      {firstVotedMatchId !== null && (
+        <SetFirstVotedForm
+          matchId={firstVotedMatchId}
+          onSuccess={() => { setFirstVotedMatchId(null); refreshMatchList(); }}
+          onCancel={() => setFirstVotedMatchId(null)}
         />
       )}
     </div>

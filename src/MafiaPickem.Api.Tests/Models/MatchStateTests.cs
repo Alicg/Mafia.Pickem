@@ -54,4 +54,14 @@ public class MatchStateTests
         // Assert
         value.Should().Be(4);
     }
+
+    [Fact]
+    public void MatchState_FirstVoted_ShouldBe5()
+    {
+        // Arrange & Act
+        var value = (byte)MatchState.FirstVoted;
+
+        // Assert
+        value.Should().Be(5);
+    }
 }

@@ -106,6 +106,8 @@ public class StatePublishServiceTests
             .ReturnsAsync(match);
         _mockPredictionRepository.Setup(r => r.GetVoteStatsAsync(matchId))
             .ReturnsAsync(voteStats);
+        _mockPredictionRepository.Setup(r => r.GetTotalVotesAsync(matchId))
+            .ReturnsAsync(5);
         _mockBlobWriter.Setup(w => w.WriteStateAsync(It.IsAny<BlobMatchState>()))
             .Returns(Task.CompletedTask);
 
@@ -225,5 +227,51 @@ public class StatePublishServiceTests
             s.WinnerVotes == null &&
             s.VotedOutVotes == null
         )), Times.Once);
+    }
+
+    [Fact]
+    public async Task PublishMatchState_InFirstVotedState_ShouldExposeUnknownWinningSide()
+    {
+        // Arrange
+        var matchId = 6;
+        var match = new DomainMatch
+        {
+            Id = matchId,
+            TournamentId = 10,
+            State = MatchState.FirstVoted,
+            GameNumber = 1
+        };
+
+        var voteStats = new VoteStatsDto
+        {
+            TotalVotes = 10,
+            TownPercentage = 50m,
+            MafiaPercentage = 50m,
+            SlotVotes = new List<SlotVoteDto>
+            {
+                new() { Slot = 7, Count = 4, Percentage = 40m }
+            }
+        };
+
+        _mockMatchRepository.Setup(r => r.GetByIdAsync(matchId))
+            .ReturnsAsync(match);
+        _mockPredictionRepository.Setup(r => r.GetVoteStatsAsync(matchId))
+            .ReturnsAsync(voteStats);
+        _mockPredictionRepository.Setup(r => r.GetMatchResultAsync(matchId))
+            .ReturnsAsync(((byte)WinningSide.Town, "7"));
+
+        BlobMatchState? capturedState = null;
+        _mockBlobWriter.Setup(w => w.WriteStateAsync(It.IsAny<BlobMatchState>()))
+            .Callback<BlobMatchState>(state => capturedState = state)
+            .Returns(Task.CompletedTask);
+
+        // Act
+        await _statePublishService.PublishMatchStateAsync(matchId);
+
+        // Assert
+        capturedState.Should().NotBeNull();
+        capturedState!.MatchResult.Should().NotBeNull();
+        capturedState.MatchResult!.WinningSide.Should().Be((byte)WinningSide.Unknown);
+        capturedState.MatchResult.VotedOutSlots.Should().Equal(7);
     }
 }

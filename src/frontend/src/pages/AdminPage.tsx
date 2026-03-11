@@ -3,10 +3,11 @@ import {
   getTournamentMatches, 
   adminGetTournamentStats
 } from '../lib/api';
-import { MatchInfo, TournamentStats as TournamentStatsType } from '../types';
+import { MatchInfo, MatchState, TournamentStats as TournamentStatsType } from '../types';
 import { MatchList } from '../components/admin/MatchList';
 import { CreateMatchForm } from '../components/admin/CreateMatchForm';
 import { ResolveForm } from '../components/admin/ResolveForm';
+import { SetFirstVotedForm } from '../components/admin/SetFirstVotedForm';
 import { hapticFeedback } from '../lib/telegram';
 import '../components/admin/admin.css';
 
@@ -20,7 +21,8 @@ export const AdminPage: React.FC<AdminPageProps> = ({ tournamentId, onBack }) =>
   const [stats, setStats] = useState<TournamentStatsType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [resolvingMatchId, setResolvingMatchId] = useState<number | null>(null);
+  const [resolvingMatch, setResolvingMatch] = useState<{ matchId: number; currentState: MatchState } | null>(null);
+  const [firstVotedMatchId, setFirstVotedMatchId] = useState<number | null>(null);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -58,13 +60,23 @@ export const AdminPage: React.FC<AdminPageProps> = ({ tournamentId, onBack }) =>
     loadData();
   };
 
-  const handleResolveOpen = (matchId: number) => {
+  const handleResolveOpen = (matchId: number, currentState: MatchState) => {
     hapticFeedback();
-    setResolvingMatchId(matchId);
+    setResolvingMatch({ matchId, currentState });
   };
 
   const handleResolveSuccess = () => {
-    setResolvingMatchId(null);
+    setResolvingMatch(null);
+    loadData();
+  };
+
+  const handleSetFirstVotedOpen = (matchId: number) => {
+    hapticFeedback();
+    setFirstVotedMatchId(matchId);
+  };
+
+  const handleSetFirstVotedSuccess = () => {
+    setFirstVotedMatchId(null);
     loadData();
   };
 
@@ -108,6 +120,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ tournamentId, onBack }) =>
           matches={matches} 
           onRefresh={loadData}
           onResolve={handleResolveOpen}
+          onSetFirstVoted={handleSetFirstVotedOpen}
         />
       )}
 
@@ -119,11 +132,20 @@ export const AdminPage: React.FC<AdminPageProps> = ({ tournamentId, onBack }) =>
         />
       )}
 
-      {resolvingMatchId !== null && (
+      {resolvingMatch !== null && (
         <ResolveForm 
-          matchId={resolvingMatchId}
+          matchId={resolvingMatch.matchId}
+          currentState={resolvingMatch.currentState}
           onSuccess={handleResolveSuccess}
-          onCancel={() => setResolvingMatchId(null)}
+          onCancel={() => setResolvingMatch(null)}
+        />
+      )}
+
+      {firstVotedMatchId !== null && (
+        <SetFirstVotedForm
+          matchId={firstVotedMatchId}
+          onSuccess={handleSetFirstVotedSuccess}
+          onCancel={() => setFirstVotedMatchId(null)}
         />
       )}
     </div>

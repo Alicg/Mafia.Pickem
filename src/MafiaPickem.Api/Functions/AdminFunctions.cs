@@ -294,6 +294,102 @@ public class AdminFunctions
         return response;
     }
 
+    [Function("AdminSetFirstVoted")]
+    public async Task<HttpResponseData> SetFirstVotedHttp(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/set-first-voted/{id}")] HttpRequestData req,
+        int id)
+    {
+        if (!_userContext.IsAdmin)
+        {
+            var forbiddenResponse = req.CreateResponse(HttpStatusCode.Forbidden);
+            await forbiddenResponse.WriteStringAsync("Admin access required");
+            return forbiddenResponse;
+        }
+
+        var request = await req.ReadFromJsonAsync<SetFirstVotedRequest>();
+        if (request == null)
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteStringAsync("Invalid request body");
+            return badRequestResponse;
+        }
+
+        var match = await _matchRepository.GetByIdAsync(id);
+        if (match == null)
+        {
+            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFoundResponse.WriteStringAsync($"Match {id} not found");
+            return notFoundResponse;
+        }
+
+        // Sort voted out slots and convert to CSV
+        var sortedSlots = request.VotedOutSlots.OrderBy(s => s).ToList();
+        var correctVotedOutCsv = string.Join(",", sortedSlots);
+
+        // Save only voted out slots (no winning side yet)
+        await _predictionRepository.SaveVotedOutSlotsAsync(id, correctVotedOutCsv);
+
+        // Transition state to FirstVoted
+        var updatedMatch = await _matchStateService.SetFirstVotedAsync(id);
+
+        // Publish state to blob
+        await _statePublishService.PublishMatchStateAsync(id, forcePublish: true);
+
+        var matchDto = new MatchDto
+        {
+            Id = updatedMatch.Id,
+            GameNumber = updatedMatch.GameNumber,
+            TableNumber = updatedMatch.TableNumber,
+            State = updatedMatch.State
+        };
+
+        var response = req.CreateResponse(HttpStatusCode.OK);
+        await response.WriteAsJsonAsync(matchDto);
+        return response;
+    }
+
+    [Function("AdminUndoFirstVoted")]
+    public async Task<HttpResponseData> UndoFirstVotedHttp(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/undo-first-voted/{id}")] HttpRequestData req,
+        int id)
+    {
+        if (!_userContext.IsAdmin)
+        {
+            var forbiddenResponse = req.CreateResponse(HttpStatusCode.Forbidden);
+            await forbiddenResponse.WriteStringAsync("Admin access required");
+            return forbiddenResponse;
+        }
+
+        var match = await _matchRepository.GetByIdAsync(id);
+        if (match == null)
+        {
+            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFoundResponse.WriteStringAsync($"Match {id} not found");
+            return notFoundResponse;
+        }
+
+        // Delete saved voted out slots
+        await _predictionRepository.DeleteMatchResultByMatchIdAsync(id);
+
+        // Transition state back to Locked
+        var updatedMatch = await _matchStateService.UndoFirstVotedAsync(id);
+
+        // Republish blob state
+        await _statePublishService.PublishMatchStateAsync(id, forcePublish: true);
+
+        var matchDto = new MatchDto
+        {
+            Id = updatedMatch.Id,
+            GameNumber = updatedMatch.GameNumber,
+            TableNumber = updatedMatch.TableNumber,
+            State = updatedMatch.State
+        };
+
+        var response = req.CreateResponse(HttpStatusCode.OK);
+        await response.WriteAsJsonAsync(matchDto);
+        return response;
+    }
+
     [Function("AdminUnresolveMatch")]
     public async Task<HttpResponseData> UnresolveMatchHttp(
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/unresolve-match/{id}")] HttpRequestData req,
@@ -408,6 +504,7 @@ public class AdminFunctions
             MatchState.Upcoming,
             MatchState.Open,
             MatchState.Locked,
+            MatchState.FirstVoted,
             MatchState.Resolved,
             MatchState.Canceled);
 
@@ -419,6 +516,7 @@ public class AdminFunctions
             UpcomingMatches = matchesList.Count(m => m.State == MatchState.Upcoming),
             OpenMatches = matchesList.Count(m => m.State == MatchState.Open),
             LockedMatches = matchesList.Count(m => m.State == MatchState.Locked),
+            FirstVotedMatches = matchesList.Count(m => m.State == MatchState.FirstVoted),
             ResolvedMatches = matchesList.Count(m => m.State == MatchState.Resolved),
             CanceledMatches = matchesList.Count(m => m.State == MatchState.Canceled),
             TotalPredictions = 0
@@ -440,6 +538,7 @@ public class AdminFunctions
             stats.UpcomingMatches,
             stats.OpenMatches,
             stats.LockedMatches,
+            stats.FirstVotedMatches,
             stats.ResolvedMatches,
             stats.CanceledMatches,
             TotalPredictions = totalPredictions

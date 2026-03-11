@@ -117,6 +117,7 @@ GO
     WinningSide values:
     0 = Мирные (Red/Town)
     1 = Мафия (Black/Mafia)
+    255 = Победитель еще не определен (FirstVoted)
 
     CorrectVotedOutCsv values:
     Отсортированные номера слотов через запятую (например: "0" или "3,7").

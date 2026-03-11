@@ -204,7 +204,17 @@ public static class ObsOverlayHtmlRenderer
         }
 
         .vote-bar.is-resolved .vote-bar__fill {
-            background: linear-gradient(90deg, rgba(255, 255, 255, 0.98), rgba(255, 120, 120, 0.92));
+            background: linear-gradient(90deg, rgba(74, 222, 128, 0.98), rgba(34, 197, 94, 0.92));
+            box-shadow: 0 0 14px rgba(74, 222, 128, 0.28);
+        }
+
+        .vote-bar.is-resolved .vote-bar__slot {
+            color: #86efac;
+            text-shadow: 0 0 10px rgba(74, 222, 128, 0.35);
+        }
+
+        .vote-bar.is-resolved .vote-bar__track {
+            box-shadow: inset 0 0 0 1px rgba(74, 222, 128, 0.5), 0 0 14px rgba(74, 222, 128, 0.18);
         }
 
         .vote-bar__count {
@@ -333,7 +343,7 @@ public static class ObsOverlayHtmlRenderer
 
             const totalPredictions = Number(payload.totalPredictions || 0);
 
-            matchState.textContent = payload.matchState === 'Resolved' ? 'Закрыто' : 'Лайв';
+            matchState.textContent = payload.matchState === 'Resolved' ? 'Закрыто' : payload.matchState === 'FirstVoted' ? '9-ка' : 'Лайв';
             statusText.textContent = formatUpdatedAt(payload.updatedAt);
             setSummary(
                 payload.redSide,

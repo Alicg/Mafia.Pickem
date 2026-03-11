@@ -65,11 +65,24 @@ public class MatchStateService : IMatchStateService
         return (await _matchRepository.GetByIdAsync(matchId))!;
     }
 
-    public async Task<Match> ResolveMatchAsync(int matchId)
+    public async Task<Match> SetFirstVotedAsync(int matchId)
     {
         var match = await GetMatchOrThrowAsync(matchId);
 
         if (match.State != MatchState.Locked)
+        {
+            throw new InvalidOperationException($"Cannot transition match from {match.State} to FirstVoted");
+        }
+
+        await _matchRepository.UpdateStateAsync(matchId, MatchState.FirstVoted);
+        return (await _matchRepository.GetByIdAsync(matchId))!;
+    }
+
+    public async Task<Match> ResolveMatchAsync(int matchId)
+    {
+        var match = await GetMatchOrThrowAsync(matchId);
+
+        if (match.State != MatchState.Locked && match.State != MatchState.FirstVoted)
         {
             throw new InvalidOperationException($"Cannot transition match from {match.State} to Resolved");
         }
@@ -88,6 +101,19 @@ public class MatchStateService : IMatchStateService
         }
 
         await _matchRepository.UnresolveToLockedAsync(matchId);
+        return (await _matchRepository.GetByIdAsync(matchId))!;
+    }
+
+    public async Task<Match> UndoFirstVotedAsync(int matchId)
+    {
+        var match = await GetMatchOrThrowAsync(matchId);
+
+        if (match.State != MatchState.FirstVoted)
+        {
+            throw new InvalidOperationException($"Cannot undo first voted from {match.State} — only FirstVoted matches can be undone");
+        }
+
+        await _matchRepository.UpdateStateAsync(matchId, MatchState.Locked);
         return (await _matchRepository.GetByIdAsync(matchId))!;
     }
 

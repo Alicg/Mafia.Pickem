@@ -6,10 +6,11 @@ import './admin.css';
 interface MatchListProps {
   matches: MatchInfo[];
   onRefresh: () => void;
-  onResolve: (matchId: number) => void;
+  onResolve: (matchId: number, currentState: MatchState) => void;
+  onSetFirstVoted: (matchId: number) => void;
 }
 
-export const MatchList: React.FC<MatchListProps> = ({ matches, onRefresh, onResolve }) => {
+export const MatchList: React.FC<MatchListProps> = ({ matches, onRefresh, onResolve, onSetFirstVoted }) => {
   if (!matches || matches.length === 0) {
     return <div className="no-matches">Нет активных игр</div>;
   }
@@ -22,6 +23,7 @@ export const MatchList: React.FC<MatchListProps> = ({ matches, onRefresh, onReso
       case MatchState.Upcoming: return 'badge-upcoming';
       case MatchState.Open: return 'badge-open';
       case MatchState.Locked: return 'badge-locked';
+      case MatchState.FirstVoted: return 'badge-firstvoted';
       case MatchState.Resolved: return 'badge-resolved';
       case MatchState.Canceled: return 'badge-canceled';
       default: return '';
@@ -33,6 +35,7 @@ export const MatchList: React.FC<MatchListProps> = ({ matches, onRefresh, onReso
       case MatchState.Upcoming: return 'Ожидание';
       case MatchState.Open: return 'Открыта';
       case MatchState.Locked: return 'Заблокирована';
+      case MatchState.FirstVoted: return '9-ка';
       case MatchState.Resolved: return 'Завершена';
       case MatchState.Canceled: return 'Отменена';
       default: return 'Неизвестно';
@@ -57,7 +60,8 @@ export const MatchList: React.FC<MatchListProps> = ({ matches, onRefresh, onReso
             matchId={match.id}
             currentState={match.state}
             onRefresh={onRefresh}
-            onResolve={() => onResolve(match.id)}
+            onResolve={() => onResolve(match.id, match.state)}
+            onSetFirstVoted={() => onSetFirstVoted(match.id)}
           />
         </div>
       ))}

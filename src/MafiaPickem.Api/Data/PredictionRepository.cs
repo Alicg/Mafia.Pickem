@@ -1,5 +1,6 @@
 using Dapper;
 using MafiaPickem.Api.Models.Domain;
+using MafiaPickem.Api.Models.Enums;
 using MafiaPickem.Api.Models.Responses;
 
 namespace MafiaPickem.Api.Data;
@@ -262,6 +263,32 @@ public class PredictionRepository : IPredictionRepository
         {
             MatchId = matchId,
             WinningSide = winningSide,
+            CorrectVotedOutCsv = correctVotedOutCsv
+        });
+    }
+
+    public async Task SaveVotedOutSlotsAsync(int matchId, string correctVotedOutCsv)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        const string sql = """
+            MERGE INTO pickem.MatchResult AS target
+            USING (SELECT @MatchId AS MatchId) AS source
+            ON target.MatchId = source.MatchId
+            WHEN MATCHED THEN
+                UPDATE SET 
+                    WinningSide = @WinningSide,
+                    CorrectVotedOutCsv = @CorrectVotedOutCsv,
+                    DateCreated = GETUTCDATE()
+            WHEN NOT MATCHED THEN
+                INSERT (MatchId, WinningSide, CorrectVotedOutCsv, DateCreated)
+                VALUES (@MatchId, @WinningSide, @CorrectVotedOutCsv, GETUTCDATE());
+            """;
+
+        await connection.ExecuteAsync(sql, new
+        {
+            MatchId = matchId,
+            WinningSide = (byte)WinningSide.Unknown,
             CorrectVotedOutCsv = correctVotedOutCsv
         });
     }

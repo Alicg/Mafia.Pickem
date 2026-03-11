@@ -65,7 +65,7 @@ public class StatePublishService : IStatePublishService
         };
 
         // Load vote stats if match state >= Open
-        if (match.State == MatchState.Open || match.State == MatchState.Locked || match.State == MatchState.Resolved)
+        if (match.State == MatchState.Open || match.State == MatchState.Locked || match.State == MatchState.FirstVoted || match.State == MatchState.Resolved)
         {
             var voteStats = await _predictionRepository.GetVoteStatsAsync(matchId);
             blobState.TotalPredictions = voteStats.TotalVotes;
@@ -95,8 +95,8 @@ public class StatePublishService : IStatePublishService
             }
         }
 
-        // Load match result if resolved
-        if (match.State == MatchState.Resolved)
+        // Load match result if resolved or first voted
+        if (match.State == MatchState.Resolved || match.State == MatchState.FirstVoted)
         {
             var result = await _predictionRepository.GetMatchResultAsync(matchId);
             if (result != null)
@@ -104,7 +104,8 @@ public class StatePublishService : IStatePublishService
                 var (winningSide, correctVotedOutCsv) = result.Value;
                 blobState.MatchResult = new MatchResultDto
                 {
-                    WinningSide = winningSide,
+                    // For FirstVoted state, winningSide is not yet determined — omit it
+                    WinningSide = match.State == MatchState.FirstVoted ? (byte)WinningSide.Unknown : winningSide,
                     VotedOutSlots = string.IsNullOrEmpty(correctVotedOutCsv)
                         ? new List<int>()
                         : correctVotedOutCsv.Split(',').Select(int.Parse).ToList()

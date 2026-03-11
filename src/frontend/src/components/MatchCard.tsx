@@ -17,7 +17,8 @@ interface MatchCardProps {
   isAdmin: boolean;
   onPredictionChange: (prediction: PredictionDto | null) => void;
   onRefresh: () => void;
-  onResolve: () => void;
+  onResolve: (currentState: MatchState) => void;
+  onSetFirstVoted: () => void;
   onRefetchState: () => Promise<void>;
 }
 
@@ -28,11 +29,12 @@ function parseState(s: string): MatchState {
   if (lower === 'locked' || lower === '2') return MatchState.Locked;
   if (lower === 'resolved' || lower === '3') return MatchState.Resolved;
   if (lower === 'canceled' || lower === '4') return MatchState.Canceled;
+  if (lower === 'firstvoted' || lower === '5') return MatchState.FirstVoted;
   return MatchState.Upcoming;
 }
 
 export const MatchCard: React.FC<MatchCardProps> = ({
-  matchInfo, blobState, prediction, isExpanded, canExpand, onToggle, isAdmin, onPredictionChange, onRefresh, onResolve, onRefetchState
+  matchInfo, blobState, prediction, isExpanded, canExpand, onToggle, isAdmin, onPredictionChange, onRefresh, onResolve, onSetFirstVoted, onRefetchState
 }) => {
   const [selectedWinner, setSelectedWinner] = useState<number | null>(prediction?.predictedWinner ?? null);
   const [selectedVotedOut, setSelectedVotedOut] = useState<number | null>(prediction?.predictedVotedOut ?? null);
@@ -66,6 +68,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
       case MatchState.Upcoming: return <span className="status-badge upcoming">Ожидается</span>;
       case MatchState.Open: return <span className="status-badge open">Прогнозы открыты</span>;
       case MatchState.Locked: return <span className="status-badge locked">Игра идет</span>;
+      case MatchState.FirstVoted: return <span className="status-badge firstvoted">9-ка</span>;
       case MatchState.Resolved: return <span className="status-badge resolved">Завершено</span>;
       case MatchState.Canceled: return <span className="status-badge canceled">Отменена</span>;
     }
@@ -179,6 +182,11 @@ export const MatchCard: React.FC<MatchCardProps> = ({
             <CrowdStats blobState={blobState} prediction={prediction} />
           )}
 
+          {/* FirstVoted: stats + partial results (voted out only) */}
+          {currentState === MatchState.FirstVoted && (
+            <CrowdStats blobState={blobState} prediction={prediction} />
+          )}
+
           {/* Resolved: stats + results */}
           {currentState === MatchState.Resolved && (
             <CrowdStats blobState={blobState} prediction={prediction} />
@@ -191,6 +199,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
               currentState={currentState}
               onRefresh={onRefresh}
               onResolve={onResolve}
+              onSetFirstVoted={onSetFirstVoted}
               onRefetchState={onRefetchState}
             />
           )}

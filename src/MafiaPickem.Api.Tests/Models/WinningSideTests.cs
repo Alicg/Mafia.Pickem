@@ -24,4 +24,14 @@ public class WinningSideTests
         // Assert
         value.Should().Be(1);
     }
+
+    [Fact]
+    public void WinningSide_Unknown_ShouldBe255()
+    {
+        // Arrange & Act
+        var value = (byte)WinningSide.Unknown;
+
+        // Assert
+        value.Should().Be(255);
+    }
 }
