@@ -4,4 +4,5 @@ public class SubmitPredictionRequest
 {
     public byte PredictedWinner { get; set; }
     public byte PredictedVotedOut { get; set; }
+    public byte PredictedLastRound { get; set; }
 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { adminResolveMatch, getMatchStateBlob } from '../../lib/api';
-import { MatchState, ResolveMatchRequest } from '../../types';
+import { MatchState, ResolveMatchRequest, LAST_ROUND_LABELS, TOWN_LAST_ROUNDS, MAFIA_LAST_ROUNDS } from '../../types';
 import { hapticFeedback } from '../../lib/telegram';
 import './admin.css';
 
@@ -14,6 +14,7 @@ interface ResolveFormProps {
 export const ResolveForm: React.FC<ResolveFormProps> = ({ matchId, currentState, onSuccess, onCancel }) => {
   const [winningSide, setWinningSide] = useState<number>(0); // 0 = Town, 1 = Mafia
   const [votedOutSlots, setVotedOutSlots] = useState<number[]>([]);
+  const [lastRound, setLastRound] = useState<number>(0);
   const [isInitializing, setIsInitializing] = useState(currentState === MatchState.FirstVoted);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -107,7 +108,8 @@ export const ResolveForm: React.FC<ResolveFormProps> = ({ matchId, currentState,
     try {
       const request: ResolveMatchRequest = {
         winningSide,
-        votedOutSlots: votedOutSlots.length > 0 ? votedOutSlots : [] // If empty, backend might complain? Or maybe empty is allowed. Let's assume empty means no one voted out if not 0.
+        votedOutSlots: votedOutSlots.length > 0 ? votedOutSlots : [],
+        lastRound
       };
       // Actually backend likely expects [0] for nobody. If empty, maybe validation error.
       // Let's enforce selection
@@ -148,13 +150,13 @@ export const ResolveForm: React.FC<ResolveFormProps> = ({ matchId, currentState,
           <div className="side-toggle">
             <div 
               className={`side-option ${winningSide === 0 ? 'active' : ''}`}
-              onClick={() => { if (!isBusy) { setWinningSide(0); hapticFeedback('selection'); } }}
+              onClick={() => { if (!isBusy) { setWinningSide(0); setLastRound(0); hapticFeedback('selection'); } }}
             >
               Мирные
             </div>
             <div 
               className={`side-option ${winningSide === 1 ? 'active' : ''}`}
-              onClick={() => { if (!isBusy) { setWinningSide(1); hapticFeedback('selection'); } }}
+              onClick={() => { if (!isBusy) { setWinningSide(1); setLastRound(0); hapticFeedback('selection'); } }}
             >
               Мафия
             </div>
@@ -178,6 +180,21 @@ export const ResolveForm: React.FC<ResolveFormProps> = ({ matchId, currentState,
                 onClick={() => toggleSlot(slot)}
               >
                 {slot}
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        <div className="form-group">
+          <label className="form-label">Последний круг</label>
+          <div className="side-toggle" style={{ flexWrap: 'wrap' }}>
+            {(winningSide === 0 ? TOWN_LAST_ROUNDS : MAFIA_LAST_ROUNDS).map(lr => (
+              <div
+                key={lr}
+                className={`side-option ${lastRound === lr ? 'active' : ''}`}
+                onClick={() => { if (!isBusy) { setLastRound(lr); hapticFeedback('selection'); } }}
+              >
+                {LAST_ROUND_LABELS[lr]}
               </div>
             ))}
           </div>

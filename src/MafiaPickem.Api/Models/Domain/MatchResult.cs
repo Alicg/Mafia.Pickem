@@ -8,5 +8,6 @@ public class MatchResult
     public int MatchId { get; set; }
     public WinningSide WinningSide { get; set; }
     public string CorrectVotedOutCsv { get; set; } = string.Empty;
+    public byte CorrectLastRound { get; set; }
     public DateTime DateCreated { get; set; }
 }

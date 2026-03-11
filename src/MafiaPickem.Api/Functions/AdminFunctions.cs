@@ -282,14 +282,15 @@ public class AdminFunctions
         var correctVotedOutCsv = string.Join(",", sortedSlots);
 
         // Save match result
-        await _predictionRepository.SaveMatchResultAsync(id, request.WinningSide, correctVotedOutCsv);
+        await _predictionRepository.SaveMatchResultAsync(id, request.WinningSide, correctVotedOutCsv, request.LastRound);
 
         // Get correct vote counts
         var correctWinnerVotes = await _predictionRepository.GetCorrectWinnerVotesAsync(id, request.WinningSide);
         var correctVotedOutVotes = await _predictionRepository.GetCorrectVotedOutVotesAsync(id, correctVotedOutCsv);
+        var correctLastRoundVotes = await _predictionRepository.GetCorrectLastRoundVotesAsync(id, request.LastRound);
 
         // Calculate and save scores
-        await _scoringService.CalculateAndSaveScoresAsync(id, match.TournamentId, correctWinnerVotes, correctVotedOutVotes);
+        await _scoringService.CalculateAndSaveScoresAsync(id, match.TournamentId, correctWinnerVotes, correctVotedOutVotes, correctLastRoundVotes);
 
         // Transition state to Resolved
         var resolvedMatch = await _matchStateService.ResolveMatchAsync(id);

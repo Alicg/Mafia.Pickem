@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import './CrowdStats.css';
-import { BlobMatchState, PredictionDto, UNKNOWN_WINNING_SIDE } from '../types';
+import { BlobMatchState, PredictionDto, UNKNOWN_WINNING_SIDE, LAST_ROUND_LABELS } from '../types';
 
 type LegendStatus = 'correct' | 'wrong' | 'pending';
 
@@ -155,6 +155,61 @@ export const CrowdStats: React.FC<CrowdStatsProps> = ({ blobState, prediction })
           );
         })()}
       </div>
+
+      {/* Last Round Stats */}
+      {(() => {
+        const lastRoundVotes = blobState?.lastRoundVotes ?? [];
+        const resolvedLastRound = matchResult?.lastRound ?? 0;
+        const userLastRound = prediction?.predictedLastRound ?? null;
+
+        if (lastRoundVotes.length === 0 && !userLastRound) return null;
+
+        const pcts = lastRoundVotes.map(lr => formatPct(lr.percent));
+        const maxPct = Math.max(...pcts, 1);
+
+        return (
+          <div className="stats-group">
+            <label>Последний круг</label>
+            <div className="slots-columns">
+              {lastRoundVotes.map((lr, i) => {
+                const pct = pcts[i];
+                const heightPct = (pct / maxPct) * 100;
+                const isResolved = resolvedLastRound > 0 && lr.lastRound === resolvedLastRound;
+                const isUserPick = userLastRound === lr.lastRound;
+                return (
+                  <div key={lr.lastRound} className={`slot-col${isResolved ? ' actual-voted-out' : ''}${isUserPick ? ' user-pick-slot' : ''}`}>
+                    <span className="slot-col-pct">{pct.toFixed(0)}%</span>
+                    <div className="slot-col-track">
+                      <div
+                        className={`slot-col-fill${isResolved ? ' voted-out-fill' : ''}`}
+                        style={{ height: `${heightPct}%` }}
+                      />
+                    </div>
+                    <span className="slot-col-num" style={{ fontSize: '10px' }}>{LAST_ROUND_LABELS[lr.lastRound] ?? lr.lastRound}</span>
+                  </div>
+                );
+              })}
+            </div>
+            {userLastRound != null && userLastRound > 0 && (
+              <div className="legend-row">
+                <LegendItem
+                  label={`Ваш выбор: ${LAST_ROUND_LABELS[userLastRound] ?? userLastRound}`}
+                  status={resolvedLastRound > 0 ? (resolvedLastRound === userLastRound ? 'correct' : 'wrong') : 'pending'}
+                />
+                {prediction?.lastRoundPoints != null && (
+                  <span className={`legend-pts ${prediction.lastRoundPoints > 0 ? 'positive' : ''}`}>+{prediction.lastRoundPoints}</span>
+                )}
+                {resolvedLastRound > 0 && (
+                  <LegendItem
+                    label={`Результат: ${LAST_ROUND_LABELS[resolvedLastRound] ?? resolvedLastRound}`}
+                    status="correct"
+                  />
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {prediction != null && prediction.totalPoints != null && (
         <div className="total-points-row">

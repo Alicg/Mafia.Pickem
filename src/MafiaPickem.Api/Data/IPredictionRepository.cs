@@ -7,16 +7,17 @@ public interface IPredictionRepository
 {
     Task<Prediction?> GetByMatchAndUserAsync(int matchId, int userId);
     Task<List<Prediction>> GetByTournamentAndUserAsync(int tournamentId, int userId);
-    Task UpsertAsync(int matchId, int userId, byte predictedWinner, byte predictedVotedOut);
+    Task UpsertAsync(int matchId, int userId, byte predictedWinner, byte predictedVotedOut, byte predictedLastRound);
     Task<VoteStatsDto> GetVoteStatsAsync(int matchId);
     Task<int> GetTotalVotesAsync(int matchId);
     Task<int> GetCorrectWinnerVotesAsync(int matchId, byte winningSide);
     Task<int> GetCorrectVotedOutVotesAsync(int matchId, string correctVotedOutCsv);
-    Task InsertScoresAsync(int matchId, int totalVotes, int correctWinnerVotes, int correctVotedOutVotes);
+    Task<int> GetCorrectLastRoundVotesAsync(int matchId, byte correctLastRound);
+    Task InsertScoresAsync(int matchId, int totalVotes, int correctWinnerVotes, int correctVotedOutVotes, int correctLastRoundVotes);
     Task<PredictionScore?> GetScoreByPredictionIdAsync(int predictionId);
-    Task SaveMatchResultAsync(int matchId, byte winningSide, string correctVotedOutCsv);
+    Task SaveMatchResultAsync(int matchId, byte winningSide, string correctVotedOutCsv, byte correctLastRound);
     Task SaveVotedOutSlotsAsync(int matchId, string correctVotedOutCsv);
-    Task<(byte WinningSide, string CorrectVotedOutCsv)?> GetMatchResultAsync(int matchId);
+    Task<(byte WinningSide, string CorrectVotedOutCsv, byte CorrectLastRound)?> GetMatchResultAsync(int matchId);
     Task DeleteScoresByMatchIdAsync(int matchId);
     Task DeleteByMatchAndUserAsync(int matchId, int userId);
     Task DeleteByMatchIdAsync(int matchId);

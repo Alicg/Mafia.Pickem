@@ -92,6 +92,13 @@ public class StatePublishService : IStatePublishService
                     Count = s.Count,
                     Percent = s.Percentage
                 }).ToList();
+
+                blobState.LastRoundVotes = voteStats.LastRoundVotes.Select(lr => new LastRoundVoteEntry
+                {
+                    LastRound = lr.LastRound,
+                    Count = lr.Count,
+                    Percent = lr.Percentage
+                }).ToList();
             }
         }
 
@@ -101,14 +108,15 @@ public class StatePublishService : IStatePublishService
             var result = await _predictionRepository.GetMatchResultAsync(matchId);
             if (result != null)
             {
-                var (winningSide, correctVotedOutCsv) = result.Value;
+                var (winningSide, correctVotedOutCsv, correctLastRound) = result.Value;
                 blobState.MatchResult = new MatchResultDto
                 {
                     // For FirstVoted state, winningSide is not yet determined — omit it
                     WinningSide = match.State == MatchState.FirstVoted ? (byte)WinningSide.Unknown : winningSide,
                     VotedOutSlots = string.IsNullOrEmpty(correctVotedOutCsv)
                         ? new List<int>()
-                        : correctVotedOutCsv.Split(',').Select(int.Parse).ToList()
+                        : correctVotedOutCsv.Split(',').Select(int.Parse).ToList(),
+                    LastRound = match.State == MatchState.FirstVoted ? (byte)0 : correctLastRound
                 };
             }
         }

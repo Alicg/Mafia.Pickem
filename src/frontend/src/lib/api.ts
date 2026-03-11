@@ -105,14 +105,14 @@ export async function getMyPredictions(tournamentId: number): Promise<Prediction
 }
 
 // Matches
-export async function submitPrediction(matchId: number, predictedWinner: number, predictedVotedOut: number): Promise<void> {
+export async function submitPrediction(matchId: number, predictedWinner: number, predictedVotedOut: number, predictedLastRound: number): Promise<void> {
   if (isDemoMode) {
-    console.log('[DEMO] submitPrediction', { matchId, predictedWinner, predictedVotedOut });
+    console.log('[DEMO] submitPrediction', { matchId, predictedWinner, predictedVotedOut, predictedLastRound });
     return;
   }
   await apiFetch(`/matches/${encodeURIComponent(matchId)}/predict`, {
     method: 'POST',
-    body: JSON.stringify({ predictedWinner, predictedVotedOut }),
+    body: JSON.stringify({ predictedWinner, predictedVotedOut, predictedLastRound }),
   });
 }
 

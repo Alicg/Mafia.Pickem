@@ -2,5 +2,5 @@ namespace MafiaPickem.Api.Services;
 
 public interface IPredictionService
 {
-    Task SubmitPredictionAsync(int matchId, int userId, byte predictedWinner, byte predictedVotedOut);
+    Task SubmitPredictionAsync(int matchId, int userId, byte predictedWinner, byte predictedVotedOut, byte predictedLastRound);
 }

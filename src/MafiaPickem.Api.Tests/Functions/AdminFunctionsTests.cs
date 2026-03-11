@@ -184,13 +184,15 @@ public class AdminFunctionsTests
 
         _mockMatchRepository.Setup(r => r.GetByIdAsync(matchId))
             .ReturnsAsync(match);
-        _mockPredictionRepository.Setup(r => r.SaveMatchResultAsync(matchId, 1, "3,7,9"))
+        _mockPredictionRepository.Setup(r => r.SaveMatchResultAsync(matchId, 1, "3,7,9", 0))
             .Returns(Task.CompletedTask);
         _mockPredictionRepository.Setup(r => r.GetCorrectWinnerVotesAsync(matchId, 1))
             .ReturnsAsync(15);
         _mockPredictionRepository.Setup(r => r.GetCorrectVotedOutVotesAsync(matchId, "3,7,9"))
             .ReturnsAsync(8);
-        _mockScoringService.Setup(s => s.CalculateAndSaveScoresAsync(matchId, 10, 15, 8))
+        _mockPredictionRepository.Setup(r => r.GetCorrectLastRoundVotesAsync(matchId, 0))
+            .ReturnsAsync(0);
+        _mockScoringService.Setup(s => s.CalculateAndSaveScoresAsync(matchId, 10, 15, 8, 0))
             .Returns(Task.CompletedTask);
         _mockMatchStateService.Setup(s => s.ResolveMatchAsync(matchId))
             .ReturnsAsync(resolvedMatch);

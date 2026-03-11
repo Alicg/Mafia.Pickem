@@ -143,7 +143,8 @@ public class TournamentFunctions
                 var dto = new PredictionDto
                 {
                     PredictedWinner = p.PredictedWinner,
-                    PredictedVotedOut = p.PredictedVotedOut
+                    PredictedVotedOut = p.PredictedVotedOut,
+                    PredictedLastRound = p.PredictedLastRound
                 };
 
                 // Load scores for resolved matches
@@ -152,6 +153,7 @@ public class TournamentFunctions
                 {
                     dto.WinnerPoints = score.WinnerPoints;
                     dto.VotedOutPoints = score.VotedOutPoints;
+                    dto.LastRoundPoints = score.LastRoundPoints;
                     dto.TotalPoints = score.TotalPoints;
                 }
 

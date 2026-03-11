@@ -44,16 +44,16 @@ public class ScoringServiceTests
             .ReturnsAsync(match);
         _mockPredictionRepo.Setup(r => r.GetTotalVotesAsync(matchId))
             .ReturnsAsync(totalVotes);
-        _mockPredictionRepo.Setup(r => r.InsertScoresAsync(matchId, totalVotes, correctWinnerVotes, correctVotedOutVotes))
+        _mockPredictionRepo.Setup(r => r.InsertScoresAsync(matchId, totalVotes, correctWinnerVotes, correctVotedOutVotes, 0))
             .Returns(Task.CompletedTask);
         _mockLeaderboardRepo.Setup(r => r.UpdateLeaderboardAsync(tournamentId))
             .Returns(Task.CompletedTask);
 
         // Act
-        await _scoringService.CalculateAndSaveScoresAsync(matchId, tournamentId, correctWinnerVotes, correctVotedOutVotes);
+        await _scoringService.CalculateAndSaveScoresAsync(matchId, tournamentId, correctWinnerVotes, correctVotedOutVotes, 0);
 
         // Assert
-        _mockPredictionRepo.Verify(r => r.InsertScoresAsync(matchId, totalVotes, correctWinnerVotes, correctVotedOutVotes), Times.Once);
+        _mockPredictionRepo.Verify(r => r.InsertScoresAsync(matchId, totalVotes, correctWinnerVotes, correctVotedOutVotes, 0), Times.Once);
         _mockLeaderboardRepo.Verify(r => r.UpdateLeaderboardAsync(tournamentId), Times.Once);
     }
 
@@ -73,16 +73,16 @@ public class ScoringServiceTests
             .ReturnsAsync(match);
         _mockPredictionRepo.Setup(r => r.GetTotalVotesAsync(matchId))
             .ReturnsAsync(totalVotes);
-        _mockPredictionRepo.Setup(r => r.InsertScoresAsync(matchId, totalVotes, correctWinnerVotes, correctVotedOutVotes))
+        _mockPredictionRepo.Setup(r => r.InsertScoresAsync(matchId, totalVotes, correctWinnerVotes, correctVotedOutVotes, 0))
             .Returns(Task.CompletedTask);
         _mockLeaderboardRepo.Setup(r => r.UpdateLeaderboardAsync(tournamentId))
             .Returns(Task.CompletedTask);
 
         // Act
-        await _scoringService.CalculateAndSaveScoresAsync(matchId, tournamentId, correctWinnerVotes, correctVotedOutVotes);
+        await _scoringService.CalculateAndSaveScoresAsync(matchId, tournamentId, correctWinnerVotes, correctVotedOutVotes, 0);
 
         // Assert
-        _mockPredictionRepo.Verify(r => r.InsertScoresAsync(matchId, totalVotes, correctWinnerVotes, correctVotedOutVotes), Times.Once);
+        _mockPredictionRepo.Verify(r => r.InsertScoresAsync(matchId, totalVotes, correctWinnerVotes, correctVotedOutVotes, 0), Times.Once);
     }
 
     [Fact]
@@ -101,16 +101,16 @@ public class ScoringServiceTests
             .ReturnsAsync(match);
         _mockPredictionRepo.Setup(r => r.GetTotalVotesAsync(matchId))
             .ReturnsAsync(totalVotes);
-        _mockPredictionRepo.Setup(r => r.InsertScoresAsync(matchId, totalVotes, correctWinnerVotes, correctVotedOutVotes))
+        _mockPredictionRepo.Setup(r => r.InsertScoresAsync(matchId, totalVotes, correctWinnerVotes, correctVotedOutVotes, 0))
             .Returns(Task.CompletedTask);
         _mockLeaderboardRepo.Setup(r => r.UpdateLeaderboardAsync(tournamentId))
             .Returns(Task.CompletedTask);
 
         // Act
-        await _scoringService.CalculateAndSaveScoresAsync(matchId, tournamentId, correctWinnerVotes, correctVotedOutVotes);
+        await _scoringService.CalculateAndSaveScoresAsync(matchId, tournamentId, correctWinnerVotes, correctVotedOutVotes, 0);
 
         // Assert
-        _mockPredictionRepo.Verify(r => r.InsertScoresAsync(matchId, totalVotes, 0, correctVotedOutVotes), Times.Once);
+        _mockPredictionRepo.Verify(r => r.InsertScoresAsync(matchId, totalVotes, 0, correctVotedOutVotes, 0), Times.Once);
     }
 
     [Fact]
@@ -129,16 +129,16 @@ public class ScoringServiceTests
             .ReturnsAsync(match);
         _mockPredictionRepo.Setup(r => r.GetTotalVotesAsync(matchId))
             .ReturnsAsync(totalVotes);
-        _mockPredictionRepo.Setup(r => r.InsertScoresAsync(matchId, totalVotes, correctWinnerVotes, correctVotedOutVotes))
+        _mockPredictionRepo.Setup(r => r.InsertScoresAsync(matchId, totalVotes, correctWinnerVotes, correctVotedOutVotes, 0))
             .Returns(Task.CompletedTask);
         _mockLeaderboardRepo.Setup(r => r.UpdateLeaderboardAsync(tournamentId))
             .Returns(Task.CompletedTask);
 
         // Act
-        await _scoringService.CalculateAndSaveScoresAsync(matchId, tournamentId, correctWinnerVotes, 0);
+        await _scoringService.CalculateAndSaveScoresAsync(matchId, tournamentId, correctWinnerVotes, 0, 0);
 
         // Assert
-        _mockPredictionRepo.Verify(r => r.InsertScoresAsync(matchId, totalVotes, correctWinnerVotes, 0), Times.Once);
+        _mockPredictionRepo.Verify(r => r.InsertScoresAsync(matchId, totalVotes, correctWinnerVotes, 0, 0), Times.Once);
     }
 
     [Fact]
@@ -155,16 +155,16 @@ public class ScoringServiceTests
             .ReturnsAsync(match);
         _mockPredictionRepo.Setup(r => r.GetTotalVotesAsync(matchId))
             .ReturnsAsync(totalVotes);
-        _mockPredictionRepo.Setup(r => r.InsertScoresAsync(matchId, 0, 0, 0))
+        _mockPredictionRepo.Setup(r => r.InsertScoresAsync(matchId, 0, 0, 0, 0))
             .Returns(Task.CompletedTask);
         _mockLeaderboardRepo.Setup(r => r.UpdateLeaderboardAsync(tournamentId))
             .Returns(Task.CompletedTask);
 
         // Act
-        await _scoringService.CalculateAndSaveScoresAsync(matchId, tournamentId, 0, 0);
+        await _scoringService.CalculateAndSaveScoresAsync(matchId, tournamentId, 0, 0, 0);
 
         // Assert
-        _mockPredictionRepo.Verify(r => r.InsertScoresAsync(matchId, 0, 0, 0), Times.Once);
+        _mockPredictionRepo.Verify(r => r.InsertScoresAsync(matchId, 0, 0, 0, 0), Times.Once);
         _mockLeaderboardRepo.Verify(r => r.UpdateLeaderboardAsync(tournamentId), Times.Once);
     }
 }

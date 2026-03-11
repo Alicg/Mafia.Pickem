@@ -7,6 +7,7 @@ public class Prediction
     public int UserId { get; set; }
     public byte PredictedWinner { get; set; }
     public byte PredictedVotedOut { get; set; }
+    public byte PredictedLastRound { get; set; }
     public DateTime DateCreated { get; set; }
     public DateTime? DateUpdated { get; set; }
 }

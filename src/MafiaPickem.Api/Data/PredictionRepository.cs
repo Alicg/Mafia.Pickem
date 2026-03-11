@@ -19,7 +19,7 @@ public class PredictionRepository : IPredictionRepository
         using var connection = _connectionFactory.CreateConnection();
 
         const string sql = """
-            SELECT Id, MatchId, UserId, PredictedWinner, PredictedVotedOut, DateCreated, DateUpdated
+            SELECT Id, MatchId, UserId, PredictedWinner, PredictedVotedOut, PredictedLastRound, DateCreated, DateUpdated
             FROM pickem.Prediction
             WHERE MatchId = @MatchId AND UserId = @UserId
             """;
@@ -32,7 +32,7 @@ public class PredictionRepository : IPredictionRepository
         using var connection = _connectionFactory.CreateConnection();
 
         const string sql = """
-            SELECT p.Id, p.MatchId, p.UserId, p.PredictedWinner, p.PredictedVotedOut, p.DateCreated, p.DateUpdated
+            SELECT p.Id, p.MatchId, p.UserId, p.PredictedWinner, p.PredictedVotedOut, p.PredictedLastRound, p.DateCreated, p.DateUpdated
             FROM pickem.Prediction p
             INNER JOIN pickem.Match m ON m.Id = p.MatchId
             WHERE m.TournamentId = @TournamentId AND p.UserId = @UserId
@@ -42,7 +42,7 @@ public class PredictionRepository : IPredictionRepository
         return results.ToList();
     }
 
-    public async Task UpsertAsync(int matchId, int userId, byte predictedWinner, byte predictedVotedOut)
+    public async Task UpsertAsync(int matchId, int userId, byte predictedWinner, byte predictedVotedOut, byte predictedLastRound)
     {
         using var connection = _connectionFactory.CreateConnection();
 
@@ -54,10 +54,11 @@ public class PredictionRepository : IPredictionRepository
                 UPDATE SET 
                     PredictedWinner = @PredictedWinner,
                     PredictedVotedOut = @PredictedVotedOut,
+                    PredictedLastRound = @PredictedLastRound,
                     DateUpdated = GETUTCDATE()
             WHEN NOT MATCHED THEN
-                INSERT (MatchId, UserId, PredictedWinner, PredictedVotedOut, DateCreated)
-                VALUES (@MatchId, @UserId, @PredictedWinner, @PredictedVotedOut, GETUTCDATE());
+                INSERT (MatchId, UserId, PredictedWinner, PredictedVotedOut, PredictedLastRound, DateCreated)
+                VALUES (@MatchId, @UserId, @PredictedWinner, @PredictedVotedOut, @PredictedLastRound, GETUTCDATE());
             """;
 
         await connection.ExecuteAsync(sql, new
@@ -65,7 +66,8 @@ public class PredictionRepository : IPredictionRepository
             MatchId = matchId,
             UserId = userId,
             PredictedWinner = predictedWinner,
-            PredictedVotedOut = predictedVotedOut
+            PredictedVotedOut = predictedVotedOut,
+            PredictedLastRound = predictedLastRound
         });
     }
 
@@ -100,12 +102,27 @@ public class PredictionRepository : IPredictionRepository
 
         var slots = (await connection.QueryAsync<SlotVoteDto>(slotsSql, new { MatchId = matchId })).ToList();
 
+        // Get last round vote counts
+        const string lastRoundSql = """
+            SELECT 
+                PredictedLastRound AS LastRound,
+                COUNT(*) AS Count,
+                CAST(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM pickem.Prediction WHERE MatchId = @MatchId) AS DECIMAL(5,2)) AS Percentage
+            FROM pickem.Prediction
+            WHERE MatchId = @MatchId AND PredictedLastRound > 0
+            GROUP BY PredictedLastRound
+            ORDER BY PredictedLastRound
+            """;
+
+        var lastRoundVotes = (await connection.QueryAsync<LastRoundVoteDto>(lastRoundSql, new { MatchId = matchId })).ToList();
+
         return new VoteStatsDto
         {
             TotalVotes = stats.TotalVotes,
             TownPercentage = stats.TownPercentage,
             MafiaPercentage = stats.MafiaPercentage,
-            SlotVotes = slots
+            SlotVotes = slots,
+            LastRoundVotes = lastRoundVotes
         };
     }
 
@@ -154,13 +171,26 @@ public class PredictionRepository : IPredictionRepository
         return await connection.ExecuteScalarAsync<int>(sql, new { MatchId = matchId, CorrectVotedOutCsv = correctVotedOutCsv });
     }
 
-    public async Task InsertScoresAsync(int matchId, int totalVotes, int correctWinnerVotes, int correctVotedOutVotes)
+    public async Task<int> GetCorrectLastRoundVotesAsync(int matchId, byte correctLastRound)
     {
         using var connection = _connectionFactory.CreateConnection();
 
         const string sql = """
-            INSERT INTO pickem.PredictionScore (PredictionId, WinnerPoints, VotedOutPoints, TotalPoints, 
-                                          TotalVotes, CorrectWinnerVotes, CorrectVotedOutVotes, DateCalculated)
+            SELECT COUNT(*)
+            FROM pickem.Prediction
+            WHERE MatchId = @MatchId AND PredictedLastRound = @CorrectLastRound
+            """;
+
+        return await connection.ExecuteScalarAsync<int>(sql, new { MatchId = matchId, CorrectLastRound = correctLastRound });
+    }
+
+    public async Task InsertScoresAsync(int matchId, int totalVotes, int correctWinnerVotes, int correctVotedOutVotes, int correctLastRoundVotes)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        const string sql = """
+            INSERT INTO pickem.PredictionScore (PredictionId, WinnerPoints, VotedOutPoints, LastRoundPoints, TotalPoints, 
+                                          TotalVotes, CorrectWinnerVotes, CorrectVotedOutVotes, CorrectLastRoundVotes, DateCalculated)
             SELECT 
                 p.Id AS PredictionId,
                 CASE 
@@ -179,6 +209,11 @@ public class PredictionRepository : IPredictionRepository
                     ELSE 0
                 END AS VotedOutPoints,
                 CASE 
+                    WHEN p.PredictedLastRound = mr.CorrectLastRound AND p.PredictedLastRound > 0 AND @CorrectLastRoundVotes > 0
+                    THEN CAST(@TotalVotes AS DECIMAL(12,4)) / @CorrectLastRoundVotes * 15
+                    ELSE 0
+                END AS LastRoundPoints,
+                CASE 
                     WHEN p.PredictedWinner = mr.WinningSide AND @CorrectWinnerVotes > 0 
                     THEN CAST(@TotalVotes AS DECIMAL(12,4)) / @CorrectWinnerVotes * 10
                     ELSE 0
@@ -192,10 +227,16 @@ public class PredictionRepository : IPredictionRepository
                     ) AND @CorrectVotedOutVotes > 0
                     THEN CAST(@TotalVotes AS DECIMAL(12,4)) / @CorrectVotedOutVotes * 20
                     ELSE 0
+                END +
+                CASE 
+                    WHEN p.PredictedLastRound = mr.CorrectLastRound AND p.PredictedLastRound > 0 AND @CorrectLastRoundVotes > 0
+                    THEN CAST(@TotalVotes AS DECIMAL(12,4)) / @CorrectLastRoundVotes * 15
+                    ELSE 0
                 END AS TotalPoints,
                 @TotalVotes AS TotalVotes,
                 @CorrectWinnerVotes AS CorrectWinnerVotes,
                 @CorrectVotedOutVotes AS CorrectVotedOutVotes,
+                @CorrectLastRoundVotes AS CorrectLastRoundVotes,
                 GETUTCDATE() AS DateCalculated
             FROM pickem.Prediction p
             INNER JOIN pickem.MatchResult mr ON p.MatchId = mr.MatchId
@@ -207,7 +248,8 @@ public class PredictionRepository : IPredictionRepository
             MatchId = matchId,
             TotalVotes = totalVotes,
             CorrectWinnerVotes = correctWinnerVotes,
-            CorrectVotedOutVotes = correctVotedOutVotes
+            CorrectVotedOutVotes = correctVotedOutVotes,
+            CorrectLastRoundVotes = correctLastRoundVotes
         });
     }
 
@@ -216,8 +258,8 @@ public class PredictionRepository : IPredictionRepository
         using var connection = _connectionFactory.CreateConnection();
 
         const string sql = """
-            SELECT Id, PredictionId, WinnerPoints, VotedOutPoints, TotalPoints, 
-                   TotalVotes, CorrectWinnerVotes, CorrectVotedOutVotes, DateCalculated
+            SELECT Id, PredictionId, WinnerPoints, VotedOutPoints, LastRoundPoints, TotalPoints, 
+                   TotalVotes, CorrectWinnerVotes, CorrectVotedOutVotes, CorrectLastRoundVotes, DateCalculated
             FROM pickem.PredictionScore
             WHERE PredictionId = @PredictionId
             """;
@@ -225,12 +267,12 @@ public class PredictionRepository : IPredictionRepository
         return await connection.QuerySingleOrDefaultAsync<PredictionScore>(sql, new { PredictionId = predictionId });
     }
 
-    public async Task<(byte WinningSide, string CorrectVotedOutCsv)?> GetMatchResultAsync(int matchId)
+    public async Task<(byte WinningSide, string CorrectVotedOutCsv, byte CorrectLastRound)?> GetMatchResultAsync(int matchId)
     {
         using var connection = _connectionFactory.CreateConnection();
 
         const string sql = """
-            SELECT WinningSide, CorrectVotedOutCsv
+            SELECT WinningSide, CorrectVotedOutCsv, CorrectLastRound
             FROM pickem.MatchResult
             WHERE MatchId = @MatchId
             """;
@@ -238,10 +280,10 @@ public class PredictionRepository : IPredictionRepository
         var row = await connection.QuerySingleOrDefaultAsync<dynamic>(sql, new { MatchId = matchId });
         if (row == null) return null;
 
-        return ((byte)row.WinningSide, (string)row.CorrectVotedOutCsv);
+        return ((byte)row.WinningSide, (string)row.CorrectVotedOutCsv, (byte)row.CorrectLastRound);
     }
 
-    public async Task SaveMatchResultAsync(int matchId, byte winningSide, string correctVotedOutCsv)
+    public async Task SaveMatchResultAsync(int matchId, byte winningSide, string correctVotedOutCsv, byte correctLastRound)
     {
         using var connection = _connectionFactory.CreateConnection();
 
@@ -253,17 +295,19 @@ public class PredictionRepository : IPredictionRepository
                 UPDATE SET 
                     WinningSide = @WinningSide,
                     CorrectVotedOutCsv = @CorrectVotedOutCsv,
+                    CorrectLastRound = @CorrectLastRound,
                     DateCreated = GETUTCDATE()
             WHEN NOT MATCHED THEN
-                INSERT (MatchId, WinningSide, CorrectVotedOutCsv, DateCreated)
-                VALUES (@MatchId, @WinningSide, @CorrectVotedOutCsv, GETUTCDATE());
+                INSERT (MatchId, WinningSide, CorrectVotedOutCsv, CorrectLastRound, DateCreated)
+                VALUES (@MatchId, @WinningSide, @CorrectVotedOutCsv, @CorrectLastRound, GETUTCDATE());
             """;
 
         await connection.ExecuteAsync(sql, new
         {
             MatchId = matchId,
             WinningSide = winningSide,
-            CorrectVotedOutCsv = correctVotedOutCsv
+            CorrectVotedOutCsv = correctVotedOutCsv,
+            CorrectLastRound = correctLastRound
         });
     }
 

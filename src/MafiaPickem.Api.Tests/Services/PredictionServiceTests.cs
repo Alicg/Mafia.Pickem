@@ -51,14 +51,14 @@ public class PredictionServiceTests
         _mockTournamentParticipantRepo.Setup(r => r.HasTeamSelectionAsync(match.TournamentId, userId))
             .ReturnsAsync(true);
         _mockUserContext.Setup(u => u.IsRegistered).Returns(true);
-        _mockPredictionRepo.Setup(r => r.UpsertAsync(matchId, userId, predictedWinner, predictedVotedOut))
+        _mockPredictionRepo.Setup(r => r.UpsertAsync(matchId, userId, predictedWinner, predictedVotedOut, 0))
             .Returns(Task.CompletedTask);
 
         // Act
-        await _predictionService.SubmitPredictionAsync(matchId, userId, predictedWinner, predictedVotedOut);
+        await _predictionService.SubmitPredictionAsync(matchId, userId, predictedWinner, predictedVotedOut, 0);
 
         // Assert
-        _mockPredictionRepo.Verify(r => r.UpsertAsync(matchId, userId, predictedWinner, predictedVotedOut), Times.Once);
+        _mockPredictionRepo.Verify(r => r.UpsertAsync(matchId, userId, predictedWinner, predictedVotedOut, 0), Times.Once);
     }
 
     [Theory]
@@ -78,7 +78,7 @@ public class PredictionServiceTests
         _mockUserContext.Setup(u => u.IsRegistered).Returns(true);
 
         // Act
-        var act = async () => await _predictionService.SubmitPredictionAsync(matchId, userId, 0, 5);
+        var act = async () => await _predictionService.SubmitPredictionAsync(matchId, userId, 0, 5, 0);
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -97,7 +97,7 @@ public class PredictionServiceTests
         _mockUserContext.Setup(u => u.IsRegistered).Returns(true);
 
         // Act
-        var act = async () => await _predictionService.SubmitPredictionAsync(matchId, userId, 0, 5);
+        var act = async () => await _predictionService.SubmitPredictionAsync(matchId, userId, 0, 5, 0);
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -123,7 +123,7 @@ public class PredictionServiceTests
         _mockUserContext.Setup(u => u.IsRegistered).Returns(true);
 
         // Act
-        var act = async () => await _predictionService.SubmitPredictionAsync(matchId, userId, invalidWinner, 5);
+        var act = async () => await _predictionService.SubmitPredictionAsync(matchId, userId, invalidWinner, 5, 0);
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -149,7 +149,7 @@ public class PredictionServiceTests
         _mockUserContext.Setup(u => u.IsRegistered).Returns(true);
 
         // Act
-        var act = async () => await _predictionService.SubmitPredictionAsync(matchId, userId, 0, invalidVotedOut);
+        var act = async () => await _predictionService.SubmitPredictionAsync(matchId, userId, 0, invalidVotedOut, 0);
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -169,7 +169,7 @@ public class PredictionServiceTests
         _mockUserContext.Setup(u => u.IsRegistered).Returns(false);
 
         // Act
-        var act = async () => await _predictionService.SubmitPredictionAsync(matchId, userId, 0, 5);
+        var act = async () => await _predictionService.SubmitPredictionAsync(matchId, userId, 0, 5, 0);
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -194,7 +194,7 @@ public class PredictionServiceTests
         _mockUserContext.Setup(u => u.IsRegistered).Returns(true);
 
         // Act
-        var act = async () => await _predictionService.SubmitPredictionAsync(matchId, userId, 0, 5);
+        var act = async () => await _predictionService.SubmitPredictionAsync(matchId, userId, 0, 5, 0);
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>()

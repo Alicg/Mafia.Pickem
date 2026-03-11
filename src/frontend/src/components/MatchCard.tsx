@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './MatchCard.css';
-import { MatchInfo, MatchState, PredictionDto, BlobMatchState } from '../types';
+import { MatchInfo, MatchState, PredictionDto, BlobMatchState, TOWN_LAST_ROUNDS, MAFIA_LAST_ROUNDS } from '../types';
 import { PredictionForm } from './PredictionForm';
 import { CrowdStats } from './CrowdStats';
 import { MatchStateControls } from './admin/MatchStateControls';
@@ -38,6 +38,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
 }) => {
   const [selectedWinner, setSelectedWinner] = useState<number | null>(prediction?.predictedWinner ?? null);
   const [selectedVotedOut, setSelectedVotedOut] = useState<number | null>(prediction?.predictedVotedOut ?? null);
+  const [selectedLastRound, setSelectedLastRound] = useState<number | null>(prediction?.predictedLastRound ?? null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -48,17 +49,29 @@ export const MatchCard: React.FC<MatchCardProps> = ({
     if (!hasChanges) {
       setSelectedWinner(prediction?.predictedWinner ?? null);
       setSelectedVotedOut(prediction?.predictedVotedOut ?? null);
+      setSelectedLastRound(prediction?.predictedLastRound ?? null);
     }
   }, [prediction, hasChanges]);
 
   const handleWinnerChange = (val: number) => {
     setSelectedWinner(val);
+    // Reset last round when winner changes since options differ
+    const validOptions = val === 0 ? TOWN_LAST_ROUNDS : MAFIA_LAST_ROUNDS;
+    if (selectedLastRound !== null && !validOptions.includes(selectedLastRound)) {
+      setSelectedLastRound(null);
+    }
     setHasChanges(true);
     hapticFeedback('selection');
   };
 
   const handleVotedOutChange = (val: number) => {
     setSelectedVotedOut(val);
+    setHasChanges(true);
+    hapticFeedback('selection');
+  };
+
+  const handleLastRoundChange = (val: number) => {
+    setSelectedLastRound(val);
     setHasChanges(true);
     hapticFeedback('selection');
   };
@@ -75,19 +88,21 @@ export const MatchCard: React.FC<MatchCardProps> = ({
   };
 
   const isFormDisabled = currentState !== MatchState.Open || isSubmitting;
-  const showInlineSubmit = hasChanges && selectedWinner !== null && selectedVotedOut !== null && currentState === MatchState.Open;
+  const showInlineSubmit = hasChanges && selectedWinner !== null && selectedVotedOut !== null && selectedLastRound !== null && currentState === MatchState.Open;
 
   const handleInlineSubmit = async () => {
-    if (selectedWinner === null || selectedVotedOut === null) return;
+    if (selectedWinner === null || selectedVotedOut === null || selectedLastRound === null) return;
     try {
       setIsSubmitting(true);
       hapticFeedback('soft');
-      await submitPrediction(matchInfo.id, selectedWinner, selectedVotedOut);
+      await submitPrediction(matchInfo.id, selectedWinner, selectedVotedOut, selectedLastRound);
       const newPrediction: PredictionDto = {
         predictedWinner: selectedWinner,
         predictedVotedOut: selectedVotedOut,
+        predictedLastRound: selectedLastRound,
         winnerPoints: null,
         votedOutPoints: null,
+        lastRoundPoints: null,
         totalPoints: null
       };
       onPredictionChange(newPrediction);
@@ -109,6 +124,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
       onPredictionChange(null);
       setSelectedWinner(null);
       setSelectedVotedOut(null);
+      setSelectedLastRound(null);
       setHasChanges(false);
       hapticFeedback('success');
     } catch (err) {
@@ -147,8 +163,10 @@ export const MatchCard: React.FC<MatchCardProps> = ({
               <PredictionForm
                 selectedWinner={selectedWinner}
                 selectedVotedOut={selectedVotedOut}
+                selectedLastRound={selectedLastRound}
                 onWinnerChange={handleWinnerChange}
                 onVotedOutChange={handleVotedOutChange}
+                onLastRoundChange={handleLastRoundChange}
                 disabled={isFormDisabled}
               />
               {showInlineSubmit && (

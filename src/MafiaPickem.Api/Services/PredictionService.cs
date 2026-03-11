@@ -26,7 +26,7 @@ public class PredictionService : IPredictionService
         _userContext = userContext;
     }
 
-    public async Task SubmitPredictionAsync(int matchId, int userId, byte predictedWinner, byte predictedVotedOut)
+    public async Task SubmitPredictionAsync(int matchId, int userId, byte predictedWinner, byte predictedVotedOut, byte predictedLastRound)
     {
         // Validate user is registered
         if (!_userContext.IsRegistered)
@@ -70,7 +70,26 @@ public class PredictionService : IPredictionService
             throw new InvalidOperationException("PredictedVotedOut must be between 0 and 10");
         }
 
+        // Validate predicted last round
+        if (predictedLastRound > 5)
+        {
+            throw new InvalidOperationException("PredictedLastRound must be between 0 and 5");
+        }
+
+        // Validate last round is consistent with predicted winner
+        if (predictedLastRound > 0)
+        {
+            if (predictedWinner == 0 && predictedLastRound > 2) // Town: only 1 (TownClean) or 2 (TownGuess)
+            {
+                throw new InvalidOperationException("Town winner predictions only allow TownClean (1) or TownGuess (2)");
+            }
+            if (predictedWinner == 1 && predictedLastRound < 3) // Mafia: only 3, 4, or 5
+            {
+                throw new InvalidOperationException("Mafia winner predictions only allow Mafia3v3 (3), Mafia2v2 (4), or Mafia1v1 (5)");
+            }
+        }
+
         // Submit prediction
-        await _predictionRepository.UpsertAsync(matchId, userId, predictedWinner, predictedVotedOut);
+        await _predictionRepository.UpsertAsync(matchId, userId, predictedWinner, predictedVotedOut, predictedLastRound);
     }
 }

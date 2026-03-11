@@ -261,6 +261,11 @@ public static class ObsOverlayHtmlRenderer
                     <div class="chart-title">Заголосуют первым</div>
                     <div class="vote-chart" id="voteChart"></div>
                 </div>
+
+                <div class="chart-card">
+                    <div class="chart-title">Последний круг</div>
+                    <div class="vote-chart" id="lastRoundChart"></div>
+                </div>
             </div>
         </section>
     </div>
@@ -272,6 +277,7 @@ public static class ObsOverlayHtmlRenderer
         const matchState = document.getElementById('matchState');
         const statusText = document.getElementById('statusText');
         const voteChart = document.getElementById('voteChart');
+        const lastRoundChart = document.getElementById('lastRoundChart');
 
         const formatPercent = (value) => `${Number(value || 0).toFixed(1)}%`;
         const formatUpdatedAt = (value) => {
@@ -323,12 +329,39 @@ public static class ObsOverlayHtmlRenderer
             });
         };
 
+        const renderLastRound = (payload) => {
+            const lastRoundVotes = Array.isArray(payload.lastRoundVotes) ? payload.lastRoundVotes : [];
+            const resolvedLR = payload.resolvedLastRound || 0;
+            const maxCount = Math.max(...lastRoundVotes.map((lr) => Number(lr.count || 0)), 1);
+
+            lastRoundChart.innerHTML = '';
+
+            lastRoundVotes.forEach((lr) => {
+                const count = Number(lr.count || 0);
+                const barWidth = count > 0 ? Math.max((count / maxCount) * 100, 10) : 0;
+                const fillStyle = count > 0
+                    ? `style="--bar-width:${barWidth}%"`
+                    : 'style="--bar-width:0%"';
+                const isResolved = resolvedLR > 0 && lr.lastRound === resolvedLR;
+                const item = document.createElement('div');
+                item.className = `vote-bar${isResolved ? ' is-resolved' : ''}${count === 0 ? ' is-empty' : ''}`;
+                item.innerHTML = `
+                    <div class="vote-bar__slot" style="width:52px;text-align:left;font-size:10px">${lr.label || lr.lastRound}</div>
+                    <div class="vote-bar__track">
+                        <div class="vote-bar__fill" ${fillStyle}></div>
+                        <div class="vote-bar__count">${count}</div>
+                    </div>`;
+                lastRoundChart.appendChild(item);
+            });
+        };
+
         const applyDisconnectedState = (message) => {
             matchState.textContent = 'Нет связи';
             statusText.textContent = 'Ошибка обновления';
             redPercent.textContent = '-';
             totalPredictionsCount.textContent = '0 прогнозов';
             renderSeats({ seatVotes: [] });
+            renderLastRound({ lastRoundVotes: [] });
         };
 
         const renderPayload = (payload) => {
@@ -338,6 +371,7 @@ public static class ObsOverlayHtmlRenderer
                 redPercent.textContent = '-';
                 totalPredictionsCount.textContent = '0 прогнозов';
                 renderSeats(payload);
+                renderLastRound(payload);
                 return;
             }
 
@@ -350,6 +384,7 @@ public static class ObsOverlayHtmlRenderer
                 totalPredictions
             );
             renderSeats(payload);
+            renderLastRound(payload);
         };
 
         const refreshOverlay = async () => {

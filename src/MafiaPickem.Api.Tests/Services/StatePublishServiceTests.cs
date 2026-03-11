@@ -258,7 +258,7 @@ public class StatePublishServiceTests
         _mockPredictionRepository.Setup(r => r.GetVoteStatsAsync(matchId))
             .ReturnsAsync(voteStats);
         _mockPredictionRepository.Setup(r => r.GetMatchResultAsync(matchId))
-            .ReturnsAsync(((byte)WinningSide.Town, "7"));
+            .ReturnsAsync(((byte)WinningSide.Town, "7", (byte)0));
 
         BlobMatchState? capturedState = null;
         _mockBlobWriter.Setup(w => w.WriteStateAsync(It.IsAny<BlobMatchState>()))

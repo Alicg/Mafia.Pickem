@@ -52,11 +52,34 @@ export enum MatchState {
 
 export const UNKNOWN_WINNING_SIDE = 255;
 
+/** Last round prediction values */
+export enum LastRound {
+  None = 0,
+  TownClean = 1,   // Победа города — сухая
+  TownGuess = 2,   // Победа города — угадайка
+  Mafia3v3 = 3,    // Победа мафии — 3в3
+  Mafia2v2 = 4,    // Победа мафии — 2в2
+  Mafia1v1 = 5,    // Победа мафии — 1в1
+}
+
+export const LAST_ROUND_LABELS: Record<number, string> = {
+  [LastRound.TownClean]: 'Сухая',
+  [LastRound.TownGuess]: 'Угадайка',
+  [LastRound.Mafia3v3]: '3в3',
+  [LastRound.Mafia2v2]: '2в2',
+  [LastRound.Mafia1v1]: '1в1',
+};
+
+export const TOWN_LAST_ROUNDS = [LastRound.TownClean, LastRound.TownGuess];
+export const MAFIA_LAST_ROUNDS = [LastRound.Mafia3v3, LastRound.Mafia2v2, LastRound.Mafia1v1];
+
 export interface PredictionDto {
   predictedWinner: number;
   predictedVotedOut: number;
+  predictedLastRound: number;
   winnerPoints: number | null;
   votedOutPoints: number | null;
+  lastRoundPoints: number | null;
   totalPoints: number | null;
 }
 
@@ -102,6 +125,7 @@ export interface TournamentTeamSelectionDto {
 export interface ResolveMatchRequest {
   winningSide: number;  // 0=Town, 1=Mafia
   votedOutSlots: number[];  // [0]=Nobody, [3,7]=Players
+  lastRound: number;  // LastRound enum value
 }
 
 export interface SetFirstVotedRequest {
@@ -129,8 +153,10 @@ export interface BlobMatchState {
     mafia: { count: number; percent: number };
   } | null;
   votedOutVotes: { slot: number; count: number; percent: number }[] | null;
+  lastRoundVotes: { lastRound: number; count: number; percent: number }[] | null;
   matchResult: {
     winningSide: number;   // 0=Town, 1=Mafia, 255=Unknown for FirstVoted
     votedOutSlots: number[];
+    lastRound: number;     // LastRound enum value
   } | null;
 }

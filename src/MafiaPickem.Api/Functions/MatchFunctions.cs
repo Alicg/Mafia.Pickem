@@ -62,7 +62,8 @@ public class MatchFunctions
                     myPrediction = new PredictionDto
                     {
                         PredictedWinner = prediction.PredictedWinner,
-                        PredictedVotedOut = prediction.PredictedVotedOut
+                        PredictedVotedOut = prediction.PredictedVotedOut,
+                        PredictedLastRound = prediction.PredictedLastRound
                     };
 
                     // If match is resolved, include score
@@ -73,6 +74,7 @@ public class MatchFunctions
                         {
                             myPrediction.WinnerPoints = score.WinnerPoints;
                             myPrediction.VotedOutPoints = score.VotedOutPoints;
+                            myPrediction.LastRoundPoints = score.LastRoundPoints;
                             myPrediction.TotalPoints = score.TotalPoints;
                         }
                     }
@@ -128,7 +130,8 @@ public class MatchFunctions
                 id,
                 _userContext.UserId,
                 request.PredictedWinner,
-                request.PredictedVotedOut);
+                request.PredictedVotedOut,
+                request.PredictedLastRound);
 
             // Publish state update to blob (with throttling for Open state)
             await _statePublishService.PublishMatchStateAsync(id);

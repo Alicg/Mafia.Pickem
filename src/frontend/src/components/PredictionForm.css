@@ -52,3 +52,46 @@
   border-color: rgba(255, 255, 255, 0.3);
   box-shadow: 0 0 24px rgba(0, 0, 0, 0.4);
 }
+
+.last-round-toggle {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.last-round-btn {
+  flex: 1;
+  min-width: 60px;
+  padding: 12px 8px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid rgba(100, 140, 255, 0.1);
+  transition: all 0.25s var(--pm-ease-out);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(126, 180, 255, 0.45);
+}
+
+.last-round-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.last-round-btn.selected {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.22), rgba(139, 92, 246, 0.08));
+  color: #c4b5fd;
+  border-color: rgba(139, 92, 246, 0.5);
+  box-shadow: 0 0 24px rgba(139, 92, 246, 0.12);
+}
+
+.section-disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.last-round-hint {
+  font-size: 12px;
+  color: var(--tg-theme-hint-color);
+  padding: 12px 0;
+}

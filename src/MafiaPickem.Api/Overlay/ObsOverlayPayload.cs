@@ -17,6 +17,8 @@ public class ObsOverlayPayload
     public OverlaySideStat BlackSide { get; set; } = new();
     public List<OverlaySeatVote> SeatVotes { get; set; } = new();
     public List<int> ResolvedSlots { get; set; } = new();
+    public List<OverlayLastRoundVote> LastRoundVotes { get; set; } = new();
+    public byte? ResolvedLastRound { get; set; }
 }
 
 public class OverlaySideStat
@@ -31,4 +33,12 @@ public class OverlaySeatVote
     public int Count { get; set; }
     public decimal Percent { get; set; }
     public bool IsResolved { get; set; }
+}
+
+public class OverlayLastRoundVote
+{
+    public byte LastRound { get; set; }
+    public string Label { get; set; } = string.Empty;
+    public int Count { get; set; }
+    public decimal Percent { get; set; }
 }

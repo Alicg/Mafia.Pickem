@@ -6,4 +6,5 @@ public class VoteStatsDto
     public decimal TownPercentage { get; set; }
     public decimal MafiaPercentage { get; set; }
     public List<SlotVoteDto> SlotVotes { get; set; } = new();
+    public List<LastRoundVoteDto> LastRoundVotes { get; set; } = new();
 }

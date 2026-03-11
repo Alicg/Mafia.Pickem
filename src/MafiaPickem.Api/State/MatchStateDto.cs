@@ -11,6 +11,7 @@ public class BlobMatchState
     public int TotalPredictions { get; set; }
     public WinnerVotesDto? WinnerVotes { get; set; }
     public List<SlotVoteEntry>? VotedOutVotes { get; set; }
+    public List<LastRoundVoteEntry>? LastRoundVotes { get; set; }
     public MatchResultDto? MatchResult { get; set; }
 }
 
@@ -18,6 +19,7 @@ public class MatchResultDto
 {
     public byte WinningSide { get; set; }
     public List<int> VotedOutSlots { get; set; } = new();
+    public byte LastRound { get; set; }
 }
 
 public class WinnerVotesDto
@@ -35,6 +37,13 @@ public class VoteEntry
 public class SlotVoteEntry
 {
     public int Slot { get; set; }
+    public int Count { get; set; }
+    public decimal Percent { get; set; }
+}
+
+public class LastRoundVoteEntry
+{
+    public byte LastRound { get; set; }
     public int Count { get; set; }
     public decimal Percent { get; set; }
 }

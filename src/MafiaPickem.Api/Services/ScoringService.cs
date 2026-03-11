@@ -22,13 +22,13 @@ public class ScoringService : IScoringService
         _leaderboardBlobWriter = leaderboardBlobWriter;
     }
 
-    public async Task CalculateAndSaveScoresAsync(int matchId, int tournamentId, int correctWinnerVotes, int correctVotedOutVotes)
+    public async Task CalculateAndSaveScoresAsync(int matchId, int tournamentId, int correctWinnerVotes, int correctVotedOutVotes, int correctLastRoundVotes)
     {
         // Get total votes for the match
         var totalVotes = await _predictionRepository.GetTotalVotesAsync(matchId);
 
         // Insert scores for all predictions of this match
-        await _predictionRepository.InsertScoresAsync(matchId, totalVotes, correctWinnerVotes, correctVotedOutVotes);
+        await _predictionRepository.InsertScoresAsync(matchId, totalVotes, correctWinnerVotes, correctVotedOutVotes, correctLastRoundVotes);
 
         // Update leaderboard for the tournament
         await _leaderboardRepository.UpdateLeaderboardAsync(tournamentId);

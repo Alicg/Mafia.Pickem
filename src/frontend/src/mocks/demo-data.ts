@@ -28,9 +28,11 @@ export const demoMatches: MatchDto[] = [
     myPrediction: {
       predictedWinner: 0,
       predictedVotedOut: 3,
+      predictedLastRound: 2,
       winnerPoints: 10,
       votedOutPoints: 5,
-      totalPoints: 15,
+      lastRoundPoints: 8,
+      totalPoints: 23,
     },
   },
   {
@@ -41,8 +43,10 @@ export const demoMatches: MatchDto[] = [
     myPrediction: {
       predictedWinner: 1,
       predictedVotedOut: 7,
+      predictedLastRound: 4,
       winnerPoints: 0,
       votedOutPoints: 0,
+      lastRoundPoints: 0,
       totalPoints: 0,
     },
   },
@@ -68,8 +72,10 @@ export const demoMatches: MatchDto[] = [
     myPrediction: {
       predictedWinner: 0,
       predictedVotedOut: 5,
+      predictedLastRound: 1,
       winnerPoints: null,
       votedOutPoints: null,
+      lastRoundPoints: null,
       totalPoints: null,
     },
   },
@@ -138,8 +144,8 @@ export const demoPredictionsMap: PredictionsMap = Object.fromEntries(
 // Demo blob states with match results for resolved matches
 function makeBlobState(
   match: MatchDto,
-  votes: { total: number; town: number; mafia: number; slots: { slot: number; count: number; percent: number }[] } | null,
-  result: { winningSide: number; votedOutSlots: number[] } | null = null,
+  votes: { total: number; town: number; mafia: number; slots: { slot: number; count: number; percent: number }[]; lastRound?: { lastRound: number; count: number; percent: number }[] } | null,
+  result: { winningSide: number; votedOutSlots: number[]; lastRound?: number } | null = null,
 ): BlobMatchState {
   return {
     matchId: match.id,
@@ -154,7 +160,8 @@ function makeBlobState(
       mafia: { count: Math.round(votes.total * votes.mafia / 100), percent: votes.mafia },
     } : null,
     votedOutVotes: votes?.slots ?? null,
-    matchResult: result,
+    lastRoundVotes: votes?.lastRound ?? null,
+    matchResult: result ? { ...result, lastRound: result.lastRound ?? 0 } : null,
   };
 }
 
@@ -164,23 +171,35 @@ export const demoBlobStates: Record<number, BlobMatchState> = {
     { slot: 4, count: 2, percent: 5 }, { slot: 5, count: 6, percent: 14 }, { slot: 6, count: 1, percent: 2 },
     { slot: 7, count: 4, percent: 10 }, { slot: 8, count: 3, percent: 7 }, { slot: 9, count: 2, percent: 5 },
     { slot: 10, count: 4, percent: 10 },
-  ]}, { winningSide: 0, votedOutSlots: [3, 7] }),
+  ], lastRound: [
+    { lastRound: 1, count: 12, percent: 29 }, { lastRound: 2, count: 14, percent: 33 },
+    { lastRound: 3, count: 6, percent: 14 }, { lastRound: 4, count: 7, percent: 17 }, { lastRound: 5, count: 3, percent: 7 },
+  ]}, { winningSide: 0, votedOutSlots: [3, 7], lastRound: 2 }),
   2: makeBlobState(demoMatches[1], { total: 38, town: 71, mafia: 29, slots: [
     { slot: 1, count: 5, percent: 13 }, { slot: 2, count: 2, percent: 5 }, { slot: 3, count: 4, percent: 11 },
     { slot: 4, count: 7, percent: 18 }, { slot: 5, count: 3, percent: 8 }, { slot: 6, count: 6, percent: 16 },
     { slot: 7, count: 2, percent: 5 }, { slot: 8, count: 4, percent: 11 }, { slot: 9, count: 3, percent: 8 },
     { slot: 10, count: 2, percent: 5 },
-  ]}, { winningSide: 0, votedOutSlots: [4] }),
+  ], lastRound: [
+    { lastRound: 1, count: 15, percent: 39 }, { lastRound: 2, count: 12, percent: 32 },
+    { lastRound: 3, count: 4, percent: 11 }, { lastRound: 4, count: 5, percent: 13 }, { lastRound: 5, count: 2, percent: 5 },
+  ]}, { winningSide: 0, votedOutSlots: [4], lastRound: 1 }),
   3: makeBlobState(demoMatches[2], { total: 15, town: 53, mafia: 47, slots: [
     { slot: 1, count: 2, percent: 13 }, { slot: 2, count: 1, percent: 7 }, { slot: 3, count: 3, percent: 20 },
     { slot: 4, count: 1, percent: 7 }, { slot: 5, count: 2, percent: 13 }, { slot: 6, count: 0, percent: 0 },
     { slot: 7, count: 2, percent: 13 }, { slot: 8, count: 1, percent: 7 }, { slot: 9, count: 1, percent: 7 },
     { slot: 10, count: 2, percent: 13 },
+  ], lastRound: [
+    { lastRound: 1, count: 3, percent: 20 }, { lastRound: 2, count: 5, percent: 33 },
+    { lastRound: 3, count: 3, percent: 20 }, { lastRound: 4, count: 2, percent: 13 }, { lastRound: 5, count: 2, percent: 14 },
   ]}),
   5: makeBlobState(demoMatches[4], { total: 27, town: 44, mafia: 56, slots: [
     { slot: 1, count: 1, percent: 4 }, { slot: 2, count: 3, percent: 11 }, { slot: 3, count: 2, percent: 7 },
     { slot: 4, count: 5, percent: 19 }, { slot: 5, count: 4, percent: 15 }, { slot: 6, count: 2, percent: 7 },
     { slot: 7, count: 3, percent: 11 }, { slot: 8, count: 2, percent: 7 }, { slot: 9, count: 4, percent: 15 },
     { slot: 10, count: 1, percent: 4 },
+  ], lastRound: [
+    { lastRound: 1, count: 4, percent: 15 }, { lastRound: 2, count: 8, percent: 30 },
+    { lastRound: 3, count: 5, percent: 19 }, { lastRound: 4, count: 6, percent: 22 }, { lastRound: 5, count: 4, percent: 14 },
   ]}),
 };

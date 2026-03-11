@@ -47,6 +47,8 @@ public class ObsOverlayService : IObsOverlayService
         var votedOutLookup = (blobState.VotedOutVotes ?? new List<SlotVoteEntry>())
             .ToDictionary(entry => entry.Slot);
         var resolvedSlots = blobState.MatchResult?.VotedOutSlots?.Distinct().OrderBy(slot => slot).ToList() ?? new List<int>();
+        var lastRoundLookup = (blobState.LastRoundVotes ?? new List<LastRoundVoteEntry>())
+            .ToDictionary(entry => entry.LastRound);
 
         var payload = CreateBasePayload(tournamentId, "ready", string.Empty, selectedMatch);
         payload.MatchState = blobState.State;
@@ -55,6 +57,7 @@ public class ObsOverlayService : IObsOverlayService
         payload.TotalPredictions = blobState.TotalPredictions;
         payload.WinningSide = blobState.MatchResult?.WinningSide;
         payload.ResolvedSlots = resolvedSlots;
+        payload.ResolvedLastRound = blobState.MatchResult?.LastRound;
         payload.RedSide = new OverlaySideStat
         {
             Count = blobState.WinnerVotes?.Town.Count ?? 0,
@@ -75,6 +78,20 @@ public class ObsOverlayService : IObsOverlayService
                     Count = vote?.Count ?? 0,
                     Percent = vote?.Percent ?? 0m,
                     IsResolved = resolvedSlots.Contains(slot)
+                };
+            })
+            .ToList();
+
+        payload.LastRoundVotes = new byte[] { 1, 2, 3, 4, 5 }
+            .Select(lr =>
+            {
+                lastRoundLookup.TryGetValue(lr, out var vote);
+                return new OverlayLastRoundVote
+                {
+                    LastRound = lr,
+                    Label = GetLastRoundLabel(lr),
+                    Count = vote?.Count ?? 0,
+                    Percent = vote?.Percent ?? 0m
                 };
             })
             .ToList();
@@ -154,6 +171,19 @@ public class ObsOverlayService : IObsOverlayService
             nameof(MatchState.Upcoming) => "Upcoming",
             nameof(MatchState.Canceled) => "Canceled",
             _ => state
+        };
+    }
+
+    private static string GetLastRoundLabel(byte lastRound)
+    {
+        return lastRound switch
+        {
+            1 => "Сухая",
+            2 => "Угадайка",
+            3 => "3в3",
+            4 => "2в2",
+            5 => "1в1",
+            _ => lastRound.ToString()
         };
     }
 }
