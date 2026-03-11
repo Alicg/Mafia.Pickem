@@ -1,5 +1,6 @@
 using Dapper;
 using MafiaPickem.Api.Models.Domain;
+using System.Text.Json;
 
 namespace MafiaPickem.Api.Data;
 
@@ -17,7 +18,7 @@ public class TournamentRepository : ITournamentRepository
         using var connection = _connectionFactory.CreateConnection();
 
         const string sql = """
-            SELECT Id, Name, Description, ImageUrl, Active, DateCreated
+            SELECT Id, Name, Description, ImageUrl, TeamsJson, Active, DateCreated
             FROM pickem.Tournament
             WHERE Active = 1
             ORDER BY DateCreated DESC
@@ -31,7 +32,7 @@ public class TournamentRepository : ITournamentRepository
         using var connection = _connectionFactory.CreateConnection();
 
         const string sql = """
-            SELECT Id, Name, Description, ImageUrl, Active, DateCreated
+            SELECT Id, Name, Description, ImageUrl, TeamsJson, Active, DateCreated
             FROM pickem.Tournament
             WHERE Id = @Id
             """;
@@ -39,17 +40,18 @@ public class TournamentRepository : ITournamentRepository
         return await connection.QuerySingleOrDefaultAsync<Tournament>(sql, new { Id = id });
     }
 
-    public async Task<Tournament> CreateAsync(string name, string? description, string? imageUrl)
+    public async Task<Tournament> CreateAsync(string name, string? description, string? imageUrl, IReadOnlyCollection<string> teams)
     {
         using var connection = _connectionFactory.CreateConnection();
+        var teamsJson = JsonSerializer.Serialize(teams);
 
         const string sql = """
-            INSERT INTO pickem.Tournament (Name, Description, ImageUrl)
-            VALUES (@Name, @Description, @ImageUrl);
+            INSERT INTO pickem.Tournament (Name, Description, ImageUrl, TeamsJson)
+            VALUES (@Name, @Description, @ImageUrl, @TeamsJson);
             SELECT CAST(SCOPE_IDENTITY() AS int);
             """;
 
-        var id = await connection.QuerySingleAsync<int>(sql, new { Name = name, Description = description, ImageUrl = imageUrl });
+        var id = await connection.QuerySingleAsync<int>(sql, new { Name = name, Description = description, ImageUrl = imageUrl, TeamsJson = teamsJson });
 
         return (await GetByIdAsync(id))!;
     }

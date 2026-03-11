@@ -7,6 +7,29 @@
   animation: fadeSlideUp 0.4s var(--pm-ease-out) both;
 }
 
+.lb-mode-switcher {
+  display: flex;
+  gap: 8px;
+  padding: 14px 16px 0;
+}
+
+.lb-mode-btn {
+  flex: 1;
+  border: 1px solid var(--pm-divider);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--tg-theme-hint-color);
+  border-radius: 999px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.lb-mode-btn.active {
+  background: rgba(79, 124, 255, 0.16);
+  border-color: rgba(126, 180, 255, 0.28);
+  color: #cfe4ff;
+}
+
 .lb-header-row {
   display: flex;
   align-items: center;
@@ -106,6 +129,29 @@
   text-overflow: ellipsis;
   color: var(--pm-text-primary);
   letter-spacing: -0.01em;
+}
+
+.lb-player-meta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lb-team-name {
+  font-size: 12px;
+  color: var(--tg-theme-hint-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lb-team-player {
+  gap: 12px;
+}
+
+.lb-team-avatar {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.85), rgba(249, 115, 22, 0.85));
 }
 
 .lb-points {

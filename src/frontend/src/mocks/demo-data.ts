@@ -80,6 +80,8 @@ export const demoTournament: TournamentDto = {
   name: 'Мафия Кубок Зимы 2026',
   description: 'Зимний турнир по мафии — сделай свой прогноз!',
   imageUrl: null,
+  teams: ['Север', 'Юг', 'Запад'],
+  selectedTeamName: 'Север',
   currentMatch: { id: 3, gameNumber: 3, tableNumber: 2, state: MatchState.Open }, // Game #3
 };
 
@@ -90,22 +92,24 @@ export const demoTournaments: TournamentDto[] = [
     name: 'Весенний Чемпионат 2026',
     description: 'Открытый чемпионат города — регистрация открыта',
     imageUrl: null,
+    teams: ['Альфа', 'Браво'],
+    selectedTeamName: null,
     currentMatch: null,
   },
 ];
 
 export const demoLeaderboard: LeaderboardResponse = {
   entries: [
-    { userId: 10, rank: 1, displayName: 'ШерлокХолмс', photoUrl: null, totalPoints: 85, correctPredictions: 12, totalPredictions: 15 },
-    { userId: 11, rank: 2, displayName: 'Детектив007', photoUrl: null, totalPoints: 72, correctPredictions: 10, totalPredictions: 14 },
-    { userId: 1, rank: 3, displayName: 'МафиозоДжо', photoUrl: null, totalPoints: 65, correctPredictions: 9, totalPredictions: 15 },
-    { userId: 12, rank: 4, displayName: 'НочнойДозор', photoUrl: null, totalPoints: 58, correctPredictions: 8, totalPredictions: 13 },
-    { userId: 13, rank: 5, displayName: 'КомиссарРекс', photoUrl: null, totalPoints: 51, correctPredictions: 7, totalPredictions: 12 },
-    { userId: 14, rank: 6, displayName: 'ДонКорлеоне', photoUrl: null, totalPoints: 44, correctPredictions: 6, totalPredictions: 14 },
-    { userId: 15, rank: 7, displayName: 'МирныйЖитель', photoUrl: null, totalPoints: 38, correctPredictions: 5, totalPredictions: 11 },
-    { userId: 16, rank: 8, displayName: 'Провидец', photoUrl: null, totalPoints: 30, correctPredictions: 4, totalPredictions: 10 },
-    { userId: 17, rank: 9, displayName: 'ТихийОмут', photoUrl: null, totalPoints: 22, correctPredictions: 3, totalPredictions: 9 },
-    { userId: 18, rank: 10, displayName: 'Новичок42', photoUrl: null, totalPoints: 10, correctPredictions: 1, totalPredictions: 5 },
+    { userId: 10, rank: 1, displayName: 'ШерлокХолмс', photoUrl: null, teamName: 'Север', totalPoints: 85, correctPredictions: 12, totalPredictions: 15 },
+    { userId: 11, rank: 2, displayName: 'Детектив007', photoUrl: null, teamName: 'Юг', totalPoints: 72, correctPredictions: 10, totalPredictions: 14 },
+    { userId: 1, rank: 3, displayName: 'МафиозоДжо', photoUrl: null, teamName: 'Север', totalPoints: 65, correctPredictions: 9, totalPredictions: 15 },
+    { userId: 12, rank: 4, displayName: 'НочнойДозор', photoUrl: null, teamName: 'Запад', totalPoints: 58, correctPredictions: 8, totalPredictions: 13 },
+    { userId: 13, rank: 5, displayName: 'КомиссарРекс', photoUrl: null, teamName: 'Юг', totalPoints: 51, correctPredictions: 7, totalPredictions: 12 },
+    { userId: 14, rank: 6, displayName: 'ДонКорлеоне', photoUrl: null, teamName: 'Север', totalPoints: 44, correctPredictions: 6, totalPredictions: 14 },
+    { userId: 15, rank: 7, displayName: 'МирныйЖитель', photoUrl: null, teamName: 'Запад', totalPoints: 38, correctPredictions: 5, totalPredictions: 11 },
+    { userId: 16, rank: 8, displayName: 'Провидец', photoUrl: null, teamName: 'Север', totalPoints: 30, correctPredictions: 4, totalPredictions: 10 },
+    { userId: 17, rank: 9, displayName: 'ТихийОмут', photoUrl: null, teamName: 'Юг', totalPoints: 22, correctPredictions: 3, totalPredictions: 9 },
+    { userId: 18, rank: 10, displayName: 'Новичок42', photoUrl: null, teamName: 'Запад', totalPoints: 10, correctPredictions: 1, totalPredictions: 5 },
   ],
 };
 

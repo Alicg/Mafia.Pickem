@@ -7,6 +7,7 @@ using MafiaPickem.Api.Services;
 using MafiaPickem.Api.State;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
+using System.Text.Json;
 using System.Net;
 
 namespace MafiaPickem.Api.Functions;
@@ -61,17 +62,32 @@ public class AdminFunctions
             return badRequestResponse;
         }
 
+        var teams = request.Teams
+            .Where(team => !string.IsNullOrWhiteSpace(team))
+            .Select(team => team.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (teams.Count == 0)
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteStringAsync("At least one team is required");
+            return badRequestResponse;
+        }
+
         var tournament = await _tournamentRepository.CreateAsync(
             request.Name,
             request.Description,
-            request.ImageUrl);
+            request.ImageUrl,
+            teams);
 
         var dto = new TournamentDto
         {
             Id = tournament.Id,
             Name = tournament.Name,
             Description = tournament.Description,
-            ImageUrl = tournament.ImageUrl
+            ImageUrl = tournament.ImageUrl,
+            Teams = teams
         };
 
         var response = req.CreateResponse(HttpStatusCode.Created);

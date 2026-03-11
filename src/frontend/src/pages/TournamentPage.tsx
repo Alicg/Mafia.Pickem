@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { adminGetTournamentStats, getProfile, getTournamentMatches, getMyPredictions } from '../lib/api';
+import { adminGetTournamentStats, getProfile, getTournamentMatches, getMyPredictions, selectTournamentTeam } from '../lib/api';
 import { TournamentDto, UserProfile, MatchInfo, MatchState, PredictionsMap, PredictionDto, TournamentStats } from '../types';
 import { useMatchStates } from '../hooks/useMatchStates';
 import { MatchCard } from '../components/MatchCard';
@@ -35,6 +35,10 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
   const [matchInfos, setMatchInfos] = useState<MatchInfo[]>([]);
   const [predictions, setPredictions] = useState<PredictionsMap>({});
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [selectedTeamName, setSelectedTeamName] = useState<string | null>(tournament.selectedTeamName);
+  const [pendingTeamName, setPendingTeamName] = useState<string>('');
+  const [teamSelectionError, setTeamSelectionError] = useState<string | null>(null);
+  const [isSavingTeamSelection, setIsSavingTeamSelection] = useState(false);
   const [tournamentStats, setTournamentStats] = useState<TournamentStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedMatchId, setExpandedMatchId] = useState<number | null>(null);
@@ -42,6 +46,7 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
   const [resolvingMatch, setResolvingMatch] = useState<{ matchId: number; currentState: MatchState } | null>(null);
   const [firstVotedMatchId, setFirstVotedMatchId] = useState<number | null>(null);
   const isAdmin = profile?.isAdmin ?? false;
+  const requiresTeamSelection = tournament.teams.length > 0 && !selectedTeamName;
 
   // Blob polling for all matches
   const matchIds = useMemo(() => matchInfos.map(m => m.id), [matchInfos]);
@@ -162,6 +167,27 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
     onBack();
   };
 
+  const handleTeamSelectionSubmit = useCallback(async () => {
+    if (!pendingTeamName) {
+      setTeamSelectionError('Выберите команду из списка.');
+      return;
+    }
+
+    try {
+      setIsSavingTeamSelection(true);
+      setTeamSelectionError(null);
+      const result = await selectTournamentTeam(tournament.id, { teamName: pendingTeamName });
+      setSelectedTeamName(result.teamName);
+      hapticFeedback('success');
+    } catch (err) {
+      console.error('Failed to select tournament team:', err);
+      setTeamSelectionError(err instanceof Error ? err.message : 'Не удалось сохранить выбор команды');
+      hapticFeedback('error');
+    } finally {
+      setIsSavingTeamSelection(false);
+    }
+  }, [pendingTeamName, tournament.id]);
+
   // Update prediction locally (no API refetch needed)
   const handlePredictionChange = useCallback((matchId: number, prediction: PredictionDto | null) => {
     setPredictions(prev => {
@@ -234,7 +260,7 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
             </svg>
           </button>
           <h1 className="tournament-title">{tournament.name}</h1>
-          {profile && <div className="user-badge">{profile.gameNickname}</div>}
+          {profile && <div className="user-badge">{selectedTeamName ? `${profile.gameNickname} · ${selectedTeamName}` : profile.gameNickname}</div>}
         </div>
 
         <div className="tabs-bar">
@@ -341,6 +367,49 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
           onSuccess={() => { setFirstVotedMatchId(null); refreshMatchList(); }}
           onCancel={() => setFirstVotedMatchId(null)}
         />
+      )}
+
+      {requiresTeamSelection && (
+        <div className="team-selection-overlay">
+          <div className="team-selection-modal">
+            <div className="team-selection-kicker">Выбор команды обязателен</div>
+            <h2>За кого вы играете в этом турнире?</h2>
+            <p className="team-selection-copy">
+              Выберите команду один раз перед участием в турнире. После подтверждения изменить выбор будет нельзя, поэтому выбирайте внимательно.
+            </p>
+
+            <label className="team-selection-label" htmlFor="team-select">
+              Команда
+            </label>
+            <select
+              id="team-select"
+              className="team-selection-select"
+              value={pendingTeamName}
+              onChange={(event) => setPendingTeamName(event.target.value)}
+              disabled={isSavingTeamSelection}
+            >
+              <option value="">Выберите команду</option>
+              {tournament.teams.map((team) => (
+                <option key={team} value={team}>{team}</option>
+              ))}
+            </select>
+
+            <div className="team-selection-warning">
+              Подтвердите только тот вариант, за который действительно хотите выступать весь турнир.
+            </div>
+
+            {teamSelectionError && <div className="team-selection-error">{teamSelectionError}</div>}
+
+            <div className="team-selection-actions">
+              <button type="button" className="team-selection-back" onClick={handleBack} disabled={isSavingTeamSelection}>
+                Вернуться
+              </button>
+              <button type="button" className="team-selection-submit" onClick={handleTeamSelectionSubmit} disabled={isSavingTeamSelection || !pendingTeamName}>
+                {isSavingTeamSelection ? 'Сохраняем...' : 'Подтвердить команду'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

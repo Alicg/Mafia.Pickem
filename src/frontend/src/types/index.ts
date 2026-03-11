@@ -16,6 +16,8 @@ export interface TournamentDto {
   name: string;
   description: string | null;
   imageUrl: string | null;
+  teams: string[];
+  selectedTeamName: string | null;
   currentMatch: MatchInfo | null;
 }
 
@@ -67,6 +69,7 @@ export interface LeaderboardEntryDto {
   rank: number;
   displayName: string;
   photoUrl: string | null;
+  teamName: string | null;
   totalPoints: number;
   correctPredictions: number;
   totalPredictions: number;
@@ -84,6 +87,16 @@ export interface CreateTournamentRequest {
   name: string;
   description?: string;
   imageUrl?: string;
+  teams: string[];
+}
+
+export interface SelectTournamentTeamRequest {
+  teamName: string;
+}
+
+export interface TournamentTeamSelectionDto {
+  tournamentId: number;
+  teamName: string;
 }
 
 export interface ResolveMatchRequest {

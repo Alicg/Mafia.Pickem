@@ -13,6 +13,7 @@ DROP TABLE IF EXISTS pickem.PredictionScore;
 DROP TABLE IF EXISTS pickem.Prediction;
 DROP TABLE IF EXISTS pickem.MatchResult;
 DROP TABLE IF EXISTS pickem.Match;
+DROP TABLE IF EXISTS pickem.TournamentParticipant;
 DROP TABLE IF EXISTS pickem.Leaderboard;
 DROP TABLE IF EXISTS pickem.Tournament;
 DROP TABLE IF EXISTS pickem.PickemUser;
@@ -53,9 +54,36 @@ CREATE TABLE pickem.Tournament
     Name                nvarchar(300)   NOT NULL,
     Description         nvarchar(1000),
     ImageUrl            nvarchar(max),
+    TeamsJson           nvarchar(max),
     Active              bit             DEFAULT 1 NOT NULL,
     DateCreated         datetime2(0)    DEFAULT sysdatetime() NOT NULL
 );
+GO
+
+-- ============================================================
+-- Участие пользователя в конкретном турнире и закрепленная команда
+-- ============================================================
+CREATE TABLE pickem.TournamentParticipant
+(
+    Id                  int identity    NOT NULL
+        CONSTRAINT PK_TournamentParticipant PRIMARY KEY,
+    TournamentId        int             NOT NULL
+        CONSTRAINT FK_TournamentParticipant_Tournament
+            REFERENCES pickem.Tournament (Id)
+            ON DELETE CASCADE,
+    UserId              int             NOT NULL
+        CONSTRAINT FK_TournamentParticipant_User
+            REFERENCES pickem.PickemUser (Id),
+    TeamName            nvarchar(100)   NOT NULL,
+    DateCreated         datetime2(0)    DEFAULT sysdatetime() NOT NULL,
+
+    CONSTRAINT UQ_TournamentParticipant_Tournament_User
+        UNIQUE (TournamentId, UserId)
+);
+GO
+
+CREATE INDEX IX_TournamentParticipant_TournamentId_TeamName
+    ON pickem.TournamentParticipant (TournamentId, TeamName);
 GO
 
 -- ============================================================

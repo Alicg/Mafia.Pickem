@@ -6,6 +6,7 @@ public class LeaderboardEntryDto
     public int Rank { get; set; }
     public string DisplayName { get; set; } = string.Empty;
     public string? PhotoUrl { get; set; }
+    public string? TeamName { get; set; }
     public decimal TotalPoints { get; set; }
     public int CorrectPredictions { get; set; }
     public int TotalPredictions { get; set; }

@@ -9,8 +9,10 @@ import {
   LeaderboardResponse,
   CreateMatchRequest,
   CreateTournamentRequest,
+  SelectTournamentTeamRequest,
   ResolveMatchRequest,
   SetFirstVotedRequest,
+  TournamentTeamSelectionDto,
   TournamentStats
 } from '../types';
 import { isDemoMode } from '../mocks/demo-mode';
@@ -134,6 +136,20 @@ export async function getLeaderboard(tournamentId: number): Promise<LeaderboardR
   return res.json();
 }
 
+export async function selectTournamentTeam(
+  tournamentId: number,
+  request: SelectTournamentTeamRequest,
+): Promise<TournamentTeamSelectionDto> {
+  if (isDemoMode) {
+    return { tournamentId, teamName: request.teamName };
+  }
+
+  return apiFetch(`/tournaments/${encodeURIComponent(tournamentId)}/team`, {
+    method: 'POST',
+    body: JSON.stringify(request),
+  });
+}
+
 export async function getMatchStateBlob(matchId: number): Promise<BlobMatchState | null> {
   if (isDemoMode) return demoBlobStates[matchId] ?? null;
 
@@ -150,7 +166,15 @@ export async function getMatchStateBlob(matchId: number): Promise<BlobMatchState
 export async function adminCreateTournament(request: CreateTournamentRequest): Promise<TournamentDto> {
   if (isDemoMode) {
     console.log('[DEMO] adminCreateTournament', request);
-    return { id: 99, name: request.name, description: request.description ?? null, imageUrl: request.imageUrl ?? null, currentMatch: null };
+    return {
+      id: 99,
+      name: request.name,
+      description: request.description ?? null,
+      imageUrl: request.imageUrl ?? null,
+      teams: [...request.teams],
+      selectedTeamName: null,
+      currentMatch: null,
+    };
   }
   return apiFetch('/manage/tournaments', {
     method: 'POST',

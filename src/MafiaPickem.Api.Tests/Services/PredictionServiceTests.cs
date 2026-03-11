@@ -1,6 +1,7 @@
 using FluentAssertions;
 using MafiaPickem.Api.Auth;
 using MafiaPickem.Api.Data;
+using MafiaPickem.Api.Models.Domain;
 using MafiaPickem.Api.Models.Enums;
 using MafiaPickem.Api.Services;
 using Moq;
@@ -12,6 +13,8 @@ public class PredictionServiceTests
 {
     private readonly Mock<IPredictionRepository> _mockPredictionRepo;
     private readonly Mock<IMatchRepository> _mockMatchRepo;
+    private readonly Mock<ITournamentRepository> _mockTournamentRepo;
+    private readonly Mock<ITournamentParticipantRepository> _mockTournamentParticipantRepo;
     private readonly Mock<IUserContext> _mockUserContext;
     private readonly IPredictionService _predictionService;
 
@@ -19,10 +22,14 @@ public class PredictionServiceTests
     {
         _mockPredictionRepo = new Mock<IPredictionRepository>();
         _mockMatchRepo = new Mock<IMatchRepository>();
+        _mockTournamentRepo = new Mock<ITournamentRepository>();
+        _mockTournamentParticipantRepo = new Mock<ITournamentParticipantRepository>();
         _mockUserContext = new Mock<IUserContext>();
         _predictionService = new PredictionService(
             _mockPredictionRepo.Object,
             _mockMatchRepo.Object,
+            _mockTournamentRepo.Object,
+            _mockTournamentParticipantRepo.Object,
             _mockUserContext.Object);
     }
 
@@ -34,10 +41,15 @@ public class PredictionServiceTests
         var userId = 100;
         byte predictedWinner = 0;
         byte predictedVotedOut = 5;
-        var match = new DomainMatch { Id = matchId, State = MatchState.Open };
+        var match = new DomainMatch { Id = matchId, TournamentId = 77, State = MatchState.Open };
+        var tournament = new Tournament { Id = 77, TeamsJson = "[\"North\",\"South\"]" };
 
         _mockMatchRepo.Setup(r => r.GetByIdAsync(matchId))
             .ReturnsAsync(match);
+        _mockTournamentRepo.Setup(r => r.GetByIdAsync(match.TournamentId))
+            .ReturnsAsync(tournament);
+        _mockTournamentParticipantRepo.Setup(r => r.HasTeamSelectionAsync(match.TournamentId, userId))
+            .ReturnsAsync(true);
         _mockUserContext.Setup(u => u.IsRegistered).Returns(true);
         _mockPredictionRepo.Setup(r => r.UpsertAsync(matchId, userId, predictedWinner, predictedVotedOut))
             .Returns(Task.CompletedTask);
@@ -59,7 +71,7 @@ public class PredictionServiceTests
         // Arrange
         var matchId = 1;
         var userId = 100;
-        var match = new DomainMatch { Id = matchId, State = state };
+        var match = new DomainMatch { Id = matchId, TournamentId = 77, State = state };
 
         _mockMatchRepo.Setup(r => r.GetByIdAsync(matchId))
             .ReturnsAsync(match);
@@ -101,10 +113,13 @@ public class PredictionServiceTests
         // Arrange
         var matchId = 1;
         var userId = 100;
-        var match = new DomainMatch { Id = matchId, State = MatchState.Open };
+        var match = new DomainMatch { Id = matchId, TournamentId = 77, State = MatchState.Open };
+        var tournament = new Tournament { Id = 77, TeamsJson = null };
 
         _mockMatchRepo.Setup(r => r.GetByIdAsync(matchId))
             .ReturnsAsync(match);
+        _mockTournamentRepo.Setup(r => r.GetByIdAsync(match.TournamentId))
+            .ReturnsAsync(tournament);
         _mockUserContext.Setup(u => u.IsRegistered).Returns(true);
 
         // Act
@@ -124,10 +139,13 @@ public class PredictionServiceTests
         // Arrange
         var matchId = 1;
         var userId = 100;
-        var match = new DomainMatch { Id = matchId, State = MatchState.Open };
+        var match = new DomainMatch { Id = matchId, TournamentId = 77, State = MatchState.Open };
+        var tournament = new Tournament { Id = 77, TeamsJson = null };
 
         _mockMatchRepo.Setup(r => r.GetByIdAsync(matchId))
             .ReturnsAsync(match);
+        _mockTournamentRepo.Setup(r => r.GetByIdAsync(match.TournamentId))
+            .ReturnsAsync(tournament);
         _mockUserContext.Setup(u => u.IsRegistered).Returns(true);
 
         // Act
@@ -144,7 +162,7 @@ public class PredictionServiceTests
         // Arrange
         var matchId = 1;
         var userId = 100;
-        var match = new DomainMatch { Id = matchId, State = MatchState.Open };
+        var match = new DomainMatch { Id = matchId, TournamentId = 77, State = MatchState.Open };
 
         _mockMatchRepo.Setup(r => r.GetByIdAsync(matchId))
             .ReturnsAsync(match);
@@ -156,5 +174,30 @@ public class PredictionServiceTests
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("User must be registered to submit predictions");
+    }
+
+    [Fact]
+    public async Task SubmitPrediction_WhenTournamentRequiresTeamSelection_ShouldThrowIfMissing()
+    {
+        // Arrange
+        var matchId = 1;
+        var userId = 100;
+        var match = new DomainMatch { Id = matchId, TournamentId = 77, State = MatchState.Open };
+        var tournament = new Tournament { Id = 77, TeamsJson = "[\"North\",\"South\"]" };
+
+        _mockMatchRepo.Setup(r => r.GetByIdAsync(matchId))
+            .ReturnsAsync(match);
+        _mockTournamentRepo.Setup(r => r.GetByIdAsync(match.TournamentId))
+            .ReturnsAsync(tournament);
+        _mockTournamentParticipantRepo.Setup(r => r.HasTeamSelectionAsync(match.TournamentId, userId))
+            .ReturnsAsync(false);
+        _mockUserContext.Setup(u => u.IsRegistered).Returns(true);
+
+        // Act
+        var act = async () => await _predictionService.SubmitPredictionAsync(matchId, userId, 0, 5);
+
+        // Assert
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("User must select a team for this tournament before submitting predictions");
     }
 }

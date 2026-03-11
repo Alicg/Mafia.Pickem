@@ -8,15 +8,21 @@ public class PredictionService : IPredictionService
 {
     private readonly IPredictionRepository _predictionRepository;
     private readonly IMatchRepository _matchRepository;
+    private readonly ITournamentRepository _tournamentRepository;
+    private readonly ITournamentParticipantRepository _tournamentParticipantRepository;
     private readonly IUserContext _userContext;
 
     public PredictionService(
         IPredictionRepository predictionRepository,
         IMatchRepository matchRepository,
+        ITournamentRepository tournamentRepository,
+        ITournamentParticipantRepository tournamentParticipantRepository,
         IUserContext userContext)
     {
         _predictionRepository = predictionRepository;
         _matchRepository = matchRepository;
+        _tournamentRepository = tournamentRepository;
+        _tournamentParticipantRepository = tournamentParticipantRepository;
         _userContext = userContext;
     }
 
@@ -38,6 +44,18 @@ public class PredictionService : IPredictionService
         if (match.State != MatchState.Open)
         {
             throw new InvalidOperationException("Match is not open for predictions");
+        }
+
+        var tournament = await _tournamentRepository.GetByIdAsync(match.TournamentId)
+            ?? throw new InvalidOperationException($"Tournament with ID {match.TournamentId} not found");
+
+        if (!string.IsNullOrWhiteSpace(tournament.TeamsJson))
+        {
+            var hasTeamSelection = await _tournamentParticipantRepository.HasTeamSelectionAsync(match.TournamentId, userId);
+            if (!hasTeamSelection)
+            {
+                throw new InvalidOperationException("User must select a team for this tournament before submitting predictions");
+            }
         }
 
         // Validate predicted winner

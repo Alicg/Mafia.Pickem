@@ -233,3 +233,120 @@
   height: 100vh;
   color: var(--tg-theme-hint-color);
 }
+
+.team-selection-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(4, 8, 18, 0.82);
+  backdrop-filter: blur(18px);
+}
+
+.team-selection-modal {
+  width: min(100%, 420px);
+  padding: 28px 24px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(19, 28, 54, 0.98), rgba(10, 16, 35, 0.98));
+  border: 1px solid rgba(126, 180, 255, 0.18);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+}
+
+.team-selection-kicker {
+  margin-bottom: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #93c5fd;
+}
+
+.team-selection-modal h2 {
+  margin: 0 0 12px;
+  font-size: 24px;
+  line-height: 1.15;
+  color: var(--pm-text-primary);
+}
+
+.team-selection-copy {
+  margin: 0 0 18px;
+  color: var(--tg-theme-hint-color);
+  line-height: 1.45;
+}
+
+.team-selection-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tg-theme-hint-color);
+}
+
+.team-selection-select {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(126, 180, 255, 0.22);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--pm-text-primary);
+  font-size: 16px;
+  outline: none;
+}
+
+.team-selection-select option {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.team-selection-warning {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+  line-height: 1.4;
+}
+
+.team-selection-error {
+  margin-top: 14px;
+  color: #fda4af;
+  font-size: 14px;
+}
+
+.team-selection-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.team-selection-back,
+.team-selection-submit {
+  flex: 1;
+  border: none;
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.team-selection-back {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--pm-text-primary);
+}
+
+.team-selection-submit {
+  background: var(--pm-gradient-accent);
+  color: #fff;
+  box-shadow: 0 8px 28px var(--pm-gradient-accent-shadow);
+}
+
+.team-selection-submit:disabled,
+.team-selection-back:disabled {
+  opacity: 0.6;
+}

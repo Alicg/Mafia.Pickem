@@ -74,11 +74,15 @@ public class LeaderboardRepository : ILeaderboardRepository
                 l.Rank,
                 u.GameNickname AS DisplayName,
                 u.PhotoUrl,
+                tp.TeamName,
                 l.TotalPoints,
                 l.CorrectPredictions,
                 l.TotalPredictions
             FROM pickem.Leaderboard l
             INNER JOIN pickem.PickemUser u ON l.UserId = u.Id
+            LEFT JOIN pickem.TournamentParticipant tp
+                ON tp.TournamentId = l.TournamentId
+               AND tp.UserId = l.UserId
             WHERE l.TournamentId = @TournamentId
             ORDER BY l.Rank
             """;

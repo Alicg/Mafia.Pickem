@@ -13,12 +13,19 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ onSu
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [teamsText, setTeamsText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const parsedTeams = teamsText
+    .split(/[\n,;]/)
+    .map(team => team.trim())
+    .filter(Boolean)
+    .filter((team, index, all) => all.findIndex(item => item.toLowerCase() === team.toLowerCase()) === index);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || parsedTeams.length === 0) return;
 
     setIsLoading(true);
     setError(null);
@@ -29,6 +36,7 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ onSu
         name: name.trim(),
         description: description.trim() || undefined,
         imageUrl: imageUrl.trim() || undefined,
+        teams: parsedTeams,
       };
 
       await adminCreateTournament(request);
@@ -87,6 +95,21 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ onSu
             />
           </div>
 
+          <div className="form-group">
+            <label className="form-label">Команды *</label>
+            <textarea
+              className="form-input"
+              value={teamsText}
+              onChange={(e) => setTeamsText(e.target.value)}
+              placeholder={"Одна команда на строку\nНапример:\nСевер\nЮг\nЗапад"}
+              rows={5}
+              style={{ resize: 'vertical' }}
+            />
+            <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--tg-theme-hint-color)' }}>
+              Пользователь выбирает команду один раз и больше не сможет изменить выбор.
+            </div>
+          </div>
+
           <div className="form-actions">
             <button
               type="button"
@@ -99,7 +122,7 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ onSu
             <button
               type="submit"
               className="btn btn-primary"
-              disabled={isLoading || !name.trim()}
+              disabled={isLoading || !name.trim() || parsedTeams.length === 0}
             >
               {isLoading && <span className="btn-spinner" />}
               {isLoading ? 'Создание...' : 'Создать'}

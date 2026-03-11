@@ -6,6 +6,7 @@ public class Tournament
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public string? ImageUrl { get; set; }
+    public string? TeamsJson { get; set; }
     public bool Active { get; set; }
     public DateTime DateCreated { get; set; }
 }

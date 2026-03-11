@@ -37,6 +37,7 @@ var host = new HostBuilder()
         // Repositories
         services.AddScoped<IPickemUserRepository, PickemUserRepository>();
         services.AddScoped<ITournamentRepository, TournamentRepository>();
+        services.AddScoped<ITournamentParticipantRepository, TournamentParticipantRepository>();
         services.AddScoped<IMatchRepository, MatchRepository>();
         services.AddScoped<IPredictionRepository, PredictionRepository>();
         services.AddScoped<ILeaderboardRepository, LeaderboardRepository>();
