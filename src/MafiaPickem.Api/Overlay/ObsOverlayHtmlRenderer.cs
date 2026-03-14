@@ -58,7 +58,7 @@ public static class ObsOverlayHtmlRenderer
             display: flex;
             align-items: center;
             justify-content: flex-start;
-            padding: 0 0 0 22px;
+            padding: 0 0 0 15px;
         }
 
         .overlay-panel {
