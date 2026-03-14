@@ -52,9 +52,9 @@ public static class ObsOverlayHtmlRenderer
             height: 100vh;
             pointer-events: none;
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: flex-start;
-            padding: 22px 0 0 22px;
+            padding: 0 0 0 22px;
         }
 
         .overlay-panel {
