@@ -14,6 +14,10 @@
   --pm-card-bg: rgba(16, 24, 56, 0.9);
   --pm-card-border: rgba(130, 170, 255, 0.22);
   --pm-glow: rgba(79, 124, 255, 0.2);
+  --pm-field-bg: rgba(18, 28, 64, 0.96);
+  --pm-field-bg-focus: rgba(13, 20, 51, 0.98);
+  --pm-field-text: #f7fbff;
+  --pm-field-placeholder: rgba(169, 200, 247, 0.68);
   --pm-accent-gold: #fbbf24;
   --pm-accent-red: #fb7185;
   --pm-accent-green: #4ade80;

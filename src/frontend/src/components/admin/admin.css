@@ -214,15 +214,23 @@
   border: 1px solid var(--pm-divider);
   border-radius: 10px;
   font-size: 16px;
-  background-color: var(--tg-theme-secondary-bg-color);
-  color: var(--pm-text-primary);
+  background-color: var(--pm-field-bg);
+  color: var(--pm-field-text);
+  -webkit-text-fill-color: var(--pm-field-text);
+  caret-color: var(--pm-field-text);
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-input::placeholder {
+  color: var(--pm-field-placeholder);
+  opacity: 1;
 }
 
 .form-input:focus {
   border-color: var(--tg-theme-button-color);
   box-shadow: 0 0 0 3px var(--pm-glow);
+  background-color: var(--pm-field-bg-focus);
 }
 
 .form-actions {
