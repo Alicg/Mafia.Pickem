@@ -48,7 +48,7 @@ public class ObsOverlayServiceTests
         };
 
         _matchRepositoryMock
-            .Setup(repository => repository.GetByTournamentAndStateAsync(tournamentId, MatchState.Open, MatchState.Locked, MatchState.FirstVoted, MatchState.Resolved))
+            .Setup(repository => repository.GetByTournamentAndStateAsync(tournamentId, MatchState.Open, MatchState.Locked, MatchState.FirstVoted))
             .ReturnsAsync(new[] { resolvedMatch, openMatch });
 
         _blobReaderMock
@@ -93,7 +93,7 @@ public class ObsOverlayServiceTests
     }
 
     [Fact]
-    public async Task GetOverlayPayloadAsync_ShouldFallbackToLatestResolvedMatch()
+    public async Task GetOverlayPayloadAsync_ShouldReturnNoMatchWhenOnlyResolvedMatchesExist()
     {
         // Arrange
         const int tournamentId = 88;
@@ -119,41 +119,19 @@ public class ObsOverlayServiceTests
         };
 
         _matchRepositoryMock
-            .Setup(repository => repository.GetByTournamentAndStateAsync(tournamentId, MatchState.Open, MatchState.Locked, MatchState.FirstVoted, MatchState.Resolved))
+            .Setup(repository => repository.GetByTournamentAndStateAsync(tournamentId, MatchState.Open, MatchState.Locked, MatchState.FirstVoted))
             .ReturnsAsync(new[] { olderResolved, latestResolved });
-
-        _blobReaderMock
-            .Setup(reader => reader.ReadStateAsync(latestResolved.Id))
-            .ReturnsAsync(new BlobMatchState
-            {
-                MatchId = latestResolved.Id,
-                TournamentId = tournamentId,
-                State = "Resolved",
-                UpdatedAt = DateTime.UtcNow,
-                TotalPredictions = 18,
-                WinnerVotes = new WinnerVotesDto
-                {
-                    Town = new VoteEntry { Count = 7, Percent = 38.9m },
-                    Mafia = new VoteEntry { Count = 11, Percent = 61.1m }
-                },
-                MatchResult = new MatchResultDto
-                {
-                    WinningSide = 1,
-                    VotedOutSlots = new List<int> { 2, 7 }
-                }
-            });
 
         // Act
         var payload = await _service.GetOverlayPayloadAsync(tournamentId);
 
         // Assert
-        payload.Status.Should().Be("ready");
-        payload.MatchId.Should().Be(latestResolved.Id);
-        payload.MatchState.Should().Be("Resolved");
-        payload.WinningSide.Should().Be(1);
-        payload.ResolvedSlots.Should().Equal(2, 7);
-        payload.SeatVotes.Single(seat => seat.Slot == 2).IsResolved.Should().BeTrue();
-        payload.SeatVotes.Single(seat => seat.Slot == 7).IsResolved.Should().BeTrue();
+        payload.Status.Should().Be("no-match");
+        payload.MatchId.Should().BeNull();
+        payload.MatchState.Should().BeEmpty();
+        payload.TotalPredictions.Should().Be(0);
+
+        _blobReaderMock.Verify(reader => reader.ReadStateAsync(It.IsAny<int>()), Times.Never);
     }
 
     [Fact]
@@ -173,7 +151,7 @@ public class ObsOverlayServiceTests
         };
 
         _matchRepositoryMock
-            .Setup(repository => repository.GetByTournamentAndStateAsync(tournamentId, MatchState.Open, MatchState.Locked, MatchState.FirstVoted, MatchState.Resolved))
+            .Setup(repository => repository.GetByTournamentAndStateAsync(tournamentId, MatchState.Open, MatchState.Locked, MatchState.FirstVoted))
             .ReturnsAsync(new[] { openMatch });
         _blobReaderMock
             .Setup(reader => reader.ReadStateAsync(openMatch.Id))
@@ -208,7 +186,7 @@ public class ObsOverlayServiceTests
         };
 
         _matchRepositoryMock
-            .Setup(repository => repository.GetByTournamentAndStateAsync(tournamentId, MatchState.Open, MatchState.Locked, MatchState.FirstVoted, MatchState.Resolved))
+            .Setup(repository => repository.GetByTournamentAndStateAsync(tournamentId, MatchState.Open, MatchState.Locked, MatchState.FirstVoted))
             .ReturnsAsync(new[] { firstVotedMatch });
 
         _blobReaderMock
@@ -264,7 +242,7 @@ public class ObsOverlayServiceTests
         };
 
         _matchRepositoryMock
-            .Setup(repository => repository.GetByTournamentAndStateAsync(tournamentId, MatchState.Open, MatchState.Locked, MatchState.FirstVoted, MatchState.Resolved))
+            .Setup(repository => repository.GetByTournamentAndStateAsync(tournamentId, MatchState.Open, MatchState.Locked, MatchState.FirstVoted))
             .ReturnsAsync(new[] { lockedMatch });
 
         _blobReaderMock

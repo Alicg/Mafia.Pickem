@@ -24,13 +24,12 @@ public class ObsOverlayService : IObsOverlayService
             tournamentId,
             MatchState.Open,
             MatchState.Locked,
-            MatchState.FirstVoted,
-            MatchState.Resolved)).ToList();
+            MatchState.FirstVoted)).ToList();
 
         var selectedMatch = SelectMatch(matches);
         if (selectedMatch == null)
         {
-            return CreateBasePayload(tournamentId, "no-match", "No open, locked, or resolved match is available for this tournament.");
+            return CreateBasePayload(tournamentId, "no-match", "No open, locked, or first-voted match is available for this tournament.");
         }
 
         var blobState = await _matchStateBlobReader.ReadStateAsync(selectedMatch.Id);
@@ -135,11 +134,7 @@ public class ObsOverlayService : IObsOverlayService
             return firstVotedMatch;
         }
 
-        return matches
-            .Where(match => match.State == MatchState.Resolved)
-            .OrderByDescending(match => match.DateResolved ?? match.DateCreated)
-            .ThenByDescending(match => match.Id)
-            .FirstOrDefault();
+        return null;
     }
 
     private static ObsOverlayPayload CreateBasePayload(int tournamentId, string status, string message, Match? match = null)

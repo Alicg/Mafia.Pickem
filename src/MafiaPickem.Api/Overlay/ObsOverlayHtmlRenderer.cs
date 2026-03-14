@@ -366,7 +366,7 @@ public static class ObsOverlayHtmlRenderer
 </head>
 <body>
     <div class="overlay-root">
-        <section class="overlay-panel">
+        <section class="overlay-panel" id="overlayPanel">
             <div class="stack">
                 <div class="summary-card">
                     <div class="summary-top">
@@ -427,6 +427,7 @@ public static class ObsOverlayHtmlRenderer
         const matchState = document.getElementById('matchState');
         const voteChart = document.getElementById('voteChart');
         const lastRoundChart = document.getElementById('lastRoundChart');
+        const overlayPanel = document.getElementById('overlayPanel');
 
         const formatPercent = (value) => `${Number(value || 0).toFixed(1)}%`;
         const formatPredictionsCount = (value) => {
@@ -464,6 +465,10 @@ public static class ObsOverlayHtmlRenderer
             redBarFill.style.setProperty('--segment-width', `${Math.max(0, Math.min(normalizedRed, 100))}%`);
             blackBarFill.style.setProperty('--segment-width', `${Math.max(0, Math.min(normalizedBlack, 100))}%`);
             totalPredictionsCount.textContent = formatPredictionsCount(totalPredictions);
+        };
+
+        const setPanelVisible = (isVisible) => {
+            overlayPanel.style.display = isVisible ? '' : 'none';
         };
 
         const renderSeats = (payload) => {
@@ -529,6 +534,13 @@ public static class ObsOverlayHtmlRenderer
         };
 
         const renderPayload = (payload) => {
+            if (payload.status === 'no-match') {
+                setPanelVisible(false);
+                return;
+            }
+
+            setPanelVisible(true);
+
             if (payload.status !== 'ready') {
                 matchState.textContent = 'Ожидание';
                 redPercent.textContent = '-';
