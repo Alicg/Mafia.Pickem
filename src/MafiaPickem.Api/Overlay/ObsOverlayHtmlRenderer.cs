@@ -14,9 +14,12 @@ public static class ObsOverlayHtmlRenderer
     <style>
         :root {
             --panel-width: 232px;
+            --panel-offset-y: -28px;
             --card-bg: rgba(11, 16, 24, 0.74);
             --card-bg-soft: rgba(17, 24, 36, 0.58);
             --card-highlight: rgba(255, 255, 255, 0.08);
+            --red-bar: rgb(179, 0, 0);
+            --black-bar: rgb(52, 54, 60);
             --text-main: rgba(248, 250, 252, 1);
             --text-soft: rgba(226, 232, 240, 1);
             --text-faint: rgba(255, 255, 255, 1);
@@ -61,6 +64,7 @@ public static class ObsOverlayHtmlRenderer
         .overlay-panel {
             width: var(--panel-width);
             max-width: calc(100vw - 22px);
+            transform: translateY(var(--panel-offset-y));
         }
 
         .overlay-footer__link {
@@ -202,13 +206,13 @@ public static class ObsOverlayHtmlRenderer
         }
 
         .summary-bar__segment.is-left {
-            background: linear-gradient(270deg, rgba(255, 84, 84, 0.86), rgba(255, 47, 47, 0.62));
-            box-shadow: 0 0 16px rgba(255, 47, 47, 0.25);
+            background: var(--red-bar);
+            box-shadow: 0 0 16px rgba(179, 0, 0, 0.28);
         }
 
         .summary-bar__segment.is-right {
-            background: linear-gradient(90deg, rgba(71, 85, 105, 0.9), rgba(15, 23, 42, 0.84));
-            box-shadow: 0 0 16px rgba(0, 0, 0, 0.2);
+            background: var(--black-bar);
+            box-shadow: 0 0 16px rgba(52, 54, 60, 0.24);
         }
 
         .summary-side__count {
@@ -285,8 +289,8 @@ public static class ObsOverlayHtmlRenderer
             width: var(--bar-width, 0%);
             height: 100%;
             border-radius: inherit;
-            background: var(--accent-strong);
-            box-shadow: 0 0 14px rgba(255, 47, 47, 0.22);
+            background: var(--red-bar);
+            box-shadow: 0 0 14px rgba(179, 0, 0, 0.24);
         }
 
         .vote-bar.is-first-vote .vote-bar__track {
@@ -305,28 +309,34 @@ public static class ObsOverlayHtmlRenderer
 
         .vote-bar.is-last-round.is-black-style .vote-bar__slot {
             color: rgba(255, 255, 255, 0.96);
-            background: linear-gradient(180deg, rgba(30, 41, 59, 0.78), rgba(15, 23, 42, 0.72));
+            background: var(--black-bar);
             box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 0 10px rgba(0, 0, 0, 0.18);
         }
 
         .vote-bar.is-last-round.is-black-style .vote-bar__track {
-            background: linear-gradient(90deg, rgba(15, 23, 42, 0.22), rgba(15, 23, 42, 0.34));
+            background: rgba(52, 54, 60, 0.26);
             box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.14);
         }
 
         .vote-bar.is-last-round.is-black-style .vote-bar__fill {
-            background: linear-gradient(90deg, rgba(51, 65, 85, 0.86), rgba(15, 23, 42, 0.78));
-            box-shadow: 0 0 14px rgba(0, 0, 0, 0.18);
+            background: var(--black-bar);
+            box-shadow: 0 0 14px rgba(52, 54, 60, 0.22);
         }
 
         .vote-bar.is-last-round.is-red-style .vote-bar__slot {
             color: rgba(255, 248, 248, 0.98);
-            background: linear-gradient(180deg, rgba(255, 84, 84, 0.78), rgba(166, 28, 28, 0.72));
+            background: var(--red-bar);
             box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14), 0 0 10px rgba(255, 47, 47, 0.18);
         }
 
         .vote-bar.is-last-round.is-red-style .vote-bar__track {
-            box-shadow: inset 0 0 0 1px rgba(255, 84, 84, 0.2);
+            background: rgba(179, 0, 0, 0.2);
+            box-shadow: inset 0 0 0 1px rgba(179, 0, 0, 0.28);
+        }
+
+        .vote-bar.is-last-round.is-red-style .vote-bar__fill {
+            background: var(--red-bar);
+            box-shadow: 0 0 14px rgba(179, 0, 0, 0.24);
         }
 
         .vote-bar.is-resolved .vote-bar__fill {
