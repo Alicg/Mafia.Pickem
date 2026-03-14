@@ -373,9 +373,9 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
         <div className="team-selection-overlay">
           <div className="team-selection-modal">
             <div className="team-selection-kicker">Выбор команды обязателен</div>
-            <h2>За кого вы играете в этом турнире?</h2>
+            <h2>За кого вы болеете в этом турнире?</h2>
             <p className="team-selection-copy">
-              Выберите команду один раз перед участием в турнире. После подтверждения изменить выбор будет нельзя, поэтому выбирайте внимательно.
+              Выберите команду один раз перед участием в турнире. Часть заработанных баллов в угадайке будут зачислены выбранному участнику дюжины в фан-баттле. После подтверждения изменить выбор будет нельзя, поэтому выбирайте внимательно.
             </p>
 
             <label className="team-selection-label" htmlFor="team-select">
