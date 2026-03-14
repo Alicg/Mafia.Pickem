@@ -17,8 +17,8 @@ public static class ObsOverlayHtmlRenderer
             --card-bg: rgba(11, 16, 24, 0.74);
             --card-bg-soft: rgba(17, 24, 36, 0.58);
             --card-highlight: rgba(255, 255, 255, 0.08);
-            --text-main: rgba(248, 250, 252, 0.98);
-            --text-soft: rgba(226, 232, 240, 0.86);
+            --text-main: rgba(248, 250, 252, 1);
+            --text-soft: rgba(226, 232, 240, 1);
             --text-faint: rgba(255, 255, 255, 1);
             --accent: #ff8a8a;
             --accent-strong: rgba(255, 84, 84, 0.88);
