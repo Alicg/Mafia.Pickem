@@ -9,6 +9,7 @@ import {
   LeaderboardResponse,
   CreateMatchRequest,
   CreateTournamentRequest,
+  UpdateTournamentRequest,
   SelectTournamentTeamRequest,
   ResolveMatchRequest,
   SetFirstVotedRequest,
@@ -172,6 +173,7 @@ export async function adminCreateTournament(request: CreateTournamentRequest): P
       description: request.description ?? null,
       imageUrl: request.imageUrl ?? null,
       teams: [...request.teams],
+      operatorUsernames: [...request.operatorUsernames],
       selectedTeamName: null,
       canManage: true,
       currentMatch: null,
@@ -179,6 +181,39 @@ export async function adminCreateTournament(request: CreateTournamentRequest): P
   }
   return apiFetch('/manage/tournaments', {
     method: 'POST',
+    body: JSON.stringify(request),
+  });
+}
+
+export async function adminDeleteTournament(tournamentId: number): Promise<void> {
+  if (isDemoMode) {
+    console.log('[DEMO] adminDeleteTournament', tournamentId);
+    return;
+  }
+
+  await apiFetch(`/manage/tournaments/${encodeURIComponent(tournamentId)}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function adminUpdateTournament(tournamentId: number, request: UpdateTournamentRequest): Promise<TournamentDto> {
+  if (isDemoMode) {
+    console.log('[DEMO] adminUpdateTournament', tournamentId, request);
+    return {
+      id: tournamentId,
+      name: request.name,
+      description: request.description ?? null,
+      imageUrl: request.imageUrl ?? null,
+      teams: [...request.teams],
+      operatorUsernames: [...request.operatorUsernames],
+      selectedTeamName: null,
+      canManage: true,
+      currentMatch: null,
+    };
+  }
+
+  return apiFetch(`/manage/tournaments/${encodeURIComponent(tournamentId)}`, {
+    method: 'PUT',
     body: JSON.stringify(request),
   });
 }

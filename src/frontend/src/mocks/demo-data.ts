@@ -87,6 +87,7 @@ export const demoTournament: TournamentDto = {
   description: 'Зимний турнир по мафии — сделай свой прогноз!',
   imageUrl: null,
   teams: ['Север', 'Юг', 'Запад'],
+  operatorUsernames: ['@ivan_admin', '@marina_ops'],
   selectedTeamName: 'Север',
   canManage: true,
   currentMatch: { id: 3, gameNumber: 3, tableNumber: 2, state: MatchState.Open }, // Game #3
@@ -100,6 +101,7 @@ export const demoTournaments: TournamentDto[] = [
     description: 'Открытый чемпионат города — регистрация открыта',
     imageUrl: null,
     teams: ['Альфа', 'Браво'],
+    operatorUsernames: [],
     selectedTeamName: null,
     canManage: false,
     currentMatch: null,

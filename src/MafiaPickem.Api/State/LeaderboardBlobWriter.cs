@@ -49,4 +49,11 @@ public class LeaderboardBlobWriter : ILeaderboardBlobWriter
             }
         });
     }
+
+    public async Task DeleteAsync(int tournamentId)
+    {
+        var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
+        var blobClient = containerClient.GetBlobClient($"leaderboard-{tournamentId}.json");
+        await blobClient.DeleteIfExistsAsync();
+    }
 }

@@ -54,11 +54,16 @@ public class TournamentFunctions
             {
                 var currentMatch = await _matchRepository.GetCurrentMatchByTournamentIdAsync(tournament.Id);
                 var selectedTeamName = await GetSelectedTeamNameAsync(tournament.Id);
+                var canManage = _userContext.IsAdmin || manageableTournamentIds.Contains(tournament.Id);
+                var operatorUsernames = canManage
+                    ? (await _tournamentOperatorRepository.GetByTournamentIdAsync(tournament.Id)).ToList()
+                    : new List<string>();
                 tournamentDtos.Add(MapToDto(
                     tournament,
                     currentMatch,
                     selectedTeamName,
-                    _userContext.IsAdmin || manageableTournamentIds.Contains(tournament.Id)));
+                    canManage,
+                    operatorUsernames));
             }
 
             var response = req.CreateResponse(HttpStatusCode.OK);
@@ -91,11 +96,16 @@ public class TournamentFunctions
 
             var currentMatch = await _matchRepository.GetCurrentMatchByTournamentIdAsync(tournament.Id);
             var selectedTeamName = await GetSelectedTeamNameAsync(tournament.Id);
+            var canManage = await CanManageTournamentAsync(tournament.Id);
+            var operatorUsernames = canManage
+                ? (await _tournamentOperatorRepository.GetByTournamentIdAsync(tournament.Id)).ToList()
+                : new List<string>();
             var tournamentDto = MapToDto(
                 tournament,
                 currentMatch,
                 selectedTeamName,
-                await CanManageTournamentAsync(tournament.Id));
+                canManage,
+                operatorUsernames);
 
             var response = req.CreateResponse(HttpStatusCode.OK);
             await response.WriteAsJsonAsync(tournamentDto);
@@ -300,7 +310,7 @@ public class TournamentFunctions
         return await _tournamentOperatorRepository.IsOperatorAsync(tournamentId, _userContext.TelegramUsername);
     }
 
-    private static TournamentDto MapToDto(Tournament tournament, Match? currentMatch, string? selectedTeamName, bool canManage)
+    private static TournamentDto MapToDto(Tournament tournament, Match? currentMatch, string? selectedTeamName, bool canManage, List<string>? operatorUsernames = null)
     {
         return new TournamentDto
         {
@@ -309,6 +319,7 @@ public class TournamentFunctions
             Description = tournament.Description,
             ImageUrl = tournament.ImageUrl,
             Teams = ParseTeams(tournament.TeamsJson),
+            OperatorUsernames = operatorUsernames ?? new List<string>(),
             SelectedTeamName = selectedTeamName,
             CanManage = canManage,
             CurrentMatch = currentMatch != null ? MapMatchToDto(currentMatch) : null

@@ -36,6 +36,21 @@ public class TournamentOperatorRepository : ITournamentOperatorRepository
         await connection.ExecuteAsync(sql, parameters);
     }
 
+    public async Task<IReadOnlyCollection<string>> GetByTournamentIdAsync(int tournamentId)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        const string sql = """
+            SELECT OperatorUsername
+            FROM pickem.TournamentOperator
+            WHERE TournamentId = @TournamentId
+            ORDER BY OperatorUsername
+            """;
+
+        var result = await connection.QueryAsync<string>(sql, new { TournamentId = tournamentId });
+        return result.ToArray();
+    }
+
     public async Task<bool> IsOperatorAsync(int tournamentId, string? telegramUsername)
     {
         var normalizedUsername = TelegramUsernameNormalizer.NormalizeMention(telegramUsername);
@@ -74,5 +89,18 @@ public class TournamentOperatorRepository : ITournamentOperatorRepository
 
         var result = await connection.QueryAsync<int>(sql, new { OperatorUsername = normalizedUsername });
         return result.ToArray();
+    }
+
+    public async Task ReplaceAsync(int tournamentId, IReadOnlyCollection<string> operatorUsernames)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        const string deleteSql = """
+            DELETE FROM pickem.TournamentOperator
+            WHERE TournamentId = @TournamentId
+            """;
+
+        await connection.ExecuteAsync(deleteSql, new { TournamentId = tournamentId });
+        await AddRangeAsync(tournamentId, operatorUsernames);
     }
 }

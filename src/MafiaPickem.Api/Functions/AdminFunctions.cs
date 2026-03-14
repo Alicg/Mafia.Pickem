@@ -23,6 +23,7 @@ public class AdminFunctions
     private readonly IScoringService _scoringService;
     private readonly IStatePublishService _statePublishService;
     private readonly IMatchStateBlobWriter _blobWriter;
+    private readonly ILeaderboardBlobWriter _leaderboardBlobWriter;
     private readonly IUserContext _userContext;
 
     public AdminFunctions(
@@ -34,6 +35,7 @@ public class AdminFunctions
         IScoringService scoringService,
         IStatePublishService statePublishService,
         IMatchStateBlobWriter blobWriter,
+        ILeaderboardBlobWriter leaderboardBlobWriter,
         IUserContext userContext)
     {
         _matchRepository = matchRepository;
@@ -44,6 +46,7 @@ public class AdminFunctions
         _scoringService = scoringService;
         _statePublishService = statePublishService;
         _blobWriter = blobWriter;
+        _leaderboardBlobWriter = leaderboardBlobWriter;
         _userContext = userContext;
     }
 
@@ -57,23 +60,11 @@ public class AdminFunctions
         }
 
         var request = await req.ReadFromJsonAsync<CreateTournamentRequest>();
-        if (request == null || string.IsNullOrWhiteSpace(request.Name))
+        var validationError = TryNormalizeTournamentRequest(request, out var name, out var description, out var imageUrl, out var teams);
+        if (validationError != null)
         {
             var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
-            await badRequestResponse.WriteStringAsync("Tournament name is required");
-            return badRequestResponse;
-        }
-
-        var teams = request.Teams
-            .Where(team => !string.IsNullOrWhiteSpace(team))
-            .Select(team => team.Trim())
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
-        if (teams.Count == 0)
-        {
-            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
-            await badRequestResponse.WriteStringAsync("At least one team is required");
+            await badRequestResponse.WriteStringAsync(validationError);
             return badRequestResponse;
         }
 
@@ -85,9 +76,9 @@ public class AdminFunctions
             .ToList();
 
         var tournament = await _tournamentRepository.CreateAsync(
-            request.Name,
-            request.Description,
-            request.ImageUrl,
+            name,
+            description,
+            imageUrl,
             teams);
 
         if (operatorUsernames.Count > 0)
@@ -102,12 +93,100 @@ public class AdminFunctions
             Description = tournament.Description,
             ImageUrl = tournament.ImageUrl,
             Teams = teams,
+            OperatorUsernames = operatorUsernames,
             CanManage = true
         };
 
         var response = req.CreateResponse(HttpStatusCode.Created);
         await response.WriteAsJsonAsync(dto);
         return response;
+    }
+
+    [Function("AdminUpdateTournament")]
+    public async Task<HttpResponseData> UpdateTournamentHttp(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "manage/tournaments/{id}")] HttpRequestData req,
+        int id)
+    {
+        if (!_userContext.IsAdmin)
+        {
+            return await CreateForbiddenResponseAsync(req, "Admin access required");
+        }
+
+        var existingTournament = await _tournamentRepository.GetByIdAsync(id);
+        if (existingTournament == null)
+        {
+            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFoundResponse.WriteStringAsync($"Tournament {id} not found");
+            return notFoundResponse;
+        }
+
+        var request = await req.ReadFromJsonAsync<CreateTournamentRequest>();
+        var validationError = TryNormalizeTournamentRequest(request, out var name, out var description, out var imageUrl, out var teams);
+        if (validationError != null)
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteStringAsync(validationError);
+            return badRequestResponse;
+        }
+
+        var operatorUsernames = request!.OperatorUsernames
+            .Select(TelegramUsernameNormalizer.NormalizeMention)
+            .Where(username => username != null)
+            .Cast<string>()
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var tournament = await _tournamentRepository.UpdateAsync(id, name, description, imageUrl, teams);
+        await _tournamentOperatorRepository.ReplaceAsync(id, operatorUsernames);
+
+        var dto = new TournamentDto
+        {
+            Id = tournament.Id,
+            Name = tournament.Name,
+            Description = tournament.Description,
+            ImageUrl = tournament.ImageUrl,
+            Teams = teams,
+            OperatorUsernames = operatorUsernames,
+            CanManage = true
+        };
+
+        var response = req.CreateResponse(HttpStatusCode.OK);
+        await response.WriteAsJsonAsync(dto);
+        return response;
+    }
+
+    [Function("AdminDeleteTournament")]
+    public async Task<HttpResponseData> DeleteTournamentHttp(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "manage/tournaments/{id}")] HttpRequestData req,
+        int id)
+    {
+        if (!_userContext.IsAdmin)
+        {
+            return await CreateForbiddenResponseAsync(req, "Admin access required");
+        }
+
+        var tournament = await _tournamentRepository.GetByIdAsync(id);
+        if (tournament == null)
+        {
+            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFoundResponse.WriteStringAsync($"Tournament {id} not found");
+            return notFoundResponse;
+        }
+
+        var matchIds = (await _matchRepository.GetByTournamentIdAsync(id))
+            .Select(match => match.Id)
+            .ToList();
+
+        await _tournamentRepository.DeleteAsync(id);
+
+        foreach (var matchId in matchIds)
+        {
+            await _blobWriter.DeleteStateAsync(matchId);
+        }
+
+        await _leaderboardBlobWriter.DeleteAsync(id);
+
+        return req.CreateResponse(HttpStatusCode.NoContent);
     }
 
     [Function("AdminCreateMatch")]
@@ -597,6 +676,41 @@ public class AdminFunctions
 
         return await _tournamentOperatorRepository.IsOperatorAsync(match.TournamentId, _userContext.TelegramUsername);
     }
+
+    private static string? TryNormalizeTournamentRequest(
+        CreateTournamentRequest? request,
+        out string name,
+        out string? description,
+        out string? imageUrl,
+        out List<string> teams)
+    {
+        name = string.Empty;
+        description = null;
+        imageUrl = null;
+        teams = new List<string>();
+
+        if (request == null || string.IsNullOrWhiteSpace(request.Name))
+        {
+            return "Tournament name is required";
+        }
+
+        name = request.Name.Trim();
+        description = NormalizeOptionalText(request.Description);
+        imageUrl = NormalizeOptionalText(request.ImageUrl);
+        teams = request.Teams
+            .Where(team => !string.IsNullOrWhiteSpace(team))
+            .Select(team => team.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        return teams.Count == 0 ? "At least one team is required" : null;
+    }
+
+    private static string? NormalizeOptionalText(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
     private static async Task<HttpResponseData> CreateForbiddenResponseAsync(HttpRequestData req, string message)
     {
         var response = req.CreateResponse(HttpStatusCode.Forbidden);

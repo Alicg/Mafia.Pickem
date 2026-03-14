@@ -9,6 +9,7 @@ public class TournamentDto
     public string? Description { get; set; }
     public string? ImageUrl { get; set; }
     public List<string> Teams { get; set; } = new();
+    public List<string> OperatorUsernames { get; set; } = new();
     public string? SelectedTeamName { get; set; }
     public bool CanManage { get; set; }
     public MatchDto? CurrentMatch { get; set; }

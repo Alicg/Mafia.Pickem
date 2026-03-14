@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
-import { adminCreateTournament } from '../../lib/api';
-import { CreateTournamentRequest } from '../../types';
+import React, { useEffect, useState } from 'react';
+import { adminCreateTournament, adminUpdateTournament } from '../../lib/api';
+import { CreateTournamentRequest, TournamentDto, UpdateTournamentRequest } from '../../types';
 import { hapticFeedback } from '../../lib/telegram';
 import './admin.css';
 
 interface CreateTournamentFormProps {
+  tournament?: TournamentDto;
   onSuccess: () => void;
   onCancel: () => void;
 }
 
-export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ onSuccess, onCancel }) => {
+export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ tournament, onSuccess, onCancel }) => {
+  const isEditMode = Boolean(tournament);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [imageUrl, setImageUrl] = useState('');
@@ -17,6 +19,15 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ onSu
   const [operatorUsernamesText, setOperatorUsernamesText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setName(tournament?.name ?? '');
+    setDescription(tournament?.description ?? '');
+    setImageUrl(tournament?.imageUrl ?? '');
+    setTeamsText(tournament?.teams.join('\n') ?? '');
+    setOperatorUsernamesText(tournament?.operatorUsernames.join('\n') ?? '');
+    setError(null);
+  }, [tournament]);
 
   const parsedTeams = teamsText
     .split(/[\n,;]/)
@@ -40,19 +51,32 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ onSu
     hapticFeedback();
 
     try {
-      const request: CreateTournamentRequest = {
-        name: name.trim(),
-        description: description.trim() || undefined,
-        imageUrl: imageUrl.trim() || undefined,
-        teams: parsedTeams,
-        operatorUsernames: parsedOperatorUsernames,
-      };
+      if (isEditMode && tournament) {
+        const request: UpdateTournamentRequest = {
+          name: name.trim(),
+          description: description.trim() || undefined,
+          imageUrl: imageUrl.trim() || undefined,
+          teams: parsedTeams,
+          operatorUsernames: parsedOperatorUsernames,
+        };
 
-      await adminCreateTournament(request);
+        await adminUpdateTournament(tournament.id, request);
+      } else {
+        const request: CreateTournamentRequest = {
+          name: name.trim(),
+          description: description.trim() || undefined,
+          imageUrl: imageUrl.trim() || undefined,
+          teams: parsedTeams,
+          operatorUsernames: parsedOperatorUsernames,
+        };
+
+        await adminCreateTournament(request);
+      }
+
       hapticFeedback('success');
       onSuccess();
-    } catch (err: any) {
-      setError(err.message || 'Ошибка создания турнира');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : (isEditMode ? 'Ошибка обновления турнира' : 'Ошибка создания турнира'));
       hapticFeedback('error');
     } finally {
       setIsLoading(false);
@@ -62,7 +86,7 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ onSu
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        <h2 className="modal-title">Новый турнир</h2>
+        <h2 className="modal-title">{isEditMode ? 'Редактировать турнир' : 'Новый турнир'}</h2>
 
         {error && <div className="error-message" style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
 
@@ -149,7 +173,7 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ onSu
               disabled={isLoading || !name.trim() || parsedTeams.length === 0}
             >
               {isLoading && <span className="btn-spinner" />}
-              {isLoading ? 'Создание...' : 'Создать'}
+              {isLoading ? (isEditMode ? 'Сохранение...' : 'Создание...') : (isEditMode ? 'Сохранить' : 'Создать')}
             </button>
           </div>
         </form>

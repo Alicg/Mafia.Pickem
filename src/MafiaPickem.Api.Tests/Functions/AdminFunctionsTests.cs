@@ -1,14 +1,17 @@
 using FluentAssertions;
+using Azure.Core.Serialization;
 using MafiaPickem.Api.Auth;
 using MafiaPickem.Api.Data;
 using MafiaPickem.Api.Functions;
 using MafiaPickem.Api.Models.Enums;
 using MafiaPickem.Api.Models.Requests;
+using MafiaPickem.Api.Models.Domain;
 using MafiaPickem.Api.Services;
 using MafiaPickem.Api.State;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Moq;
 using System.Net;
 using System.Text;
@@ -27,6 +30,7 @@ public class AdminFunctionsTests
     private readonly Mock<IScoringService> _mockScoringService;
     private readonly Mock<IStatePublishService> _mockStatePublishService;
     private readonly Mock<IMatchStateBlobWriter> _mockBlobWriter;
+    private readonly Mock<ILeaderboardBlobWriter> _mockLeaderboardBlobWriter;
     private readonly Mock<IUserContext> _mockUserContext;
     private readonly AdminFunctions _adminFunctions;
 
@@ -40,6 +44,7 @@ public class AdminFunctionsTests
         _mockScoringService = new Mock<IScoringService>();
         _mockStatePublishService = new Mock<IStatePublishService>();
         _mockBlobWriter = new Mock<IMatchStateBlobWriter>();
+        _mockLeaderboardBlobWriter = new Mock<ILeaderboardBlobWriter>();
         _mockUserContext = new Mock<IUserContext>();
 
         _adminFunctions = new AdminFunctions(
@@ -51,6 +56,7 @@ public class AdminFunctionsTests
             _mockScoringService.Object,
             _mockStatePublishService.Object,
             _mockBlobWriter.Object,
+            _mockLeaderboardBlobWriter.Object,
             _mockUserContext.Object);
     }
 
@@ -241,6 +247,154 @@ public class AdminFunctionsTests
     }
 
     [Fact]
+    public async Task DeleteTournament_AsNonAdmin_ShouldReturn403()
+    {
+        _mockUserContext.Setup(u => u.IsAdmin).Returns(false);
+
+        var httpRequest = CreateMockHttpRequest();
+
+        var response = await _adminFunctions.DeleteTournamentHttp(httpRequest, 7);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        _mockTournamentRepository.Verify(r => r.DeleteAsync(It.IsAny<int>()), Times.Never);
+        _mockLeaderboardBlobWriter.Verify(w => w.DeleteAsync(It.IsAny<int>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateTournament_AsNonAdmin_ShouldReturn403()
+    {
+        _mockUserContext.Setup(u => u.IsAdmin).Returns(false);
+
+        var httpRequest = CreateMockHttpRequest();
+
+        var response = await _adminFunctions.UpdateTournamentHttp(httpRequest, 7);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        _mockTournamentRepository.Verify(r => r.UpdateAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IReadOnlyCollection<string>>()), Times.Never);
+        _mockTournamentOperatorRepository.Verify(r => r.ReplaceAsync(It.IsAny<int>(), It.IsAny<IReadOnlyCollection<string>>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateTournament_WhenTournamentMissing_ShouldReturn404()
+    {
+        _mockUserContext.Setup(u => u.IsAdmin).Returns(true);
+        _mockTournamentRepository.Setup(r => r.GetByIdAsync(7)).ReturnsAsync((Tournament?)null);
+
+        var httpRequest = CreateMockHttpRequest("""
+            {
+              "name": "Spring Cup",
+              "teams": ["North", "South"]
+            }
+            """);
+
+        var response = await _adminFunctions.UpdateTournamentHttp(httpRequest, 7);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        _mockTournamentRepository.Verify(r => r.UpdateAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IReadOnlyCollection<string>>()), Times.Never);
+        _mockTournamentOperatorRepository.Verify(r => r.ReplaceAsync(It.IsAny<int>(), It.IsAny<IReadOnlyCollection<string>>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateTournament_AsAdmin_ShouldNormalizeAndPersistTournamentProperties()
+    {
+        _mockUserContext.Setup(u => u.IsAdmin).Returns(true);
+
+        const int tournamentId = 7;
+        var existingTournament = new Tournament
+        {
+            Id = tournamentId,
+            Name = "Old Cup",
+            Description = "Old description",
+            ImageUrl = "https://old.example/image.png",
+            Active = true,
+            TeamsJson = "[\"Old\"]"
+        };
+        var updatedTournament = new Tournament
+        {
+            Id = tournamentId,
+            Name = "Spring Cup 2026",
+            Description = "Fresh season",
+            ImageUrl = "https://img.example/spring.png",
+            Active = true,
+            TeamsJson = "[\"North\",\"South\"]"
+        };
+
+        _mockTournamentRepository.Setup(r => r.GetByIdAsync(tournamentId)).ReturnsAsync(existingTournament);
+        _mockTournamentRepository
+            .Setup(r => r.UpdateAsync(
+                tournamentId,
+                "Spring Cup 2026",
+                "Fresh season",
+                "https://img.example/spring.png",
+                It.Is<IReadOnlyCollection<string>>(teams => teams.SequenceEqual(new[] { "North", "South" }))))
+            .ReturnsAsync(updatedTournament);
+        _mockTournamentOperatorRepository
+            .Setup(r => r.ReplaceAsync(
+                tournamentId,
+                It.Is<IReadOnlyCollection<string>>(operators => operators.SequenceEqual(new[] { "@chief", "@cohost" }))))
+            .Returns(Task.CompletedTask);
+
+        var httpRequest = CreateMockHttpRequest("""
+            {
+              "name": "  Spring Cup 2026  ",
+              "description": "  Fresh season  ",
+              "imageUrl": "  https://img.example/spring.png  ",
+              "teams": [" North ", "South", "north"],
+              "operatorUsernames": ["chief", "@cohost", "@Chief"]
+            }
+            """);
+
+        var response = await _adminFunctions.UpdateTournamentHttp(httpRequest, tournamentId);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        _mockTournamentRepository.Verify(r => r.UpdateAsync(
+            tournamentId,
+            "Spring Cup 2026",
+            "Fresh season",
+            "https://img.example/spring.png",
+            It.Is<IReadOnlyCollection<string>>(teams => teams.SequenceEqual(new[] { "North", "South" }))), Times.Once);
+        _mockTournamentOperatorRepository.Verify(r => r.ReplaceAsync(
+            tournamentId,
+            It.Is<IReadOnlyCollection<string>>(operators => operators.SequenceEqual(new[] { "@chief", "@cohost" }))), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteTournament_AsAdmin_ShouldDeleteTournamentAndCleanupBlobs()
+    {
+        _mockUserContext.Setup(u => u.IsAdmin).Returns(true);
+
+        var tournamentId = 7;
+        var httpRequest = CreateMockHttpRequest();
+        var tournament = new Tournament
+        {
+            Id = tournamentId,
+            Name = "Spring Cup",
+            Active = true,
+            TeamsJson = "[]"
+        };
+        var matches = new List<DomainMatch>
+        {
+            new() { Id = 11, TournamentId = tournamentId, GameNumber = 1 },
+            new() { Id = 12, TournamentId = tournamentId, GameNumber = 2 },
+        };
+
+        _mockTournamentRepository.Setup(r => r.GetByIdAsync(tournamentId)).ReturnsAsync(tournament);
+        _mockMatchRepository.Setup(r => r.GetByTournamentIdAsync(tournamentId)).ReturnsAsync(matches);
+        _mockTournamentRepository.Setup(r => r.DeleteAsync(tournamentId)).Returns(Task.CompletedTask);
+        _mockBlobWriter.Setup(w => w.DeleteStateAsync(11)).Returns(Task.CompletedTask);
+        _mockBlobWriter.Setup(w => w.DeleteStateAsync(12)).Returns(Task.CompletedTask);
+        _mockLeaderboardBlobWriter.Setup(w => w.DeleteAsync(tournamentId)).Returns(Task.CompletedTask);
+
+        var response = await _adminFunctions.DeleteTournamentHttp(httpRequest, tournamentId);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        _mockTournamentRepository.Verify(r => r.DeleteAsync(tournamentId), Times.Once);
+        _mockBlobWriter.Verify(w => w.DeleteStateAsync(11), Times.Once);
+        _mockBlobWriter.Verify(w => w.DeleteStateAsync(12), Times.Once);
+        _mockLeaderboardBlobWriter.Verify(w => w.DeleteAsync(tournamentId), Times.Once);
+    }
+
+    [Fact]
     public async Task PublishState_AsAdmin_ShouldForcePublish()
     {
         // Arrange
@@ -288,10 +442,17 @@ public class AdminFunctionsTests
         _mockMatchRepository.VerifyNoOtherCalls();
     }
 
-    private static HttpRequestData CreateMockHttpRequest()
+    private static HttpRequestData CreateMockHttpRequest(string body = "{}")
     {
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddOptions();
+        serviceCollection.Configure<WorkerOptions>(options =>
+        {
+            options.Serializer = new JsonObjectSerializer(new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            });
+        });
         var serviceProvider = serviceCollection.BuildServiceProvider();
 
         var context = new Mock<FunctionContext>();
@@ -300,8 +461,10 @@ public class AdminFunctionsTests
         var request = new Mock<HttpRequestData>(context.Object);
         var response = new Mock<HttpResponseData>(context.Object);
         response.SetupProperty(r => r.StatusCode);
+        response.SetupProperty(r => r.Headers, new HttpHeadersCollection());
         response.Setup(r => r.Body).Returns(new MemoryStream());
 
+        request.Setup(r => r.Body).Returns(new MemoryStream(Encoding.UTF8.GetBytes(body)));
         request.Setup(r => r.CreateResponse()).Returns(response.Object);
 
         return request.Object;

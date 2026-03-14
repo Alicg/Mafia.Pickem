@@ -43,15 +43,15 @@
   backdrop-filter: var(--pm-glass-blur);
   border: 1px solid var(--pm-card-border);
   border-radius: 16px;
-  padding: 20px;
   text-align: left;
-  cursor: pointer;
   transition: transform 0.2s var(--pm-ease-out), border-color 0.25s, box-shadow 0.25s;
   width: 100%;
   position: relative;
   overflow: hidden;
   animation: fadeSlideUp 0.5s var(--pm-ease-out) both;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24), 0 0 0 0 transparent;
+  display: flex;
+  flex-direction: column;
 }
 
 .tournament-card::before {
@@ -66,7 +66,18 @@
   transition: opacity 0.25s;
 }
 
-.tournament-card:active {
+.tournament-card-main {
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 20px;
+  text-align: left;
+  width: 100%;
+  position: relative;
+}
+
+.tournament-card-main:active {
   transform: scale(0.97);
   border-color: rgba(79, 124, 255, 0.3);
   box-shadow: 0 8px 32px rgba(79, 124, 255, 0.12), 0 4px 20px rgba(0, 0, 0, 0.2);
@@ -105,9 +116,19 @@
   transition: color 0.2s, transform 0.2s;
 }
 
-.tournament-card:active .tournament-card-arrow {
+.tournament-card-main:active .tournament-card-arrow {
   color: var(--tg-theme-button-color);
   transform: translateY(-50%) translateX(2px);
+}
+
+.tournament-card-actions {
+  display: flex;
+  gap: 10px;
+  padding: 0 20px 20px;
+}
+
+.tournament-card-actions .btn {
+  flex: 1;
 }
 
 .empty-state {

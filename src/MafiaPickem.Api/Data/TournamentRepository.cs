@@ -55,4 +55,35 @@ public class TournamentRepository : ITournamentRepository
 
         return (await GetByIdAsync(id))!;
     }
+
+    public async Task<Tournament> UpdateAsync(int id, string name, string? description, string? imageUrl, IReadOnlyCollection<string> teams)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        var teamsJson = JsonSerializer.Serialize(teams);
+
+        const string sql = """
+            UPDATE pickem.Tournament
+            SET Name = @Name,
+                Description = @Description,
+                ImageUrl = @ImageUrl,
+                TeamsJson = @TeamsJson
+            WHERE Id = @Id
+            """;
+
+        await connection.ExecuteAsync(sql, new { Id = id, Name = name, Description = description, ImageUrl = imageUrl, TeamsJson = teamsJson });
+
+        return (await GetByIdAsync(id))!;
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        const string sql = """
+            DELETE FROM pickem.Tournament
+            WHERE Id = @Id
+            """;
+
+        await connection.ExecuteAsync(sql, new { Id = id });
+    }
 }

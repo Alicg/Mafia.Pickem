@@ -17,6 +17,7 @@ export interface TournamentDto {
   description: string | null;
   imageUrl: string | null;
   teams: string[];
+  operatorUsernames: string[];
   selectedTeamName: string | null;
   canManage: boolean;
   currentMatch: MatchInfo | null;
@@ -108,6 +109,14 @@ export interface CreateMatchRequest {
 }
 
 export interface CreateTournamentRequest {
+  name: string;
+  description?: string;
+  imageUrl?: string;
+  teams: string[];
+  operatorUsernames: string[];
+}
+
+export interface UpdateTournamentRequest {
   name: string;
   description?: string;
   imageUrl?: string;
