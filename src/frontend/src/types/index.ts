@@ -64,7 +64,7 @@ export enum LastRound {
 
 export const LAST_ROUND_LABELS: Record<number, string> = {
   [LastRound.TownClean]: 'Сухая',
-  [LastRound.TownGuess]: 'Угадайка',
+  [LastRound.TownGuess]: 'Другое',
   [LastRound.Mafia3v3]: '3в3',
   [LastRound.Mafia2v2]: '2в2',
   [LastRound.Mafia1v1]: '1в1',

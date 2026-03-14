@@ -3,6 +3,11 @@ import './PredictionForm.css';
 import { PlayerGrid } from './PlayerGrid';
 import { LAST_ROUND_LABELS, TOWN_LAST_ROUNDS, MAFIA_LAST_ROUNDS } from '../types';
 
+const LAST_ROUND_DESCRIPTIONS: Partial<Record<number, string>> = {
+  1: 'ни один мирный не покинул голосованием',
+  2: 'голосованием покинул хотя бы один мирный',
+};
+
 interface PredictionFormProps {
   selectedWinner: number | null; // 0 = Town, 1 = Mafia
   selectedVotedOut: number | null; // 0 = None, 1-10 = Player
@@ -79,7 +84,10 @@ export const PredictionForm: React.FC<PredictionFormProps> = ({
                 onClick={() => handleLastRoundSelect(lr)}
                 disabled={disabled || selectedWinner === null}
               >
-                {LAST_ROUND_LABELS[lr]}
+                <span className="last-round-btn-label">{LAST_ROUND_LABELS[lr]}</span>
+                {LAST_ROUND_DESCRIPTIONS[lr] && (
+                  <span className="last-round-btn-note">{LAST_ROUND_DESCRIPTIONS[lr]}</span>
+                )}
               </button>
             ))}
             {selectedWinner === null && (

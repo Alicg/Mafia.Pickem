@@ -179,7 +179,7 @@ public class ObsOverlayService : IObsOverlayService
         return lastRound switch
         {
             1 => "Сухая",
-            2 => "Угадайка",
+            2 => "Другое",
             3 => "3в3",
             4 => "2в2",
             5 => "1в1",
