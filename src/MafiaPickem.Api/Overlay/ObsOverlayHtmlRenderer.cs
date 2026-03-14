@@ -14,17 +14,18 @@ public static class ObsOverlayHtmlRenderer
     <style>
         :root {
             --panel-width: 200px;
-            --card-bg: rgba(244, 239, 235, 0.94);
-            --card-bg-soft: rgba(224, 216, 210, 0.9);
-            --text-main: #1f1b18;
-            --text-soft: rgba(31, 27, 24, 0.76);
-            --text-faint: rgba(31, 27, 24, 0.48);
-            --accent: #ff5454;
-            --accent-strong: #ff2f2f;
-            --accent-warm: #2a110f;
-            --track: rgba(37, 24, 20, 0.12);
-            --track-soft: rgba(37, 24, 20, 0.05);
-            --shadow: 0 20px 42px rgba(44, 26, 20, 0.22);
+            --card-bg: rgba(11, 16, 24, 0.74);
+            --card-bg-soft: rgba(17, 24, 36, 0.58);
+            --card-highlight: rgba(255, 255, 255, 0.08);
+            --text-main: rgba(248, 250, 252, 0.98);
+            --text-soft: rgba(226, 232, 240, 0.86);
+            --text-faint: rgba(255, 255, 255, 1);
+            --accent: #ff8a8a;
+            --accent-strong: rgba(255, 84, 84, 0.88);
+            --accent-warm: #fff4f4;
+            --track: rgba(148, 163, 184, 0.3);
+            --track-soft: rgba(15, 23, 42, 0.22);
+            --shadow: 0 18px 42px rgba(2, 6, 23, 0.32);
             font-family: "Bahnschrift", "Segoe UI Variable Display", "Trebuchet MS", sans-serif;
         }
 
@@ -62,6 +63,41 @@ public static class ObsOverlayHtmlRenderer
             max-width: calc(100vw - 22px);
         }
 
+        .overlay-footer__link {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            min-height: 24px;
+            padding: 0 10px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, rgba(11, 16, 24, 0.72), rgba(17, 24, 36, 0.56));
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.96);
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-decoration: none;
+            box-shadow: 0 10px 24px rgba(2, 6, 23, 0.24);
+            text-shadow: 0 1px 10px rgba(2, 6, 23, 0.4);
+            pointer-events: auto;
+            align-self: flex-start;
+        }
+
+        .overlay-footer__icon {
+            display: inline-flex;
+            width: 20px;
+            height: 20px;
+            flex: 0 0 20px;
+            color: #38bdf8;
+            filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.28));
+        }
+
+        .overlay-footer__icon svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
         .stack {
             display: flex;
             flex-direction: column;
@@ -74,10 +110,11 @@ public static class ObsOverlayHtmlRenderer
             overflow: hidden;
             border-radius: 16px;
             background:
-                radial-gradient(circle at top right, rgba(255, 47, 47, 0.14), transparent 34%),
+                radial-gradient(circle at top right, rgba(255, 84, 84, 0.18), transparent 34%),
+                linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 45%),
                 linear-gradient(180deg, var(--card-bg), var(--card-bg-soft));
             box-shadow: var(--shadow);
-            border: 1px solid rgba(109, 86, 76, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.12);
         }
 
         .summary-card {
@@ -97,12 +134,13 @@ public static class ObsOverlayHtmlRenderer
             min-height: 20px;
             padding: 0 8px;
             border-radius: 999px;
-            background: rgba(255, 47, 47, 0.12);
-            color: var(--accent);
+            background: rgba(255, 84, 84, 0.18);
+            color: rgba(255, 244, 244, 0.98);
             font-size: 10px;
             font-weight: 800;
             letter-spacing: 0.14em;
             text-transform: uppercase;
+            box-shadow: inset 0 0 0 1px rgba(255, 138, 138, 0.28);
         }
 
         .summary-main {
@@ -135,6 +173,7 @@ public static class ObsOverlayHtmlRenderer
             font-weight: 900;
             letter-spacing: -0.06em;
             color: var(--accent-warm);
+            text-shadow: 0 2px 14px rgba(15, 23, 42, 0.32);
         }
 
         .summary-side__label {
@@ -154,6 +193,7 @@ public static class ObsOverlayHtmlRenderer
             background: linear-gradient(90deg, var(--track-soft), var(--track));
             overflow: hidden;
             align-items: stretch;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
         }
 
         .summary-bar__segment {
@@ -162,12 +202,12 @@ public static class ObsOverlayHtmlRenderer
         }
 
         .summary-bar__segment.is-left {
-            background: linear-gradient(270deg, rgba(255, 84, 84, 0.98), rgba(255, 47, 47, 0.72));
+            background: linear-gradient(270deg, rgba(255, 84, 84, 0.86), rgba(255, 47, 47, 0.62));
             box-shadow: 0 0 16px rgba(255, 47, 47, 0.25);
         }
 
         .summary-bar__segment.is-right {
-            background: linear-gradient(90deg, rgba(30, 30, 30, 0.98), rgba(8, 8, 8, 0.98));
+            background: linear-gradient(90deg, rgba(71, 85, 105, 0.9), rgba(15, 23, 42, 0.84));
             box-shadow: 0 0 16px rgba(0, 0, 0, 0.2);
         }
 
@@ -214,6 +254,7 @@ public static class ObsOverlayHtmlRenderer
             line-height: 1;
             text-align: center;
             color: var(--text-main);
+            text-shadow: 0 1px 10px rgba(2, 6, 23, 0.3);
         }
 
         .vote-bar__slot.is-last-round {
@@ -236,6 +277,7 @@ public static class ObsOverlayHtmlRenderer
             border-radius: 999px;
             background: linear-gradient(90deg, var(--track-soft), var(--track));
             overflow: hidden;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
         }
 
         .vote-bar__fill {
@@ -247,52 +289,52 @@ public static class ObsOverlayHtmlRenderer
         }
 
         .vote-bar.is-first-vote .vote-bar__track {
-            background: linear-gradient(90deg, rgba(31, 78, 121, 0.1), rgba(31, 78, 121, 0.18));
-            box-shadow: inset 0 0 0 1px rgba(31, 78, 121, 0.12);
+            background: linear-gradient(90deg, rgba(31, 78, 121, 0.18), rgba(31, 78, 121, 0.3));
+            box-shadow: inset 0 0 0 1px rgba(125, 211, 252, 0.16);
         }
 
         .vote-bar.is-first-vote .vote-bar__fill {
-            background: linear-gradient(90deg, rgba(57, 140, 219, 0.98), rgba(31, 78, 121, 0.94));
+            background: linear-gradient(90deg, rgba(96, 165, 250, 0.84), rgba(37, 99, 235, 0.72));
             box-shadow: 0 0 14px rgba(57, 140, 219, 0.2);
         }
 
         .vote-bar.is-first-vote .vote-bar__slot {
-            color: rgba(25, 62, 94, 0.96);
+            color: rgba(239, 246, 255, 0.98);
         }
 
         .vote-bar.is-last-round.is-black-style .vote-bar__slot {
             color: rgba(255, 255, 255, 0.96);
-            background: linear-gradient(180deg, rgba(22, 22, 22, 0.96), rgba(0, 0, 0, 0.98));
+            background: linear-gradient(180deg, rgba(30, 41, 59, 0.78), rgba(15, 23, 42, 0.72));
             box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 0 10px rgba(0, 0, 0, 0.18);
         }
 
         .vote-bar.is-last-round.is-black-style .vote-bar__track {
-            background: linear-gradient(90deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.18));
-            box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+            background: linear-gradient(90deg, rgba(15, 23, 42, 0.22), rgba(15, 23, 42, 0.34));
+            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.14);
         }
 
         .vote-bar.is-last-round.is-black-style .vote-bar__fill {
-            background: linear-gradient(90deg, rgba(24, 24, 24, 0.98), rgba(0, 0, 0, 0.98));
+            background: linear-gradient(90deg, rgba(51, 65, 85, 0.86), rgba(15, 23, 42, 0.78));
             box-shadow: 0 0 14px rgba(0, 0, 0, 0.18);
         }
 
         .vote-bar.is-last-round.is-red-style .vote-bar__slot {
             color: rgba(255, 248, 248, 0.98);
-            background: linear-gradient(180deg, rgba(255, 84, 84, 0.96), rgba(166, 28, 28, 0.96));
+            background: linear-gradient(180deg, rgba(255, 84, 84, 0.78), rgba(166, 28, 28, 0.72));
             box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14), 0 0 10px rgba(255, 47, 47, 0.18);
         }
 
         .vote-bar.is-last-round.is-red-style .vote-bar__track {
-            box-shadow: inset 0 0 0 1px rgba(255, 84, 84, 0.14);
+            box-shadow: inset 0 0 0 1px rgba(255, 84, 84, 0.2);
         }
 
         .vote-bar.is-resolved .vote-bar__fill {
-            background: linear-gradient(90deg, rgba(74, 222, 128, 0.98), rgba(34, 197, 94, 0.92));
+            background: linear-gradient(90deg, rgba(74, 222, 128, 0.84), rgba(34, 197, 94, 0.76));
             box-shadow: 0 0 14px rgba(74, 222, 128, 0.28);
         }
 
         .vote-bar.is-resolved .vote-bar__slot {
-            color: #86efac;
+            color: rgba(220, 252, 231, 0.98);
             text-shadow: 0 0 10px rgba(74, 222, 128, 0.35);
         }
 
@@ -307,7 +349,8 @@ public static class ObsOverlayHtmlRenderer
             transform: translateY(-50%);
             font-size: 9px;
             font-weight: 800;
-            color: rgba(255, 248, 245, 0.94);
+            color: rgba(255, 255, 255, 0.96);
+            text-shadow: 0 1px 10px rgba(2, 6, 23, 0.42);
         }
 
         .vote-bar.is-empty .vote-bar__count {
@@ -360,6 +403,16 @@ public static class ObsOverlayHtmlRenderer
                     <div class="chart-title">Заголосуют первым</div>
                     <div class="vote-chart" id="voteChart"></div>
                 </div>
+
+                <a class="overlay-footer__link" href="https://t.me/MafiaPickemBot" target="_blank" rel="noreferrer noopener">
+                    <span class="overlay-footer__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="12" fill="currentColor" fill-opacity="0.18" />
+                            <path d="M17.94 6.62L5.98 11.23C5.17 11.56 5.18 12.01 5.83 12.21L8.9 13.17L15.99 8.69C16.33 8.48 16.64 8.59 16.39 8.81L10.65 13.99L10.43 17.12C10.75 17.12 10.89 16.97 11.07 16.79L12.56 15.34L15.66 17.63C16.23 17.94 16.64 17.78 16.78 17.12L18.81 7.54C19.02 6.73 18.49 6.36 17.94 6.62Z" fill="currentColor" />
+                        </svg>
+                    </span>
+                    <span>@MafiaPickemBot</span>
+                </a>
             </div>
         </section>
     </div>
