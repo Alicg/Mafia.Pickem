@@ -13,7 +13,7 @@ public static class ObsOverlayHtmlRenderer
     <title>Mafia Pickem Overlay</title>
     <style>
         :root {
-            --panel-width: 264px;
+            --panel-width: 232px;
             --card-bg: rgba(11, 16, 24, 0.74);
             --card-bg-soft: rgba(17, 24, 36, 0.58);
             --card-highlight: rgba(255, 255, 255, 0.08);
@@ -168,7 +168,7 @@ public static class ObsOverlayHtmlRenderer
         }
 
         .summary-side__percent {
-            font-size: 34px;
+            font-size: 29px;
             line-height: 0.92;
             font-weight: 900;
             letter-spacing: -0.06em;
@@ -177,7 +177,7 @@ public static class ObsOverlayHtmlRenderer
         }
 
         .summary-side__label {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 700;
             letter-spacing: 0.08em;
             text-transform: uppercase;
@@ -224,7 +224,7 @@ public static class ObsOverlayHtmlRenderer
 
         .chart-title {
             margin-bottom: 7px;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 800;
             letter-spacing: 0.16em;
             text-transform: uppercase;
