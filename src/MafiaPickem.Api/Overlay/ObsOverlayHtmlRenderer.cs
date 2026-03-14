@@ -239,13 +239,13 @@ public static class ObsOverlayHtmlRenderer
 
         .vote-bar {
             display: grid;
-            grid-template-columns: 14px minmax(0, 1fr);
+            grid-template-columns: 14px minmax(0, 1fr) auto;
             gap: 6px;
             align-items: center;
         }
 
         .vote-bar.is-last-round {
-            grid-template-columns: 76px minmax(0, 1fr);
+            grid-template-columns: 76px minmax(0, 1fr) auto;
             gap: 8px;
         }
 
@@ -344,12 +344,11 @@ public static class ObsOverlayHtmlRenderer
         }
 
         .vote-bar__count {
-            position: absolute;
-            right: 6px;
-            top: 50%;
-            transform: translateY(-50%);
             font-size: 15px;
             font-weight: 800;
+            line-height: 1;
+            min-width: 2ch;
+            text-align: right;
             color: rgba(255, 255, 255, 0.96);
             text-shadow: 0 1px 10px rgba(2, 6, 23, 0.42);
         }
@@ -490,8 +489,8 @@ public static class ObsOverlayHtmlRenderer
                     <div class="vote-bar__slot">${seat.slot}</div>
                     <div class="vote-bar__track">
                         <div class="vote-bar__fill" ${fillStyle}></div>
-                        <div class="vote-bar__count">${count}</div>
-                    </div>`;
+                    </div>
+                    <div class="vote-bar__count">${count}</div>`;
                 voteChart.appendChild(item);
             });
         };
@@ -517,8 +516,8 @@ public static class ObsOverlayHtmlRenderer
                     <div class="vote-bar__slot is-last-round">${lr.label || lr.lastRound}</div>
                     <div class="vote-bar__track">
                         <div class="vote-bar__fill" ${fillStyle}></div>
-                        <div class="vote-bar__count">${count}</div>
-                    </div>`;
+                    </div>
+                    <div class="vote-bar__count">${count}</div>`;
                 lastRoundChart.appendChild(item);
             });
         };
