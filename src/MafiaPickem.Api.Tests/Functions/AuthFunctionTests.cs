@@ -60,7 +60,7 @@ public class AuthFunctionTests
 
         _telegramAuthMock.Setup(x => x.ValidateInitData(request.InitData))
             .Returns(telegramResult);
-        _repositoryMock.Setup(x => x.UpsertByTelegramIdAsync(12345, "https://example.com/photo.jpg"))
+        _repositoryMock.Setup(x => x.UpsertByTelegramIdAsync(12345, "johndoe", "https://example.com/photo.jpg"))
             .ReturnsAsync(user);
 
         // Act
@@ -95,7 +95,7 @@ public class AuthFunctionTests
 
         _telegramAuthMock.Setup(x => x.ValidateInitData(request.InitData))
             .Returns(telegramResult);
-        _repositoryMock.Setup(x => x.UpsertByTelegramIdAsync(111, null))
+        _repositoryMock.Setup(x => x.UpsertByTelegramIdAsync(111, null, null))
             .ReturnsAsync(user);
 
         // Act
@@ -125,7 +125,7 @@ public class AuthFunctionTests
 
         _telegramAuthMock.Setup(x => x.ValidateInitData(request.InitData))
             .Returns(telegramResult);
-        _repositoryMock.Setup(x => x.UpsertByTelegramIdAsync(54321, null))
+        _repositoryMock.Setup(x => x.UpsertByTelegramIdAsync(54321, null, null))
             .ReturnsAsync(user);
 
         // Act
@@ -179,7 +179,7 @@ public class AuthFunctionTests
 
         _telegramAuthMock.Setup(x => x.ValidateInitData(request.InitData))
             .Returns(telegramResult);
-        _repositoryMock.Setup(x => x.UpsertByTelegramIdAsync(12345, null))
+        _repositoryMock.Setup(x => x.UpsertByTelegramIdAsync(12345, null, null))
             .ReturnsAsync(user);
 
         // Act

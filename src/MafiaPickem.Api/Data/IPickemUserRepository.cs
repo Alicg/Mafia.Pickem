@@ -5,8 +5,9 @@ namespace MafiaPickem.Api.Data;
 public interface IPickemUserRepository
 {
     Task<PickemUser?> GetByTelegramIdAsync(long telegramId);
+    Task<PickemUser?> GetByTelegramUsernameAsync(string telegramUsername);
     Task<PickemUser?> GetByIdAsync(int id);
-    Task<PickemUser> UpsertByTelegramIdAsync(long telegramId, string? photoUrl);
+    Task<PickemUser> UpsertByTelegramIdAsync(long telegramId, string? telegramUsername, string? photoUrl);
     Task UpdateNicknameAsync(int userId, string nickname);
     Task<bool> IsNicknameAvailableAsync(string nickname, int? excludeUserId);
 }

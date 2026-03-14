@@ -5,6 +5,7 @@ using MafiaPickem.Api.Models.Requests;
 using MafiaPickem.Api.Models.Responses;
 using MafiaPickem.Api.Services;
 using MafiaPickem.Api.State;
+using MafiaPickem.Api.Utils;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using System.Text.Json;
@@ -16,6 +17,7 @@ public class AdminFunctions
 {
     private readonly IMatchRepository _matchRepository;
     private readonly ITournamentRepository _tournamentRepository;
+    private readonly ITournamentOperatorRepository _tournamentOperatorRepository;
     private readonly IPredictionRepository _predictionRepository;
     private readonly IMatchStateService _matchStateService;
     private readonly IScoringService _scoringService;
@@ -26,6 +28,7 @@ public class AdminFunctions
     public AdminFunctions(
         IMatchRepository matchRepository,
         ITournamentRepository tournamentRepository,
+        ITournamentOperatorRepository tournamentOperatorRepository,
         IPredictionRepository predictionRepository,
         IMatchStateService matchStateService,
         IScoringService scoringService,
@@ -35,6 +38,7 @@ public class AdminFunctions
     {
         _matchRepository = matchRepository;
         _tournamentRepository = tournamentRepository;
+        _tournamentOperatorRepository = tournamentOperatorRepository;
         _predictionRepository = predictionRepository;
         _matchStateService = matchStateService;
         _scoringService = scoringService;
@@ -49,9 +53,7 @@ public class AdminFunctions
     {
         if (!_userContext.IsAdmin)
         {
-            var forbiddenResponse = req.CreateResponse(HttpStatusCode.Forbidden);
-            await forbiddenResponse.WriteStringAsync("Admin access required");
-            return forbiddenResponse;
+            return await CreateForbiddenResponseAsync(req, "Admin access required");
         }
 
         var request = await req.ReadFromJsonAsync<CreateTournamentRequest>();
@@ -75,11 +77,23 @@ public class AdminFunctions
             return badRequestResponse;
         }
 
+        var operatorUsernames = request.OperatorUsernames
+            .Select(TelegramUsernameNormalizer.NormalizeMention)
+            .Where(username => username != null)
+            .Cast<string>()
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
         var tournament = await _tournamentRepository.CreateAsync(
             request.Name,
             request.Description,
             request.ImageUrl,
             teams);
+
+        if (operatorUsernames.Count > 0)
+        {
+            await _tournamentOperatorRepository.AddRangeAsync(tournament.Id, operatorUsernames);
+        }
 
         var dto = new TournamentDto
         {
@@ -87,7 +101,8 @@ public class AdminFunctions
             Name = tournament.Name,
             Description = tournament.Description,
             ImageUrl = tournament.ImageUrl,
-            Teams = teams
+            Teams = teams,
+            CanManage = true
         };
 
         var response = req.CreateResponse(HttpStatusCode.Created);
@@ -99,11 +114,9 @@ public class AdminFunctions
     public async Task<HttpResponseData> CreateMatchHttp(
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/matches")] HttpRequestData req)
     {
-        if (!_userContext.IsAdmin)
+        if (!_userContext.IsAdmin && string.IsNullOrWhiteSpace(_userContext.TelegramUsername))
         {
-            var forbiddenResponse = req.CreateResponse(HttpStatusCode.Forbidden);
-            await forbiddenResponse.WriteStringAsync("Admin access required");
-            return forbiddenResponse;
+            return await CreateForbiddenResponseAsync(req, "Tournament admin or operator access required");
         }
 
         var request = await req.ReadFromJsonAsync<CreateMatchRequest>();
@@ -112,6 +125,11 @@ public class AdminFunctions
             var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
             await badRequestResponse.WriteStringAsync("Invalid request body");
             return badRequestResponse;
+        }
+
+        if (!await CanManageTournamentAsync(request.TournamentId))
+        {
+            return await CreateForbiddenResponseAsync(req, "Tournament admin or operator access required");
         }
 
         var match = await _matchRepository.CreateAsync(
@@ -141,11 +159,9 @@ public class AdminFunctions
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/open-match/{id}")] HttpRequestData req,
         int id)
     {
-        if (!_userContext.IsAdmin)
+        if (!await CanManageMatchAsync(id))
         {
-            var forbiddenResponse = req.CreateResponse(HttpStatusCode.Forbidden);
-            await forbiddenResponse.WriteStringAsync("Admin access required");
-            return forbiddenResponse;
+            return await CreateForbiddenResponseAsync(req, "Tournament admin or operator access required");
         }
 
         var match = await _matchStateService.OpenMatchAsync(id);
@@ -169,11 +185,9 @@ public class AdminFunctions
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/revert-to-upcoming/{id}")] HttpRequestData req,
         int id)
     {
-        if (!_userContext.IsAdmin)
+        if (!await CanManageMatchAsync(id))
         {
-            var forbiddenResponse = req.CreateResponse(HttpStatusCode.Forbidden);
-            await forbiddenResponse.WriteStringAsync("Admin access required");
-            return forbiddenResponse;
+            return await CreateForbiddenResponseAsync(req, "Tournament admin or operator access required");
         }
 
         var match = await _matchStateService.RevertToUpcomingAsync(id);
@@ -197,11 +211,9 @@ public class AdminFunctions
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/lock-match/{id}")] HttpRequestData req,
         int id)
     {
-        if (!_userContext.IsAdmin)
+        if (!await CanManageMatchAsync(id))
         {
-            var forbiddenResponse = req.CreateResponse(HttpStatusCode.Forbidden);
-            await forbiddenResponse.WriteStringAsync("Admin access required");
-            return forbiddenResponse;
+            return await CreateForbiddenResponseAsync(req, "Tournament admin or operator access required");
         }
 
         var match = await _matchStateService.LockMatchAsync(id);
@@ -225,11 +237,9 @@ public class AdminFunctions
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/reopen-match/{id}")] HttpRequestData req,
         int id)
     {
-        if (!_userContext.IsAdmin)
+        if (!await CanManageMatchAsync(id))
         {
-            var forbiddenResponse = req.CreateResponse(HttpStatusCode.Forbidden);
-            await forbiddenResponse.WriteStringAsync("Admin access required");
-            return forbiddenResponse;
+            return await CreateForbiddenResponseAsync(req, "Tournament admin or operator access required");
         }
 
         var match = await _matchStateService.ReopenMatchAsync(id);
@@ -253,13 +263,6 @@ public class AdminFunctions
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/resolve-match/{id}")] HttpRequestData req,
         int id)
     {
-        if (!_userContext.IsAdmin)
-        {
-            var forbiddenResponse = req.CreateResponse(HttpStatusCode.Forbidden);
-            await forbiddenResponse.WriteStringAsync("Admin access required");
-            return forbiddenResponse;
-        }
-
         var request = await req.ReadFromJsonAsync<ResolveMatchRequest>();
         if (request == null)
         {
@@ -275,6 +278,11 @@ public class AdminFunctions
             var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
             await notFoundResponse.WriteStringAsync($"Match {id} not found");
             return notFoundResponse;
+        }
+
+        if (!await CanManageTournamentAsync(match.TournamentId))
+        {
+            return await CreateForbiddenResponseAsync(req, "Tournament admin or operator access required");
         }
 
         // Sort voted out slots and convert to CSV
@@ -316,13 +324,6 @@ public class AdminFunctions
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/set-first-voted/{id}")] HttpRequestData req,
         int id)
     {
-        if (!_userContext.IsAdmin)
-        {
-            var forbiddenResponse = req.CreateResponse(HttpStatusCode.Forbidden);
-            await forbiddenResponse.WriteStringAsync("Admin access required");
-            return forbiddenResponse;
-        }
-
         var request = await req.ReadFromJsonAsync<SetFirstVotedRequest>();
         if (request == null)
         {
@@ -337,6 +338,11 @@ public class AdminFunctions
             var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
             await notFoundResponse.WriteStringAsync($"Match {id} not found");
             return notFoundResponse;
+        }
+
+        if (!await CanManageTournamentAsync(match.TournamentId))
+        {
+            return await CreateForbiddenResponseAsync(req, "Tournament admin or operator access required");
         }
 
         // Sort voted out slots and convert to CSV
@@ -370,19 +376,17 @@ public class AdminFunctions
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/undo-first-voted/{id}")] HttpRequestData req,
         int id)
     {
-        if (!_userContext.IsAdmin)
-        {
-            var forbiddenResponse = req.CreateResponse(HttpStatusCode.Forbidden);
-            await forbiddenResponse.WriteStringAsync("Admin access required");
-            return forbiddenResponse;
-        }
-
         var match = await _matchRepository.GetByIdAsync(id);
         if (match == null)
         {
             var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
             await notFoundResponse.WriteStringAsync($"Match {id} not found");
             return notFoundResponse;
+        }
+
+        if (!await CanManageTournamentAsync(match.TournamentId))
+        {
+            return await CreateForbiddenResponseAsync(req, "Tournament admin or operator access required");
         }
 
         // Delete saved voted out slots
@@ -412,19 +416,17 @@ public class AdminFunctions
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/unresolve-match/{id}")] HttpRequestData req,
         int id)
     {
-        if (!_userContext.IsAdmin)
-        {
-            var forbiddenResponse = req.CreateResponse(HttpStatusCode.Forbidden);
-            await forbiddenResponse.WriteStringAsync("Admin access required");
-            return forbiddenResponse;
-        }
-
         var match = await _matchRepository.GetByIdAsync(id);
         if (match == null)
         {
             var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
             await notFoundResponse.WriteStringAsync($"Match {id} not found");
             return notFoundResponse;
+        }
+
+        if (!await CanManageTournamentAsync(match.TournamentId))
+        {
+            return await CreateForbiddenResponseAsync(req, "Tournament admin or operator access required");
         }
 
         // Rollback scores, match result, and recalculate leaderboard
@@ -454,19 +456,17 @@ public class AdminFunctions
         [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "manage/matches/{id}")] HttpRequestData req,
         int id)
     {
-        if (!_userContext.IsAdmin)
-        {
-            var forbiddenResponse = req.CreateResponse(HttpStatusCode.Forbidden);
-            await forbiddenResponse.WriteStringAsync("Admin access required");
-            return forbiddenResponse;
-        }
-
         var match = await _matchRepository.GetByIdAsync(id);
         if (match == null)
         {
             var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
             await notFoundResponse.WriteStringAsync($"Match {id} not found");
             return notFoundResponse;
+        }
+
+        if (!await CanManageTournamentAsync(match.TournamentId))
+        {
+            return await CreateForbiddenResponseAsync(req, "Tournament admin or operator access required");
         }
 
         // Delete in correct order respecting FK constraints:
@@ -490,11 +490,9 @@ public class AdminFunctions
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/publish-match-state/{id}")] HttpRequestData req,
         int id)
     {
-        if (!_userContext.IsAdmin)
+        if (!await CanManageMatchAsync(id))
         {
-            var forbiddenResponse = req.CreateResponse(HttpStatusCode.Forbidden);
-            await forbiddenResponse.WriteStringAsync("Admin access required");
-            return forbiddenResponse;
+            return await CreateForbiddenResponseAsync(req, "Tournament admin or operator access required");
         }
 
         await _statePublishService.PublishMatchStateAsync(id, forcePublish: true);
@@ -509,11 +507,9 @@ public class AdminFunctions
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "manage/tournament-stats/{id}")] HttpRequestData req,
         int id)
     {
-        if (!_userContext.IsAdmin)
+        if (!await CanManageTournamentAsync(id))
         {
-            var forbiddenResponse = req.CreateResponse(HttpStatusCode.Forbidden);
-            await forbiddenResponse.WriteStringAsync("Admin access required");
-            return forbiddenResponse;
+            return await CreateForbiddenResponseAsync(req, "Tournament admin or operator access required");
         }
 
         var matches = await _matchRepository.GetByTournamentAndStateAsync(
@@ -563,6 +559,48 @@ public class AdminFunctions
 
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(finalStats);
+        return response;
+    }
+
+    private async Task<bool> CanManageTournamentAsync(int tournamentId)
+    {
+        if (_userContext.IsAdmin)
+        {
+            return true;
+        }
+
+        if (string.IsNullOrWhiteSpace(_userContext.TelegramUsername))
+        {
+            return false;
+        }
+
+        return await _tournamentOperatorRepository.IsOperatorAsync(tournamentId, _userContext.TelegramUsername);
+    }
+
+    private async Task<bool> CanManageMatchAsync(int matchId)
+    {
+        if (_userContext.IsAdmin)
+        {
+            return true;
+        }
+
+        if (string.IsNullOrWhiteSpace(_userContext.TelegramUsername))
+        {
+            return false;
+        }
+
+        var match = await _matchRepository.GetByIdAsync(matchId);
+        if (match == null)
+        {
+            return false;
+        }
+
+        return await _tournamentOperatorRepository.IsOperatorAsync(match.TournamentId, _userContext.TelegramUsername);
+    }
+    private static async Task<HttpResponseData> CreateForbiddenResponseAsync(HttpRequestData req, string message)
+    {
+        var response = req.CreateResponse(HttpStatusCode.Forbidden);
+        await response.WriteStringAsync(message);
         return response;
     }
 }

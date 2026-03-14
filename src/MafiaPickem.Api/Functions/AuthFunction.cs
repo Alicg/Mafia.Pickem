@@ -84,6 +84,7 @@ public class AuthFunction
         // Upsert user in database
         var user = await _userRepository.UpsertByTelegramIdAsync(
             telegramResult.TelegramId,
+            telegramResult.Username,
             telegramResult.PhotoUrl
         );
 

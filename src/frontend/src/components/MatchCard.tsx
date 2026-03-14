@@ -14,7 +14,7 @@ interface MatchCardProps {
   isExpanded: boolean;
   canExpand: boolean;
   onToggle: () => void;
-  isAdmin: boolean;
+  canManage: boolean;
   onPredictionChange: (prediction: PredictionDto | null) => void;
   onRefresh: () => void;
   onResolve: (currentState: MatchState) => void;
@@ -34,7 +34,7 @@ function parseState(s: string): MatchState {
 }
 
 export const MatchCard: React.FC<MatchCardProps> = ({
-  matchInfo, blobState, prediction, isExpanded, canExpand, onToggle, isAdmin, onPredictionChange, onRefresh, onResolve, onSetFirstVoted, onRefetchState
+  matchInfo, blobState, prediction, isExpanded, canExpand, onToggle, canManage, onPredictionChange, onRefresh, onResolve, onSetFirstVoted, onRefetchState
 }) => {
   const [selectedWinner, setSelectedWinner] = useState<number | null>(prediction?.predictedWinner ?? null);
   const [selectedVotedOut, setSelectedVotedOut] = useState<number | null>(prediction?.predictedVotedOut ?? null);
@@ -211,7 +211,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
           )}
 
           {/* Admin controls inline */}
-          {isAdmin && (
+          {canManage && (
             <MatchStateControls
               matchId={matchInfo.id}
               currentState={currentState}

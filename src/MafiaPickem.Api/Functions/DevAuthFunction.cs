@@ -46,7 +46,7 @@ public class DevAuthFunction
             .ToHashSet();
 
         // Upsert a dev user with a fixed Telegram ID
-        var user = await _userRepository.UpsertByTelegramIdAsync(DevTelegramId, null);
+        var user = await _userRepository.UpsertByTelegramIdAsync(DevTelegramId, null, null);
         var isAdmin = adminTelegramIds.Contains(DevTelegramId);
 
         var result = new AuthResponse

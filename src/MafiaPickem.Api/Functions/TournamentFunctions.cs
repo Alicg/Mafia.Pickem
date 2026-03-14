@@ -18,6 +18,7 @@ public class TournamentFunctions
     private readonly IMatchRepository _matchRepository;
     private readonly IPredictionRepository _predictionRepository;
     private readonly ITournamentParticipantRepository _tournamentParticipantRepository;
+    private readonly ITournamentOperatorRepository _tournamentOperatorRepository;
     private readonly IUserContext _userContext;
     private readonly ILogger<TournamentFunctions> _logger;
 
@@ -26,6 +27,7 @@ public class TournamentFunctions
         IMatchRepository matchRepository,
         IPredictionRepository predictionRepository,
         ITournamentParticipantRepository tournamentParticipantRepository,
+        ITournamentOperatorRepository tournamentOperatorRepository,
         IUserContext userContext,
         ILogger<TournamentFunctions>? logger = null)
     {
@@ -33,6 +35,7 @@ public class TournamentFunctions
         _matchRepository = matchRepository;
         _predictionRepository = predictionRepository;
         _tournamentParticipantRepository = tournamentParticipantRepository;
+        _tournamentOperatorRepository = tournamentOperatorRepository;
         _userContext = userContext;
         _logger = logger ?? null!;
     }
@@ -44,13 +47,18 @@ public class TournamentFunctions
         try
         {
             var tournaments = await _tournamentRepository.GetActiveAsync();
+            var manageableTournamentIds = await GetManageableTournamentIdsAsync();
             var tournamentDtos = new List<TournamentDto>();
 
             foreach (var tournament in tournaments)
             {
                 var currentMatch = await _matchRepository.GetCurrentMatchByTournamentIdAsync(tournament.Id);
                 var selectedTeamName = await GetSelectedTeamNameAsync(tournament.Id);
-                tournamentDtos.Add(MapToDto(tournament, currentMatch, selectedTeamName));
+                tournamentDtos.Add(MapToDto(
+                    tournament,
+                    currentMatch,
+                    selectedTeamName,
+                    _userContext.IsAdmin || manageableTournamentIds.Contains(tournament.Id)));
             }
 
             var response = req.CreateResponse(HttpStatusCode.OK);
@@ -83,7 +91,11 @@ public class TournamentFunctions
 
             var currentMatch = await _matchRepository.GetCurrentMatchByTournamentIdAsync(tournament.Id);
             var selectedTeamName = await GetSelectedTeamNameAsync(tournament.Id);
-            var tournamentDto = MapToDto(tournament, currentMatch, selectedTeamName);
+            var tournamentDto = MapToDto(
+                tournament,
+                currentMatch,
+                selectedTeamName,
+                await CanManageTournamentAsync(tournament.Id));
 
             var response = req.CreateResponse(HttpStatusCode.OK);
             await response.WriteAsJsonAsync(tournamentDto);
@@ -257,7 +269,38 @@ public class TournamentFunctions
         return participant?.TeamName;
     }
 
-    private static TournamentDto MapToDto(Tournament tournament, Match? currentMatch, string? selectedTeamName)
+    private async Task<HashSet<int>> GetManageableTournamentIdsAsync()
+    {
+        if (_userContext.IsAdmin)
+        {
+            return new HashSet<int>();
+        }
+
+        if (string.IsNullOrWhiteSpace(_userContext.TelegramUsername))
+        {
+            return new HashSet<int>();
+        }
+
+        var tournamentIds = await _tournamentOperatorRepository.GetTournamentIdsByUsernameAsync(_userContext.TelegramUsername);
+        return tournamentIds.ToHashSet();
+    }
+
+    private async Task<bool> CanManageTournamentAsync(int tournamentId)
+    {
+        if (_userContext.IsAdmin)
+        {
+            return true;
+        }
+
+        if (string.IsNullOrWhiteSpace(_userContext.TelegramUsername))
+        {
+            return false;
+        }
+
+        return await _tournamentOperatorRepository.IsOperatorAsync(tournamentId, _userContext.TelegramUsername);
+    }
+
+    private static TournamentDto MapToDto(Tournament tournament, Match? currentMatch, string? selectedTeamName, bool canManage)
     {
         return new TournamentDto
         {
@@ -267,6 +310,7 @@ public class TournamentFunctions
             ImageUrl = tournament.ImageUrl,
             Teams = ParseTeams(tournament.TeamsJson),
             SelectedTeamName = selectedTeamName,
+            CanManage = canManage,
             CurrentMatch = currentMatch != null ? MapMatchToDto(currentMatch) : null
         };
     }

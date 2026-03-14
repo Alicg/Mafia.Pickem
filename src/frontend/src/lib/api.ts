@@ -173,6 +173,7 @@ export async function adminCreateTournament(request: CreateTournamentRequest): P
       imageUrl: request.imageUrl ?? null,
       teams: [...request.teams],
       selectedTeamName: null,
+      canManage: true,
       currentMatch: null,
     };
   }

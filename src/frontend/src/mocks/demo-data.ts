@@ -88,6 +88,7 @@ export const demoTournament: TournamentDto = {
   imageUrl: null,
   teams: ['Север', 'Юг', 'Запад'],
   selectedTeamName: 'Север',
+  canManage: true,
   currentMatch: { id: 3, gameNumber: 3, tableNumber: 2, state: MatchState.Open }, // Game #3
 };
 
@@ -100,6 +101,7 @@ export const demoTournaments: TournamentDto[] = [
     imageUrl: null,
     teams: ['Альфа', 'Браво'],
     selectedTeamName: null,
+    canManage: false,
     currentMatch: null,
   },
 ];

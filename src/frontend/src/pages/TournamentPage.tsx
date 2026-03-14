@@ -45,7 +45,7 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [resolvingMatch, setResolvingMatch] = useState<{ matchId: number; currentState: MatchState } | null>(null);
   const [firstVotedMatchId, setFirstVotedMatchId] = useState<number | null>(null);
-  const isAdmin = profile?.isAdmin ?? false;
+  const canManage = tournament.canManage;
   const requiresTeamSelection = tournament.teams.length > 0 && !selectedTeamName;
 
   // Blob polling for all matches
@@ -65,7 +65,7 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
       setPredictions(preds);
 
       // Admin-only tournament stats shown inline on the main tournament page.
-      if (userProfile.isAdmin) {
+      if (canManage) {
         try {
           const stats = await adminGetTournamentStats(tournament.id);
           setTournamentStats(stats);
@@ -81,7 +81,7 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
     } finally {
       setIsLoading(false);
     }
-  }, [tournament.id]);
+  }, [canManage, tournament.id]);
 
   useEffect(() => {
     loadInitialData();
@@ -94,7 +94,7 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
         const matches = await getTournamentMatches(tournament.id);
         setMatchInfos(matches.sort((a, b) => a.gameNumber - b.gameNumber));
 
-        if (isAdmin) {
+        if (canManage) {
           try {
             const stats = await adminGetTournamentStats(tournament.id);
             setTournamentStats(stats);
@@ -107,7 +107,7 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
       }
     }, MATCH_LIST_REFRESH_MS);
     return () => clearInterval(interval);
-  }, [isAdmin, tournament.id]);
+  }, [canManage, tournament.id]);
 
   // Get effective match state (blob overrides API)
   const getEffectiveState = useCallback((matchInfo: MatchInfo): MatchState => {
@@ -153,7 +153,7 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
   }, [tournamentStats]);
 
   const canExpand = (state: MatchState) =>
-    state !== MatchState.Canceled && (state !== MatchState.Upcoming || isAdmin);
+    state !== MatchState.Canceled && (state !== MatchState.Upcoming || canManage);
 
   const handleToggleMatch = (matchInfo: MatchInfo) => {
     const state = getEffectiveState(matchInfo);
@@ -229,7 +229,7 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
       const matches = await getTournamentMatches(tournament.id);
       setMatchInfos(matches.sort((a, b) => a.gameNumber - b.gameNumber));
 
-      if (isAdmin) {
+      if (canManage) {
         try {
           const stats = await adminGetTournamentStats(tournament.id);
           setTournamentStats(stats);
@@ -240,7 +240,7 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
     } catch (err) {
       console.error('Match list refresh failed:', err);
     }
-  }, [isAdmin, tournament.id]);
+  }, [canManage, tournament.id]);
 
   if (isLoading) {
     return (
@@ -282,7 +282,7 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
       <div className="page-content">
         {activeTab === 'games' && (
           <div className="games-tab">
-            {isAdmin && tournamentStats && (
+            {canManage && tournamentStats && (
               <div className="admin-stats-card">
                 <div className="admin-stats-row">
                   <div className="admin-stat-item">
@@ -303,7 +303,7 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
               </div>
             )}
 
-            {isAdmin && (
+            {canManage && (
               <button
                 className="create-match-btn"
                 onClick={() => { hapticFeedback('selection'); setShowCreateForm(true); }}
@@ -325,7 +325,7 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
                       isExpanded={expandedMatchId === mi.id}
                       canExpand={canExpand(getEffectiveState(mi))}
                       onToggle={() => handleToggleMatch(mi)}
-                      isAdmin={isAdmin}
+                      canManage={canManage}
                       onPredictionChange={(p) => handlePredictionChange(mi.id, p)}
                       onRefresh={refreshMatchList}
                       onResolve={(currentState) => setResolvingMatch({ matchId: mi.id, currentState })}

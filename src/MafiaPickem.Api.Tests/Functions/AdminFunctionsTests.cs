@@ -21,6 +21,7 @@ public class AdminFunctionsTests
 {
     private readonly Mock<IMatchRepository> _mockMatchRepository;
     private readonly Mock<ITournamentRepository> _mockTournamentRepository;
+    private readonly Mock<ITournamentOperatorRepository> _mockTournamentOperatorRepository;
     private readonly Mock<IPredictionRepository> _mockPredictionRepository;
     private readonly Mock<IMatchStateService> _mockMatchStateService;
     private readonly Mock<IScoringService> _mockScoringService;
@@ -33,6 +34,7 @@ public class AdminFunctionsTests
     {
         _mockMatchRepository = new Mock<IMatchRepository>();
         _mockTournamentRepository = new Mock<ITournamentRepository>();
+        _mockTournamentOperatorRepository = new Mock<ITournamentOperatorRepository>();
         _mockPredictionRepository = new Mock<IPredictionRepository>();
         _mockMatchStateService = new Mock<IMatchStateService>();
         _mockScoringService = new Mock<IScoringService>();
@@ -43,6 +45,7 @@ public class AdminFunctionsTests
         _adminFunctions = new AdminFunctions(
             _mockMatchRepository.Object,
             _mockTournamentRepository.Object,
+            _mockTournamentOperatorRepository.Object,
             _mockPredictionRepository.Object,
             _mockMatchStateService.Object,
             _mockScoringService.Object,

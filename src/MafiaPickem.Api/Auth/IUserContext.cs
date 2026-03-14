@@ -6,6 +6,7 @@ public interface IUserContext
 {
     int UserId { get; }
     long TelegramId { get; }
+    string? TelegramUsername { get; }
     string? GameNickname { get; }
     bool IsRegistered { get; }
     bool IsAdmin { get; }

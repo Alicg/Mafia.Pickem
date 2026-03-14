@@ -14,6 +14,7 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ onSu
   const [description, setDescription] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [teamsText, setTeamsText] = useState('');
+  const [operatorUsernamesText, setOperatorUsernamesText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,6 +23,13 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ onSu
     .map(team => team.trim())
     .filter(Boolean)
     .filter((team, index, all) => all.findIndex(item => item.toLowerCase() === team.toLowerCase()) === index);
+
+  const parsedOperatorUsernames = operatorUsernamesText
+    .split(/[\n,;\s]+/)
+    .map(username => username.trim())
+    .filter(Boolean)
+    .map(username => username.startsWith('@') ? username : `@${username}`)
+    .filter((username, index, all) => all.findIndex(item => item.toLowerCase() === username.toLowerCase()) === index);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +45,7 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ onSu
         description: description.trim() || undefined,
         imageUrl: imageUrl.trim() || undefined,
         teams: parsedTeams,
+        operatorUsernames: parsedOperatorUsernames,
       };
 
       await adminCreateTournament(request);
@@ -107,6 +116,21 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ onSu
             />
             <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--tg-theme-hint-color)' }}>
               Пользователь выбирает команду один раз и больше не сможет изменить выбор.
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Операторы турнира</label>
+            <textarea
+              className="form-input"
+              value={operatorUsernamesText}
+              onChange={(e) => setOperatorUsernamesText(e.target.value)}
+              placeholder={"Добавьте Telegram usernames через @userName\nНапример:\n@ivan_admin\n@marina_ops"}
+              rows={4}
+              style={{ resize: 'vertical' }}
+            />
+            <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--tg-theme-hint-color)' }}>
+              Операторы смогут создавать игры и менять статусы игр этого турнира. Пользователь должен хотя бы один раз открыть mini app.
             </div>
           </div>
 

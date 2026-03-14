@@ -6,6 +6,7 @@ public class UserContext : IUserContext
 {
     public int UserId { get; private set; }
     public long TelegramId { get; private set; }
+    public string? TelegramUsername { get; private set; }
     public string? GameNickname { get; private set; }
     public bool IsRegistered { get; private set; }
     public bool IsAdmin { get; private set; }
@@ -14,6 +15,7 @@ public class UserContext : IUserContext
     {
         UserId = user.Id;
         TelegramId = user.TelegramId;
+        TelegramUsername = user.TelegramUsername;
         GameNickname = user.GameNickname;
         IsRegistered = !user.GameNickname.StartsWith("_unregistered_");
         IsAdmin = isAdmin;

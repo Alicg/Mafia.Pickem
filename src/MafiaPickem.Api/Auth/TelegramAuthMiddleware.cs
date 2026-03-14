@@ -90,7 +90,10 @@ public class TelegramAuthMiddleware : IFunctionsWorkerMiddleware
         }
 
         var userRepository = context.InstanceServices.GetRequiredService<IPickemUserRepository>();
-        var user = await userRepository.UpsertByTelegramIdAsync(telegramResult.TelegramId, telegramResult.PhotoUrl);
+        var user = await userRepository.UpsertByTelegramIdAsync(
+            telegramResult.TelegramId,
+            telegramResult.Username,
+            telegramResult.PhotoUrl);
 
         var isAdmin = _adminTelegramIds.Contains(telegramResult.TelegramId);
 
@@ -125,7 +128,7 @@ public class TelegramAuthMiddleware : IFunctionsWorkerMiddleware
     private async Task AuthenticateDevUserAsync(FunctionContext context)
     {
         var userRepository = context.InstanceServices.GetRequiredService<IPickemUserRepository>();
-        var user = await userRepository.UpsertByTelegramIdAsync(DevTelegramId, null);
+        var user = await userRepository.UpsertByTelegramIdAsync(DevTelegramId, null, null);
         var isAdmin = _adminTelegramIds.Contains(DevTelegramId);
 
         SetUserContext(context, user, isAdmin);
