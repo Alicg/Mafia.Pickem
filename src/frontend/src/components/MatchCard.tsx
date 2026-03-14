@@ -212,14 +212,20 @@ export const MatchCard: React.FC<MatchCardProps> = ({
 
           {/* Admin controls inline */}
           {canManage && (
-            <MatchStateControls
-              matchId={matchInfo.id}
-              currentState={currentState}
-              onRefresh={onRefresh}
-              onResolve={onResolve}
-              onSetFirstVoted={onSetFirstVoted}
-              onRefetchState={onRefetchState}
-            />
+            <section className="operator-panel" aria-label="Операторская зона">
+              <div className="operator-panel-header">
+                <span className="operator-panel-kicker">Оператор</span>
+                <span className="operator-panel-title">Служебные действия для этой игры</span>
+              </div>
+              <MatchStateControls
+                matchId={matchInfo.id}
+                currentState={currentState}
+                onRefresh={onRefresh}
+                onResolve={onResolve}
+                onSetFirstVoted={onSetFirstVoted}
+                onRefetchState={onRefetchState}
+              />
+            </section>
           )}
         </div>
       )}
