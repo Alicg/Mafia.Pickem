@@ -52,6 +52,7 @@ var host = new HostBuilder()
         services.AddHostedService<TelegramWebhookRegistrationService>();
         services.AddSingleton<IMatchStateBlobReader, MatchStateBlobReader>();
         services.AddSingleton<IMatchStateBlobWriter, MatchStateBlobWriter>();
+        services.AddSingleton<ITournamentOverlayClientStateStore, TournamentOverlayClientStateBlobStore>();
         services.AddSingleton<ILeaderboardBlobWriter, LeaderboardBlobWriter>();
         services.AddScoped<INicknameService, NicknameService>();
         services.AddScoped<IMatchStateService, MatchStateService>();

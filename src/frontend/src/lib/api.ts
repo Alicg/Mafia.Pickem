@@ -260,6 +260,18 @@ export async function adminResolveMatch(matchId: number, request: ResolveMatchRe
   });
 }
 
+export async function adminUpdateTournamentOverlayClientState(tournamentId: number, activeMatchId: number | null): Promise<void> {
+  if (isDemoMode) {
+    console.log('[DEMO] adminUpdateTournamentOverlayClientState', { tournamentId, activeMatchId });
+    return;
+  }
+
+  await apiFetch(`/manage/tournaments/${encodeURIComponent(tournamentId)}/overlay-client-state`, {
+    method: 'POST',
+    body: JSON.stringify({ activeMatchId }),
+  });
+}
+
 export async function adminUnresolveMatch(matchId: number): Promise<MatchDto> {
   if (isDemoMode) {
     console.log('[DEMO] adminUnresolveMatch', matchId);

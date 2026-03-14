@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { adminGetTournamentStats, getProfile, getTournamentMatches, getMyPredictions, selectTournamentTeam } from '../lib/api';
+import { adminGetTournamentStats, adminUpdateTournamentOverlayClientState, getProfile, getTournamentMatches, getMyPredictions, selectTournamentTeam } from '../lib/api';
 import { TournamentDto, UserProfile, MatchInfo, MatchState, PredictionsMap, PredictionDto, TournamentStats } from '../types';
 import { useMatchStates } from '../hooks/useMatchStates';
 import { MatchCard } from '../components/MatchCard';
@@ -11,6 +11,7 @@ import { hapticFeedback } from '../lib/telegram';
 import './TournamentPage.css';
 
 const MATCH_LIST_REFRESH_MS = 60_000;
+const OVERLAY_STATE_HEARTBEAT_MS = 10_000;
 
 type TabState = 'games' | 'leaders';
 
@@ -28,6 +29,13 @@ function parseState(s: string): MatchState {
   if (lower === 'canceled' || lower === '4') return MatchState.Canceled;
   if (lower === 'firstvoted' || lower === '5') return MatchState.FirstVoted;
   return MatchState.Upcoming;
+}
+
+function getOverlayStatePriority(state: MatchState): number {
+  if (state === MatchState.Open) return 0;
+  if (state === MatchState.Locked) return 1;
+  if (state === MatchState.FirstVoted) return 2;
+  return Number.MAX_SAFE_INTEGER;
 }
 
 export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBack }) => {
@@ -120,6 +128,30 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
 
   const firstOpenId = useMemo(() => {
     return matchInfos.find(m => getEffectiveState(m) === MatchState.Open)?.id ?? null;
+  }, [matchInfos, getEffectiveState]);
+
+  const activeOverlayMatchId = useMemo(() => {
+    let selected: MatchInfo | null = null;
+    let selectedPriority = Number.MAX_SAFE_INTEGER;
+
+    for (const matchInfo of matchInfos) {
+      const state = getEffectiveState(matchInfo);
+      const priority = getOverlayStatePriority(state);
+      if (priority === Number.MAX_SAFE_INTEGER) {
+        continue;
+      }
+
+      if (
+        selected == null ||
+        priority < selectedPriority ||
+        (priority === selectedPriority && matchInfo.id > selected.id)
+      ) {
+        selected = matchInfo;
+        selectedPriority = priority;
+      }
+    }
+
+    return selected?.id ?? null;
   }, [matchInfos, getEffectiveState]);
 
   // Auto-expand the first Open match
@@ -222,6 +254,34 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
         .catch(err => console.error('Failed to refresh predictions:', err));
     }
   }, [blobStates, tournament.id]);
+
+  useEffect(() => {
+    if (!canManage) {
+      return;
+    }
+
+    let isDisposed = false;
+
+    const publishOverlayState = async () => {
+      try {
+        await adminUpdateTournamentOverlayClientState(tournament.id, activeOverlayMatchId);
+      } catch (err) {
+        if (!isDisposed) {
+          console.error('Failed to update overlay client state:', err);
+        }
+      }
+    };
+
+    void publishOverlayState();
+    const intervalId = window.setInterval(() => {
+      void publishOverlayState();
+    }, OVERLAY_STATE_HEARTBEAT_MS);
+
+    return () => {
+      isDisposed = true;
+      window.clearInterval(intervalId);
+    };
+  }, [activeOverlayMatchId, canManage, tournament.id]);
 
   // Refresh match list (used by admin actions)
   const refreshMatchList = useCallback(async () => {

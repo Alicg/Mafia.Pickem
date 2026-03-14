@@ -12,13 +12,114 @@ public class ObsOverlayServiceTests
 {
     private readonly Mock<IMatchRepository> _matchRepositoryMock;
     private readonly Mock<IMatchStateBlobReader> _blobReaderMock;
+    private readonly Mock<ITournamentOverlayClientStateStore> _overlayClientStateStoreMock;
     private readonly ObsOverlayService _service;
 
     public ObsOverlayServiceTests()
     {
         _matchRepositoryMock = new Mock<IMatchRepository>();
         _blobReaderMock = new Mock<IMatchStateBlobReader>();
-        _service = new ObsOverlayService(_matchRepositoryMock.Object, _blobReaderMock.Object);
+        _overlayClientStateStoreMock = new Mock<ITournamentOverlayClientStateStore>();
+        _overlayClientStateStoreMock
+            .Setup(store => store.ReadAsync(It.IsAny<int>()))
+            .ReturnsAsync((TournamentOverlayClientState?)null);
+        _service = new ObsOverlayService(_matchRepositoryMock.Object, _blobReaderMock.Object, _overlayClientStateStoreMock.Object);
+    }
+
+    [Fact]
+    public async Task GetOverlayPayloadAsync_ShouldRespectFreshClientSelectedMatch()
+    {
+        // Arrange
+        const int tournamentId = 76;
+        var openMatch = new DomainMatch
+        {
+            Id = 80,
+            TournamentId = tournamentId,
+            GameNumber = 9,
+            TableNumber = 1,
+            State = MatchState.Open,
+            DateOpened = DateTime.UtcNow.AddMinutes(-1),
+            DateCreated = DateTime.UtcNow.AddHours(-1)
+        };
+        var lockedMatch = new DomainMatch
+        {
+            Id = 81,
+            TournamentId = tournamentId,
+            GameNumber = 10,
+            TableNumber = 2,
+            State = MatchState.Locked,
+            DateLocked = DateTime.UtcNow,
+            DateCreated = DateTime.UtcNow.AddHours(-1)
+        };
+
+        _matchRepositoryMock
+            .Setup(repository => repository.GetByTournamentAndStateAsync(tournamentId, MatchState.Open, MatchState.Locked, MatchState.FirstVoted))
+            .ReturnsAsync(new[] { openMatch, lockedMatch });
+
+        _overlayClientStateStoreMock
+            .Setup(store => store.ReadAsync(tournamentId))
+            .ReturnsAsync(new TournamentOverlayClientState
+            {
+                TournamentId = tournamentId,
+                ActiveMatchId = lockedMatch.Id,
+                UpdatedAt = DateTime.UtcNow
+            });
+
+        _blobReaderMock
+            .Setup(reader => reader.ReadStateAsync(lockedMatch.Id))
+            .ReturnsAsync(new BlobMatchState
+            {
+                MatchId = lockedMatch.Id,
+                TournamentId = tournamentId,
+                State = "Locked",
+                UpdatedAt = DateTime.UtcNow,
+                TotalPredictions = 10,
+                WinnerVotes = new WinnerVotesDto
+                {
+                    Town = new VoteEntry { Count = 4, Percent = 40m },
+                    Mafia = new VoteEntry { Count = 6, Percent = 60m }
+                }
+            });
+
+        // Act
+        var payload = await _service.GetOverlayPayloadAsync(tournamentId);
+
+        // Assert
+        payload.Status.Should().Be("ready");
+        payload.MatchId.Should().Be(lockedMatch.Id);
+        payload.MatchState.Should().Be("Locked");
+
+        _blobReaderMock.Verify(reader => reader.ReadStateAsync(lockedMatch.Id), Times.Once);
+        _blobReaderMock.Verify(reader => reader.ReadStateAsync(openMatch.Id), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetOverlayPayloadAsync_ShouldReturnNoMatchWhenFreshClientStateClearsOverlay()
+    {
+        // Arrange
+        const int tournamentId = 75;
+
+        _matchRepositoryMock
+            .Setup(repository => repository.GetByTournamentAndStateAsync(tournamentId, MatchState.Open, MatchState.Locked, MatchState.FirstVoted))
+            .ReturnsAsync(Array.Empty<DomainMatch>());
+
+        _overlayClientStateStoreMock
+            .Setup(store => store.ReadAsync(tournamentId))
+            .ReturnsAsync(new TournamentOverlayClientState
+            {
+                TournamentId = tournamentId,
+                ActiveMatchId = null,
+                UpdatedAt = DateTime.UtcNow
+            });
+
+        // Act
+        var payload = await _service.GetOverlayPayloadAsync(tournamentId);
+
+        // Assert
+        payload.Status.Should().Be("no-match");
+        payload.MatchId.Should().BeNull();
+
+        _blobReaderMock.Verify(reader => reader.ReadStateAsync(It.IsAny<int>()), Times.Never);
     }
 
     [Fact]

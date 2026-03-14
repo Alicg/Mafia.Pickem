@@ -7,15 +7,19 @@ namespace MafiaPickem.Api.Overlay;
 
 public class ObsOverlayService : IObsOverlayService
 {
+    private static readonly TimeSpan ClientStateTtl = TimeSpan.FromSeconds(30);
     private readonly IMatchRepository _matchRepository;
     private readonly IMatchStateBlobReader _matchStateBlobReader;
+    private readonly ITournamentOverlayClientStateStore _overlayClientStateStore;
 
     public ObsOverlayService(
         IMatchRepository matchRepository,
-        IMatchStateBlobReader matchStateBlobReader)
+        IMatchStateBlobReader matchStateBlobReader,
+        ITournamentOverlayClientStateStore overlayClientStateStore)
     {
         _matchRepository = matchRepository;
         _matchStateBlobReader = matchStateBlobReader;
+        _overlayClientStateStore = overlayClientStateStore;
     }
 
     public async Task<ObsOverlayPayload> GetOverlayPayloadAsync(int tournamentId)
@@ -26,7 +30,13 @@ public class ObsOverlayService : IObsOverlayService
             MatchState.Locked,
             MatchState.FirstVoted)).ToList();
 
-        var selectedMatch = SelectMatch(matches);
+        var clientState = await _overlayClientStateStore.ReadAsync(tournamentId);
+        var selectedMatch = SelectMatch(matches, clientState);
+        if (clientState != null && IsFresh(clientState) && !clientState.ActiveMatchId.HasValue)
+        {
+            return CreateBasePayload(tournamentId, "no-match", "No open, locked, or first-voted match is available for this tournament.");
+        }
+
         if (selectedMatch == null)
         {
             return CreateBasePayload(tournamentId, "no-match", "No open, locked, or first-voted match is available for this tournament.");
@@ -98,8 +108,18 @@ public class ObsOverlayService : IObsOverlayService
         return payload;
     }
 
-    private static Match? SelectMatch(IEnumerable<Match> matches)
+    private static Match? SelectMatch(IEnumerable<Match> matches, TournamentOverlayClientState? clientState)
     {
+        if (clientState != null && IsFresh(clientState))
+        {
+            if (!clientState.ActiveMatchId.HasValue)
+            {
+                return null;
+            }
+
+            return matches.FirstOrDefault(match => match.Id == clientState.ActiveMatchId.Value);
+        }
+
         var openMatch = matches
             .Where(match => match.State == MatchState.Open)
             .OrderByDescending(match => match.DateOpened ?? match.DateCreated)
@@ -135,6 +155,11 @@ public class ObsOverlayService : IObsOverlayService
         }
 
         return null;
+    }
+
+    private static bool IsFresh(TournamentOverlayClientState clientState)
+    {
+        return clientState.UpdatedAt >= DateTime.UtcNow.Subtract(ClientStateTtl);
     }
 
     private static ObsOverlayPayload CreateBasePayload(int tournamentId, string status, string message, Match? match = null)
