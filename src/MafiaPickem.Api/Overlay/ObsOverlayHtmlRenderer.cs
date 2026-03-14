@@ -13,7 +13,7 @@ public static class ObsOverlayHtmlRenderer
     <title>Mafia Pickem Overlay</title>
     <style>
         :root {
-            --panel-width: 220px;
+            --panel-width: 252px;
             --card-bg: rgba(11, 16, 24, 0.74);
             --card-bg-soft: rgba(17, 24, 36, 0.58);
             --card-highlight: rgba(255, 255, 255, 0.08);
@@ -73,7 +73,7 @@ public static class ObsOverlayHtmlRenderer
             background: linear-gradient(180deg, rgba(11, 16, 24, 0.72), rgba(17, 24, 36, 0.56));
             border: 1px solid rgba(255, 255, 255, 0.12);
             color: rgba(255, 255, 255, 0.96);
-            font-size: 13px;
+            font-size: 17px;
             font-weight: 800;
             letter-spacing: 0.04em;
             text-decoration: none;
@@ -136,7 +136,7 @@ public static class ObsOverlayHtmlRenderer
             border-radius: 999px;
             background: rgba(255, 84, 84, 0.18);
             color: rgba(255, 244, 244, 0.98);
-            font-size: 12px;
+            font-size: 16px;
             font-weight: 800;
             letter-spacing: 0.14em;
             text-transform: uppercase;
@@ -168,7 +168,7 @@ public static class ObsOverlayHtmlRenderer
         }
 
         .summary-side__percent {
-            font-size: 27px;
+            font-size: 34px;
             line-height: 0.92;
             font-weight: 900;
             letter-spacing: -0.06em;
@@ -177,7 +177,7 @@ public static class ObsOverlayHtmlRenderer
         }
 
         .summary-side__label {
-            font-size: 12px;
+            font-size: 16px;
             font-weight: 700;
             letter-spacing: 0.08em;
             text-transform: uppercase;
@@ -212,7 +212,7 @@ public static class ObsOverlayHtmlRenderer
         }
 
         .summary-side__count {
-            font-size: 15px;
+            font-size: 19px;
             font-weight: 800;
             line-height: 1;
             color: var(--text-soft);
@@ -224,7 +224,7 @@ public static class ObsOverlayHtmlRenderer
 
         .chart-title {
             margin-bottom: 7px;
-            font-size: 12px;
+            font-size: 16px;
             font-weight: 800;
             letter-spacing: 0.16em;
             text-transform: uppercase;
@@ -249,7 +249,7 @@ public static class ObsOverlayHtmlRenderer
         }
 
         .vote-bar__slot {
-            font-size: 13px;
+            font-size: 17px;
             font-weight: 800;
             line-height: 1;
             text-align: center;
@@ -263,7 +263,7 @@ public static class ObsOverlayHtmlRenderer
             min-height: 18px;
             padding: 0 6px;
             border-radius: 999px;
-            font-size: 12px;
+            font-size: 16px;
             font-weight: 900;
             letter-spacing: 0.02em;
             text-align: left;
@@ -347,7 +347,7 @@ public static class ObsOverlayHtmlRenderer
             right: 6px;
             top: 50%;
             transform: translateY(-50%);
-            font-size: 11px;
+            font-size: 15px;
             font-weight: 800;
             color: rgba(255, 255, 255, 0.96);
             text-shadow: 0 1px 10px rgba(2, 6, 23, 0.42);
