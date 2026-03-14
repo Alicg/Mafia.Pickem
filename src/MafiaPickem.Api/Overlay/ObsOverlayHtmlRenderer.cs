@@ -14,17 +14,17 @@ public static class ObsOverlayHtmlRenderer
     <style>
         :root {
             --panel-width: 200px;
-            --card-bg: rgba(10, 10, 10, 0.94);
-            --card-bg-soft: rgba(26, 26, 26, 0.9);
-            --text-main: #f5f5f5;
-            --text-soft: rgba(245, 245, 245, 0.76);
-            --text-faint: rgba(245, 245, 245, 0.48);
+            --card-bg: rgba(244, 239, 235, 0.94);
+            --card-bg-soft: rgba(224, 216, 210, 0.9);
+            --text-main: #1f1b18;
+            --text-soft: rgba(31, 27, 24, 0.76);
+            --text-faint: rgba(31, 27, 24, 0.48);
             --accent: #ff5454;
             --accent-strong: #ff2f2f;
-            --accent-warm: #ffffff;
-            --track: rgba(255, 255, 255, 0.08);
-            --track-soft: rgba(255, 255, 255, 0.03);
-            --shadow: 0 20px 42px rgba(0, 0, 0, 0.34);
+            --accent-warm: #2a110f;
+            --track: rgba(37, 24, 20, 0.12);
+            --track-soft: rgba(37, 24, 20, 0.05);
+            --shadow: 0 20px 42px rgba(44, 26, 20, 0.22);
             font-family: "Bahnschrift", "Segoe UI Variable Display", "Trebuchet MS", sans-serif;
         }
 
@@ -74,9 +74,10 @@ public static class ObsOverlayHtmlRenderer
             overflow: hidden;
             border-radius: 16px;
             background:
-                radial-gradient(circle at top right, rgba(255, 47, 47, 0.16), transparent 34%),
+                radial-gradient(circle at top right, rgba(255, 47, 47, 0.14), transparent 34%),
                 linear-gradient(180deg, var(--card-bg), var(--card-bg-soft));
             box-shadow: var(--shadow);
+            border: 1px solid rgba(109, 86, 76, 0.14);
         }
 
         .summary-card {
@@ -85,10 +86,8 @@ public static class ObsOverlayHtmlRenderer
 
         .summary-top {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            gap: 8px;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
 
         .state-pill {
@@ -98,7 +97,7 @@ public static class ObsOverlayHtmlRenderer
             min-height: 20px;
             padding: 0 8px;
             border-radius: 999px;
-            background: rgba(255, 47, 47, 0.14);
+            background: rgba(255, 47, 47, 0.12);
             color: var(--accent);
             font-size: 10px;
             font-weight: 800;
@@ -106,43 +105,70 @@ public static class ObsOverlayHtmlRenderer
             text-transform: uppercase;
         }
 
-        .status-text {
-            min-width: 0;
-            font-size: 10px;
-            color: var(--text-faint);
-            text-align: right;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
         .summary-main {
             display: flex;
             flex-direction: column;
-            align-items: flex-start;
-            gap: 3px;
+            gap: 8px;
         }
 
-        .summary-value {
+        .summary-sides {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .summary-side {
             display: flex;
-            align-items: baseline;
-            gap: 7px;
-            min-width: 0;
+            flex-direction: column;
+            gap: 1px;
         }
 
-        .summary-value__number {
-            font-size: 38px;
-            line-height: 0.88;
+        .summary-side.is-right {
+            align-items: flex-end;
+            text-align: right;
+        }
+
+        .summary-side__percent {
+            font-size: 24px;
+            line-height: 0.92;
             font-weight: 900;
             letter-spacing: -0.06em;
             color: var(--accent-warm);
         }
 
-        .summary-value__label {
-            font-size: 11px;
+        .summary-side__label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
             color: var(--text-soft);
-            padding-bottom: 5px;
             white-space: nowrap;
+        }
+
+        .summary-bar {
+            display: flex;
+            width: 100%;
+            height: 14px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--track-soft), var(--track));
+            overflow: hidden;
+            align-items: stretch;
+        }
+
+        .summary-bar__segment {
+            width: var(--segment-width, 0%);
+            height: 100%;
+        }
+
+        .summary-bar__segment.is-left {
+            background: linear-gradient(270deg, rgba(255, 84, 84, 0.98), rgba(255, 47, 47, 0.72));
+            box-shadow: 0 0 16px rgba(255, 47, 47, 0.25);
+        }
+
+        .summary-bar__segment.is-right {
+            background: linear-gradient(90deg, rgba(30, 30, 30, 0.98), rgba(8, 8, 8, 0.98));
+            box-shadow: 0 0 16px rgba(0, 0, 0, 0.2);
         }
 
         .summary-side__count {
@@ -173,9 +199,13 @@ public static class ObsOverlayHtmlRenderer
 
         .vote-bar {
             display: grid;
-            grid-template-columns: 14px 160px;
+            grid-template-columns: 14px minmax(0, 1fr);
             gap: 6px;
             align-items: center;
+        }
+
+        .vote-bar.is-last-round {
+            grid-template-columns: 52px minmax(0, 1fr);
         }
 
         .vote-bar__slot {
@@ -186,9 +216,22 @@ public static class ObsOverlayHtmlRenderer
             color: var(--text-main);
         }
 
+        .vote-bar__slot.is-last-round {
+            display: inline-flex;
+            align-items: center;
+            min-height: 18px;
+            padding: 0 6px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.02em;
+            text-align: left;
+        }
+
         .vote-bar__track {
             position: relative;
-            width: 160px;
+            width: 100%;
+            min-width: 0;
             height: 12px;
             border-radius: 999px;
             background: linear-gradient(90deg, var(--track-soft), var(--track));
@@ -201,6 +244,46 @@ public static class ObsOverlayHtmlRenderer
             border-radius: inherit;
             background: var(--accent-strong);
             box-shadow: 0 0 14px rgba(255, 47, 47, 0.22);
+        }
+
+        .vote-bar.is-first-vote .vote-bar__track {
+            background: linear-gradient(90deg, rgba(31, 78, 121, 0.1), rgba(31, 78, 121, 0.18));
+            box-shadow: inset 0 0 0 1px rgba(31, 78, 121, 0.12);
+        }
+
+        .vote-bar.is-first-vote .vote-bar__fill {
+            background: linear-gradient(90deg, rgba(57, 140, 219, 0.98), rgba(31, 78, 121, 0.94));
+            box-shadow: 0 0 14px rgba(57, 140, 219, 0.2);
+        }
+
+        .vote-bar.is-first-vote .vote-bar__slot {
+            color: rgba(25, 62, 94, 0.96);
+        }
+
+        .vote-bar.is-last-round.is-black-style .vote-bar__slot {
+            color: rgba(255, 255, 255, 0.96);
+            background: linear-gradient(180deg, rgba(22, 22, 22, 0.96), rgba(0, 0, 0, 0.98));
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 0 10px rgba(0, 0, 0, 0.18);
+        }
+
+        .vote-bar.is-last-round.is-black-style .vote-bar__track {
+            background: linear-gradient(90deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.18));
+            box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+        }
+
+        .vote-bar.is-last-round.is-black-style .vote-bar__fill {
+            background: linear-gradient(90deg, rgba(24, 24, 24, 0.98), rgba(0, 0, 0, 0.98));
+            box-shadow: 0 0 14px rgba(0, 0, 0, 0.18);
+        }
+
+        .vote-bar.is-last-round.is-red-style .vote-bar__slot {
+            color: rgba(255, 248, 248, 0.98);
+            background: linear-gradient(180deg, rgba(255, 84, 84, 0.96), rgba(166, 28, 28, 0.96));
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14), 0 0 10px rgba(255, 47, 47, 0.18);
+        }
+
+        .vote-bar.is-last-round.is-red-style .vote-bar__track {
+            box-shadow: inset 0 0 0 1px rgba(255, 84, 84, 0.14);
         }
 
         .vote-bar.is-resolved .vote-bar__fill {
@@ -224,7 +307,7 @@ public static class ObsOverlayHtmlRenderer
             transform: translateY(-50%);
             font-size: 9px;
             font-weight: 800;
-            color: rgba(255, 255, 255, 0.9);
+            color: rgba(255, 248, 245, 0.94);
         }
 
         .vote-bar.is-empty .vote-bar__count {
@@ -245,26 +328,37 @@ public static class ObsOverlayHtmlRenderer
                 <div class="summary-card">
                     <div class="summary-top">
                         <div class="state-pill" id="matchState">Ожидание</div>
-                        <div class="status-text" id="statusText">Ожидание публикации</div>
                     </div>
 
                     <div class="summary-main">
-                        <div class="summary-value">
-                            <div class="summary-value__number" id="redPercent">-</div>
-                            <div class="summary-value__label">за красных</div>
+                        <div class="summary-sides">
+                            <div class="summary-side">
+                                <div class="summary-side__percent" id="redPercent">-</div>
+                                <div class="summary-side__label">за красных</div>
+                            </div>
+                            <div class="summary-side is-right">
+                                <div class="summary-side__percent" id="blackPercent">-</div>
+                                <div class="summary-side__label">за черных</div>
+                            </div>
                         </div>
+
+                        <div class="summary-bar" aria-hidden="true">
+                            <div class="summary-bar__segment is-left" id="redBarFill"></div>
+                            <div class="summary-bar__segment is-right" id="blackBarFill"></div>
+                        </div>
+
                         <div class="summary-side__count" id="totalPredictionsCount">0 прогнозов</div>
                     </div>
                 </div>
 
                 <div class="chart-card">
-                    <div class="chart-title">Заголосуют первым</div>
-                    <div class="vote-chart" id="voteChart"></div>
+                    <div class="chart-title">Последний круг</div>
+                    <div class="vote-chart" id="lastRoundChart"></div>
                 </div>
 
                 <div class="chart-card">
-                    <div class="chart-title">Последний круг</div>
-                    <div class="vote-chart" id="lastRoundChart"></div>
+                    <div class="chart-title">Заголосуют первым</div>
+                    <div class="vote-chart" id="voteChart"></div>
                 </div>
             </div>
         </section>
@@ -273,24 +367,29 @@ public static class ObsOverlayHtmlRenderer
     <script>
         const tournamentId = {{tournamentId}};
         const redPercent = document.getElementById('redPercent');
+        const blackPercent = document.getElementById('blackPercent');
+        const redBarFill = document.getElementById('redBarFill');
+        const blackBarFill = document.getElementById('blackBarFill');
         const totalPredictionsCount = document.getElementById('totalPredictionsCount');
         const matchState = document.getElementById('matchState');
-        const statusText = document.getElementById('statusText');
         const voteChart = document.getElementById('voteChart');
         const lastRoundChart = document.getElementById('lastRoundChart');
 
         const formatPercent = (value) => `${Number(value || 0).toFixed(1)}%`;
-        const formatUpdatedAt = (value) => {
-            if (!value) {
-                return 'Ожидание публикации';
+        const formatPredictionsCount = (value) => {
+            const count = Math.max(0, Math.trunc(Number(value || 0)));
+            const mod10 = count % 10;
+            const mod100 = count % 100;
+
+            if (mod10 === 1 && mod100 !== 11) {
+                return `${count} прогноз`;
             }
 
-            const date = new Date(value);
-            if (Number.isNaN(date.getTime())) {
-                return 'Ожидание публикации';
+            if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
+                return `${count} прогноза`;
             }
 
-            return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            return `${count} прогнозов`;
         };
 
         const getDataUrl = () => {
@@ -300,9 +399,18 @@ public static class ObsOverlayHtmlRenderer
             return url.toString();
         };
 
-        const setSummary = (redSide, totalPredictions) => {
-            redPercent.textContent = formatPercent(redSide?.percent || 0);
-            totalPredictionsCount.textContent = `${Number(totalPredictions || 0)} прогнозов`;
+        const setSummary = (redSide, blackSide, totalPredictions) => {
+            const redValue = Number(redSide?.percent || 0);
+            const blackValue = Number(blackSide?.percent || 0);
+            const totalValue = redValue + blackValue;
+            const normalizedRed = totalValue > 0 ? (redValue / totalValue) * 100 : 0;
+            const normalizedBlack = totalValue > 0 ? 100 - normalizedRed : 0;
+
+            redPercent.textContent = formatPercent(redValue);
+            blackPercent.textContent = formatPercent(blackValue);
+            redBarFill.style.setProperty('--segment-width', `${Math.max(0, Math.min(normalizedRed, 100))}%`);
+            blackBarFill.style.setProperty('--segment-width', `${Math.max(0, Math.min(normalizedBlack, 100))}%`);
+            totalPredictionsCount.textContent = formatPredictionsCount(totalPredictions);
         };
 
         const renderSeats = (payload) => {
@@ -318,7 +426,7 @@ public static class ObsOverlayHtmlRenderer
                     ? `style="--bar-width:${barWidth}%"`
                     : 'style="--bar-width:0%"';
                 const item = document.createElement('div');
-                item.className = `vote-bar${seat.isResolved ? ' is-resolved' : ''}${count === 0 ? ' is-empty' : ''}`;
+                item.className = `vote-bar is-first-vote${seat.isResolved ? ' is-resolved' : ''}${count === 0 ? ' is-empty' : ''}`;
                 item.innerHTML = `
                     <div class="vote-bar__slot">${seat.slot}</div>
                     <div class="vote-bar__track">
@@ -343,10 +451,11 @@ public static class ObsOverlayHtmlRenderer
                     ? `style="--bar-width:${barWidth}%"`
                     : 'style="--bar-width:0%"';
                 const isResolved = resolvedLR > 0 && lr.lastRound === resolvedLR;
+                const styleClass = lr.lastRound >= 3 ? ' is-black-style' : ' is-red-style';
                 const item = document.createElement('div');
-                item.className = `vote-bar${isResolved ? ' is-resolved' : ''}${count === 0 ? ' is-empty' : ''}`;
+                item.className = `vote-bar is-last-round${styleClass}${isResolved ? ' is-resolved' : ''}${count === 0 ? ' is-empty' : ''}`;
                 item.innerHTML = `
-                    <div class="vote-bar__slot" style="width:52px;text-align:left;font-size:10px">${lr.label || lr.lastRound}</div>
+                    <div class="vote-bar__slot is-last-round">${lr.label || lr.lastRound}</div>
                     <div class="vote-bar__track">
                         <div class="vote-bar__fill" ${fillStyle}></div>
                         <div class="vote-bar__count">${count}</div>
@@ -357,9 +466,11 @@ public static class ObsOverlayHtmlRenderer
 
         const applyDisconnectedState = (message) => {
             matchState.textContent = 'Нет связи';
-            statusText.textContent = 'Ошибка обновления';
             redPercent.textContent = '-';
-            totalPredictionsCount.textContent = '0 прогнозов';
+            blackPercent.textContent = '-';
+            redBarFill.style.setProperty('--segment-width', '0%');
+            blackBarFill.style.setProperty('--segment-width', '0%');
+            totalPredictionsCount.textContent = formatPredictionsCount(0);
             renderSeats({ seatVotes: [] });
             renderLastRound({ lastRoundVotes: [] });
         };
@@ -367,9 +478,11 @@ public static class ObsOverlayHtmlRenderer
         const renderPayload = (payload) => {
             if (payload.status !== 'ready') {
                 matchState.textContent = 'Ожидание';
-                statusText.textContent = 'Ожидание публикации';
                 redPercent.textContent = '-';
-                totalPredictionsCount.textContent = '0 прогнозов';
+                blackPercent.textContent = '-';
+                redBarFill.style.setProperty('--segment-width', '0%');
+                blackBarFill.style.setProperty('--segment-width', '0%');
+                totalPredictionsCount.textContent = formatPredictionsCount(0);
                 renderSeats(payload);
                 renderLastRound(payload);
                 return;
@@ -378,9 +491,9 @@ public static class ObsOverlayHtmlRenderer
             const totalPredictions = Number(payload.totalPredictions || 0);
 
             matchState.textContent = payload.matchState === 'Resolved' ? 'Закрыто' : payload.matchState === 'FirstVoted' ? '9-ка' : 'Лайв';
-            statusText.textContent = formatUpdatedAt(payload.updatedAt);
             setSummary(
                 payload.redSide,
+                payload.blackSide,
                 totalPredictions
             );
             renderSeats(payload);

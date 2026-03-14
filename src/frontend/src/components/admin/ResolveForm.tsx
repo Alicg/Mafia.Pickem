@@ -164,6 +164,21 @@ export const ResolveForm: React.FC<ResolveFormProps> = ({ matchId, currentState,
         </div>
         
         <div className="form-group">
+          <label className="form-label">Последний круг</label>
+          <div className="side-toggle" style={{ flexWrap: 'wrap' }}>
+            {(winningSide === 0 ? TOWN_LAST_ROUNDS : MAFIA_LAST_ROUNDS).map(lr => (
+              <div
+                key={lr}
+                className={`side-option ${lastRound === lr ? 'active' : ''}`}
+                onClick={() => { if (!isBusy) { setLastRound(lr); hapticFeedback('selection'); } }}
+              >
+                {LAST_ROUND_LABELS[lr]}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="form-group">
           <label className="form-label">Убитые голосованием</label>
           <div 
             className={`nobody-option ${votedOutSlots.includes(0) ? 'selected' : ''}`}
@@ -180,21 +195,6 @@ export const ResolveForm: React.FC<ResolveFormProps> = ({ matchId, currentState,
                 onClick={() => toggleSlot(slot)}
               >
                 {slot}
-              </div>
-            ))}
-          </div>
-        </div>
-        
-        <div className="form-group">
-          <label className="form-label">Последний круг</label>
-          <div className="side-toggle" style={{ flexWrap: 'wrap' }}>
-            {(winningSide === 0 ? TOWN_LAST_ROUNDS : MAFIA_LAST_ROUNDS).map(lr => (
-              <div
-                key={lr}
-                className={`side-option ${lastRound === lr ? 'active' : ''}`}
-                onClick={() => { if (!isBusy) { setLastRound(lr); hapticFeedback('selection'); } }}
-              >
-                {LAST_ROUND_LABELS[lr]}
               </div>
             ))}
           </div>
