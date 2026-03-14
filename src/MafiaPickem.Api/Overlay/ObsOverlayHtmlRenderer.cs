@@ -13,7 +13,7 @@ public static class ObsOverlayHtmlRenderer
     <title>Mafia Pickem Overlay</title>
     <style>
         :root {
-            --panel-width: 252px;
+            --panel-width: 264px;
             --card-bg: rgba(11, 16, 24, 0.74);
             --card-bg-soft: rgba(17, 24, 36, 0.58);
             --card-highlight: rgba(255, 255, 255, 0.08);
@@ -245,7 +245,8 @@ public static class ObsOverlayHtmlRenderer
         }
 
         .vote-bar.is-last-round {
-            grid-template-columns: 52px minmax(0, 1fr);
+            grid-template-columns: 76px minmax(0, 1fr);
+            gap: 8px;
         }
 
         .vote-bar__slot {
@@ -260,8 +261,8 @@ public static class ObsOverlayHtmlRenderer
         .vote-bar__slot.is-last-round {
             display: inline-flex;
             align-items: center;
-            min-height: 18px;
-            padding: 0 6px;
+            min-height: 22px;
+            padding: 0 8px;
             border-radius: 999px;
             font-size: 16px;
             font-weight: 900;
