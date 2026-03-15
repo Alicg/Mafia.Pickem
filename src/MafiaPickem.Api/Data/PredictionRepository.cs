@@ -2,6 +2,7 @@ using Dapper;
 using MafiaPickem.Api.Models.Domain;
 using MafiaPickem.Api.Models.Enums;
 using MafiaPickem.Api.Models.Responses;
+using MafiaPickem.Api.Utils;
 
 namespace MafiaPickem.Api.Data;
 
@@ -188,14 +189,18 @@ public class PredictionRepository : IPredictionRepository
     {
         using var connection = _connectionFactory.CreateConnection();
 
-        const string sql = """
+        var basePoints = FormattableString.Invariant($"{PredictionScoreFormula.BasePoints:0.####}");
+        var rarityAlpha = FormattableString.Invariant($"{PredictionScoreFormula.RarityAlpha:0.####}");
+        var rarityCap = FormattableString.Invariant($"{PredictionScoreFormula.RarityCap:0.####}");
+
+        var sql = $$"""
             INSERT INTO pickem.PredictionScore (PredictionId, WinnerPoints, VotedOutPoints, LastRoundPoints, TotalPoints, 
                                           TotalVotes, CorrectWinnerVotes, CorrectVotedOutVotes, CorrectLastRoundVotes, DateCalculated)
             SELECT 
                 p.Id AS PredictionId,
                 CASE 
-                    WHEN p.PredictedWinner = mr.WinningSide AND @CorrectWinnerVotes > 0 
-                    THEN CAST(@TotalVotes AS DECIMAL(12,4)) / @CorrectWinnerVotes * 10
+                    WHEN p.PredictedWinner = mr.WinningSide
+                    THEN scoring.WinnerPoints
                     ELSE 0
                 END AS WinnerPoints,
                 CASE 
@@ -204,18 +209,18 @@ public class PredictionRepository : IPredictionRepository
                         OR mr.CorrectVotedOutCsv LIKE CAST(p.PredictedVotedOut AS NVARCHAR(10)) + ',%'
                         OR mr.CorrectVotedOutCsv LIKE '%,' + CAST(p.PredictedVotedOut AS NVARCHAR(10)) + ',%'
                         OR mr.CorrectVotedOutCsv LIKE '%,' + CAST(p.PredictedVotedOut AS NVARCHAR(10))
-                    ) AND @CorrectVotedOutVotes > 0
-                    THEN CAST(@TotalVotes AS DECIMAL(12,4)) / @CorrectVotedOutVotes * 20
+                    )
+                    THEN scoring.VotedOutPoints
                     ELSE 0
                 END AS VotedOutPoints,
                 CASE 
-                    WHEN p.PredictedLastRound = mr.CorrectLastRound AND p.PredictedLastRound > 0 AND @CorrectLastRoundVotes > 0
-                    THEN CAST(@TotalVotes AS DECIMAL(12,4)) / @CorrectLastRoundVotes * 15
+                    WHEN p.PredictedLastRound = mr.CorrectLastRound AND p.PredictedLastRound > 0
+                    THEN scoring.LastRoundPoints
                     ELSE 0
                 END AS LastRoundPoints,
                 CASE 
-                    WHEN p.PredictedWinner = mr.WinningSide AND @CorrectWinnerVotes > 0 
-                    THEN CAST(@TotalVotes AS DECIMAL(12,4)) / @CorrectWinnerVotes * 10
+                    WHEN p.PredictedWinner = mr.WinningSide
+                    THEN scoring.WinnerPoints
                     ELSE 0
                 END + 
                 CASE 
@@ -224,13 +229,13 @@ public class PredictionRepository : IPredictionRepository
                         OR mr.CorrectVotedOutCsv LIKE CAST(p.PredictedVotedOut AS NVARCHAR(10)) + ',%'
                         OR mr.CorrectVotedOutCsv LIKE '%,' + CAST(p.PredictedVotedOut AS NVARCHAR(10)) + ',%'
                         OR mr.CorrectVotedOutCsv LIKE '%,' + CAST(p.PredictedVotedOut AS NVARCHAR(10))
-                    ) AND @CorrectVotedOutVotes > 0
-                    THEN CAST(@TotalVotes AS DECIMAL(12,4)) / @CorrectVotedOutVotes * 20
+                    )
+                    THEN scoring.VotedOutPoints
                     ELSE 0
                 END +
                 CASE 
-                    WHEN p.PredictedLastRound = mr.CorrectLastRound AND p.PredictedLastRound > 0 AND @CorrectLastRoundVotes > 0
-                    THEN CAST(@TotalVotes AS DECIMAL(12,4)) / @CorrectLastRoundVotes * 15
+                    WHEN p.PredictedLastRound = mr.CorrectLastRound AND p.PredictedLastRound > 0
+                    THEN scoring.LastRoundPoints
                     ELSE 0
                 END AS TotalPoints,
                 @TotalVotes AS TotalVotes,
@@ -240,6 +245,45 @@ public class PredictionRepository : IPredictionRepository
                 GETUTCDATE() AS DateCalculated
             FROM pickem.Prediction p
             INNER JOIN pickem.MatchResult mr ON p.MatchId = mr.MatchId
+            CROSS APPLY (
+                SELECT
+                    CAST(
+                        CASE
+                            WHEN @CorrectWinnerVotes > 0
+                            THEN {{basePoints}} *
+                                CASE
+                                    WHEN 1.0 + {{rarityAlpha}} * LOG(CAST(@TotalVotes AS FLOAT) / @CorrectWinnerVotes, 2) > {{rarityCap}}
+                                    THEN {{rarityCap}}
+                                    ELSE 1.0 + {{rarityAlpha}} * LOG(CAST(@TotalVotes AS FLOAT) / @CorrectWinnerVotes, 2)
+                                END
+                            ELSE 0
+                        END AS DECIMAL(12,4)
+                    ) AS WinnerPoints,
+                    CAST(
+                        CASE
+                            WHEN @CorrectVotedOutVotes > 0
+                            THEN {{basePoints}} *
+                                CASE
+                                    WHEN 1.0 + {{rarityAlpha}} * LOG(CAST(@TotalVotes AS FLOAT) / @CorrectVotedOutVotes, 2) > {{rarityCap}}
+                                    THEN {{rarityCap}}
+                                    ELSE 1.0 + {{rarityAlpha}} * LOG(CAST(@TotalVotes AS FLOAT) / @CorrectVotedOutVotes, 2)
+                                END
+                            ELSE 0
+                        END AS DECIMAL(12,4)
+                    ) AS VotedOutPoints,
+                    CAST(
+                        CASE
+                            WHEN @CorrectLastRoundVotes > 0
+                            THEN {{basePoints}} *
+                                CASE
+                                    WHEN 1.0 + {{rarityAlpha}} * LOG(CAST(@TotalVotes AS FLOAT) / @CorrectLastRoundVotes, 2) > {{rarityCap}}
+                                    THEN {{rarityCap}}
+                                    ELSE 1.0 + {{rarityAlpha}} * LOG(CAST(@TotalVotes AS FLOAT) / @CorrectLastRoundVotes, 2)
+                                END
+                            ELSE 0
+                        END AS DECIMAL(12,4)
+                    ) AS LastRoundPoints
+            ) scoring
             WHERE p.MatchId = @MatchId
             """;
 
