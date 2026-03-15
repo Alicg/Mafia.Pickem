@@ -15,20 +15,40 @@ public static class ObsOverlayHtmlRenderer
         :root {
             --panel-width: 232px;
             --panel-offset-y: -28px;
-            --card-bg: rgba(11, 16, 24, 0.74);
-            --card-bg-soft: rgba(17, 24, 36, 0.58);
-            --card-highlight: rgba(255, 255, 255, 0.08);
-            --red-bar: rgb(179, 0, 0);
-            --black-bar: rgb(52, 54, 60);
-            --text-main: rgba(248, 250, 252, 1);
-            --text-soft: rgba(226, 232, 240, 1);
-            --text-faint: rgba(255, 255, 255, 1);
-            --accent: #ff8a8a;
-            --accent-strong: rgba(255, 84, 84, 0.88);
-            --accent-warm: #fff4f4;
-            --track: rgba(148, 163, 184, 0.3);
-            --track-soft: rgba(15, 23, 42, 0.22);
-            --shadow: 0 18px 42px rgba(2, 6, 23, 0.32);
+            --card-bg: rgba(22, 58, 97, 0.92);
+            --card-bg-soft: rgba(11, 31, 58, 0.86);
+            --card-highlight: rgba(255, 243, 224, 0.09);
+            --card-edge: rgba(247, 224, 193, 0.18);
+            --red-bar: linear-gradient(180deg, #d9342b 0%, #a91515 100%);
+            --black-bar: linear-gradient(180deg, #5a6370 0%, #232931 100%);
+            --text-main: rgba(251, 252, 255, 0.98);
+            --text-soft: rgba(236, 236, 230, 0.92);
+            --text-faint: rgba(244, 248, 252, 0.92);
+            --accent: #f1d8bf;
+            --accent-strong: rgba(246, 223, 188, 0.92);
+            --accent-warm: #fff1dd;
+            --track: rgba(209, 181, 153, 0.34);
+            --track-soft: rgba(14, 25, 41, 0.44);
+            --shadow: 0 18px 42px rgba(4, 11, 20, 0.34);
+            --badge-bg: rgba(245, 222, 192, 0.16);
+            --badge-edge: rgba(255, 242, 224, 0.24);
+            --badge-text: rgba(255, 246, 238, 0.98);
+            --footer-bg: linear-gradient(180deg, rgba(33, 57, 84, 0.92), rgba(21, 37, 58, 0.9));
+            --footer-edge: rgba(255, 245, 230, 0.16);
+            --footer-icon: #38bdf8;
+            --first-track: linear-gradient(90deg, rgba(44, 97, 155, 0.32), rgba(28, 70, 121, 0.42));
+            --first-track-edge: rgba(194, 223, 255, 0.18);
+            --first-fill: linear-gradient(90deg, rgba(96, 177, 232, 0.96), rgba(40, 89, 157, 0.9));
+            --first-slot: rgba(244, 248, 255, 0.98);
+            --black-track: linear-gradient(90deg, rgba(124, 136, 152, 0.42), rgba(84, 93, 106, 0.5));
+            --black-track-edge: rgba(255, 255, 255, 0.28);
+            --red-track: rgba(160, 24, 24, 0.28);
+            --red-track-edge: rgba(244, 206, 206, 0.18);
+            --resolved-fill: linear-gradient(90deg, rgba(102, 199, 112, 0.94), rgba(53, 153, 72, 0.9));
+            --resolved-edge: rgba(165, 230, 173, 0.52);
+            --resolved-text: rgba(227, 250, 230, 0.98);
+            --count-text: rgba(255, 251, 245, 0.96);
+            --white-frame: rgba(255, 255, 255, 0.32);
             font-family: "Bahnschrift", "Segoe UI Variable Display", "Trebuchet MS", sans-serif;
         }
 
@@ -74,8 +94,8 @@ public static class ObsOverlayHtmlRenderer
             min-height: 24px;
             padding: 0 10px;
             border-radius: 999px;
-            background: linear-gradient(180deg, rgba(11, 16, 24, 0.72), rgba(17, 24, 36, 0.56));
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: var(--footer-bg);
+            border: 1px solid var(--footer-edge);
             color: rgba(255, 255, 255, 0.96);
             font-size: 17px;
             font-weight: 800;
@@ -92,8 +112,8 @@ public static class ObsOverlayHtmlRenderer
             width: 20px;
             height: 20px;
             flex: 0 0 20px;
-            color: #38bdf8;
-            filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.28));
+            color: var(--footer-icon);
+            filter: drop-shadow(0 0 8px rgba(255, 243, 224, 0.22));
         }
 
         .overlay-footer__icon svg {
@@ -114,11 +134,11 @@ public static class ObsOverlayHtmlRenderer
             overflow: hidden;
             border-radius: 16px;
             background:
-                radial-gradient(circle at top right, rgba(255, 84, 84, 0.18), transparent 34%),
-                linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 45%),
+                radial-gradient(circle at top right, rgba(255, 255, 255, 0.16), transparent 34%),
+                linear-gradient(135deg, var(--card-highlight), transparent 45%),
                 linear-gradient(180deg, var(--card-bg), var(--card-bg-soft));
             box-shadow: var(--shadow);
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            border: 1px solid var(--card-edge);
         }
 
         .summary-card {
@@ -138,13 +158,13 @@ public static class ObsOverlayHtmlRenderer
             min-height: 20px;
             padding: 0 8px;
             border-radius: 999px;
-            background: rgba(255, 84, 84, 0.18);
-            color: rgba(255, 244, 244, 0.98);
+            background: var(--badge-bg);
+            color: var(--badge-text);
             font-size: 16px;
             font-weight: 800;
             letter-spacing: 0.14em;
             text-transform: uppercase;
-            box-shadow: inset 0 0 0 1px rgba(255, 138, 138, 0.28);
+            box-shadow: inset 0 0 0 1px var(--badge-edge);
         }
 
         .summary-main {
@@ -197,7 +217,7 @@ public static class ObsOverlayHtmlRenderer
             background: linear-gradient(90deg, var(--track-soft), var(--track));
             overflow: hidden;
             align-items: stretch;
-            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.48), 0 0 0 1px rgba(255, 255, 255, 0.1);
         }
 
         .summary-bar__segment {
@@ -207,12 +227,12 @@ public static class ObsOverlayHtmlRenderer
 
         .summary-bar__segment.is-left {
             background: var(--red-bar);
-            box-shadow: 0 0 16px rgba(179, 0, 0, 0.28);
+            box-shadow: inset 0 0 0 1px var(--white-frame), 0 0 16px rgba(125, 20, 20, 0.28);
         }
 
         .summary-bar__segment.is-right {
             background: var(--black-bar);
-            box-shadow: 0 0 16px rgba(52, 54, 60, 0.24);
+            box-shadow: inset 0 0 0 1px var(--white-frame), 0 0 16px rgba(38, 42, 49, 0.24);
         }
 
         .summary-side__count {
@@ -272,6 +292,7 @@ public static class ObsOverlayHtmlRenderer
             font-weight: 900;
             letter-spacing: 0.02em;
             text-align: left;
+            box-shadow: inset 0 0 0 1px var(--white-frame);
         }
 
         .vote-bar__track {
@@ -282,7 +303,7 @@ public static class ObsOverlayHtmlRenderer
             border-radius: 999px;
             background: linear-gradient(90deg, var(--track-soft), var(--track));
             overflow: hidden;
-            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+            box-shadow: none;
         }
 
         .vote-bar__fill {
@@ -290,67 +311,67 @@ public static class ObsOverlayHtmlRenderer
             height: 100%;
             border-radius: inherit;
             background: var(--red-bar);
-            box-shadow: 0 0 14px rgba(179, 0, 0, 0.24);
+            box-shadow: inset 0 0 0 1px var(--white-frame), 0 0 14px rgba(125, 20, 20, 0.24);
         }
 
         .vote-bar.is-first-vote .vote-bar__track {
-            background: linear-gradient(90deg, rgba(31, 78, 121, 0.18), rgba(31, 78, 121, 0.3));
-            box-shadow: inset 0 0 0 1px rgba(125, 211, 252, 0.16);
+            background: var(--first-track);
+            box-shadow: none;
         }
 
         .vote-bar.is-first-vote .vote-bar__fill {
-            background: linear-gradient(90deg, rgba(96, 165, 250, 0.84), rgba(37, 99, 235, 0.72));
-            box-shadow: 0 0 14px rgba(57, 140, 219, 0.2);
+            background: var(--first-fill);
+            box-shadow: inset 0 0 0 1px var(--white-frame), 0 0 14px rgba(46, 101, 168, 0.2);
         }
 
         .vote-bar.is-first-vote .vote-bar__slot {
-            color: rgba(239, 246, 255, 0.98);
+            color: var(--first-slot);
         }
 
         .vote-bar.is-last-round.is-black-style .vote-bar__slot {
             color: rgba(255, 255, 255, 0.96);
             background: var(--black-bar);
-            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 0 10px rgba(0, 0, 0, 0.18);
+            box-shadow: inset 0 0 0 1px var(--white-frame), 0 0 10px rgba(0, 0, 0, 0.18);
         }
 
         .vote-bar.is-last-round.is-black-style .vote-bar__track {
-            background: rgba(52, 54, 60, 0.26);
-            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.14);
+            background: var(--black-track);
+            box-shadow: none;
         }
 
         .vote-bar.is-last-round.is-black-style .vote-bar__fill {
             background: var(--black-bar);
-            box-shadow: 0 0 14px rgba(52, 54, 60, 0.22);
+            box-shadow: inset 0 0 0 1px var(--white-frame), 0 0 14px rgba(38, 42, 49, 0.22);
         }
 
         .vote-bar.is-last-round.is-red-style .vote-bar__slot {
             color: rgba(255, 248, 248, 0.98);
             background: var(--red-bar);
-            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14), 0 0 10px rgba(255, 47, 47, 0.18);
+            box-shadow: inset 0 0 0 1px var(--white-frame), 0 0 10px rgba(160, 24, 24, 0.2);
         }
 
         .vote-bar.is-last-round.is-red-style .vote-bar__track {
-            background: rgba(179, 0, 0, 0.2);
-            box-shadow: inset 0 0 0 1px rgba(179, 0, 0, 0.28);
+            background: var(--red-track);
+            box-shadow: none;
         }
 
         .vote-bar.is-last-round.is-red-style .vote-bar__fill {
             background: var(--red-bar);
-            box-shadow: 0 0 14px rgba(179, 0, 0, 0.24);
+            box-shadow: inset 0 0 0 1px var(--white-frame), 0 0 14px rgba(125, 20, 20, 0.24);
         }
 
         .vote-bar.is-resolved .vote-bar__fill {
-            background: linear-gradient(90deg, rgba(74, 222, 128, 0.84), rgba(34, 197, 94, 0.76));
-            box-shadow: 0 0 14px rgba(74, 222, 128, 0.28);
+            background: var(--resolved-fill);
+            box-shadow: inset 0 0 0 1px var(--white-frame), 0 0 14px rgba(69, 162, 89, 0.28);
         }
 
         .vote-bar.is-resolved .vote-bar__slot {
-            color: rgba(220, 252, 231, 0.98);
+            color: var(--resolved-text);
             text-shadow: 0 0 10px rgba(74, 222, 128, 0.35);
         }
 
         .vote-bar.is-resolved .vote-bar__track {
-            box-shadow: inset 0 0 0 1px rgba(74, 222, 128, 0.5), 0 0 14px rgba(74, 222, 128, 0.18);
+            box-shadow: 0 0 14px rgba(74, 222, 128, 0.14);
         }
 
         .vote-bar__count {
@@ -359,7 +380,7 @@ public static class ObsOverlayHtmlRenderer
             line-height: 1;
             min-width: 2ch;
             text-align: right;
-            color: rgba(255, 255, 255, 0.96);
+            color: var(--count-text);
             text-shadow: 0 1px 10px rgba(2, 6, 23, 0.42);
         }
 
