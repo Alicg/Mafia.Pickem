@@ -75,16 +75,31 @@ public static class ObsOverlayHtmlRenderer
             width: 100vw;
             height: 100vh;
             pointer-events: none;
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            padding: 0 0 0 15px;
+            padding: 0 15px;
         }
 
-        .overlay-panel {
+        .overlay-layout {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            display: grid;
+            grid-template-columns: var(--panel-width) minmax(0, 1fr) var(--panel-width);
+            align-items: start;
+            transform: translateY(calc(-50% + var(--panel-offset-y)));
+        }
+
+        .overlay-column {
             width: var(--panel-width);
-            max-width: calc(100vw - 22px);
-            transform: translateY(var(--panel-offset-y));
+            max-width: 100%;
+        }
+
+        .overlay-column.is-left {
+            grid-column: 1;
+        }
+
+        .overlay-column.is-right {
+            grid-column: 3;
         }
 
         .overlay-footer__link {
@@ -389,16 +404,30 @@ public static class ObsOverlayHtmlRenderer
         }
 
         @media (max-width: 900px) {
-            .overlay-panel {
-                max-width: calc(100vw - 22px);
+            .overlay-layout {
+                position: static;
+                width: 100%;
+                display: grid;
+                grid-template-columns: 1fr;
+                justify-items: start;
+                transform: none;
+            }
+
+            .overlay-column.is-left,
+            .overlay-column.is-right {
+                grid-column: 1;
+            }
+
+            .overlay-column.is-right {
+                margin-top: 6px;
             }
         }
     </style>
 </head>
 <body>
     <div class="overlay-root">
-        <section class="overlay-panel" id="overlayPanel">
-            <div class="stack">
+        <section class="overlay-layout" id="overlayPanel">
+            <div class="stack overlay-column is-left">
                 <div class="summary-card">
                     <div class="summary-top">
                         <div class="state-pill" id="matchState">Ожидание</div>
@@ -430,11 +459,6 @@ public static class ObsOverlayHtmlRenderer
                     <div class="vote-chart" id="lastRoundChart"></div>
                 </div>
 
-                <div class="chart-card">
-                    <div class="chart-title">Заголосуют первым</div>
-                    <div class="vote-chart" id="voteChart"></div>
-                </div>
-
                 <a class="overlay-footer__link" href="https://t.me/MafiaPickemBot" target="_blank" rel="noreferrer noopener">
                     <span class="overlay-footer__icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -444,6 +468,13 @@ public static class ObsOverlayHtmlRenderer
                     </span>
                     <span>@MafiaPickemBot</span>
                 </a>
+            </div>
+
+            <div class="stack overlay-column is-right">
+                <div class="chart-card">
+                    <div class="chart-title">Заголосуют первым</div>
+                    <div class="vote-chart" id="voteChart"></div>
+                </div>
             </div>
         </section>
     </div>
