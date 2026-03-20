@@ -14,7 +14,7 @@ public static class ObsOverlayHtmlRenderer
     <style>
         :root {
             --panel-width: 232px;
-            --panel-offset-y: -28px;
+            --panel-offset-y: -68px;
             --card-bg: rgba(22, 58, 97, 0.92);
             --card-bg-soft: rgba(11, 31, 58, 0.86);
             --card-highlight: rgba(255, 243, 224, 0.09);
