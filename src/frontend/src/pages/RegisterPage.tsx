@@ -4,6 +4,8 @@ import { UserProfile } from '../types';
 import { hapticFeedback } from '../lib/telegram';
 import '../App.css';
 
+const nicknamePattern = /^[\p{L}\p{N} _-]+$/u;
+
 interface RegisterPageProps {
   onSuccess: (user: UserProfile) => void;
 }
@@ -16,7 +18,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
   const validateNickname = (val: string): string | null => {
     if (val.length < 2) return 'Минимум 2 символа';
     if (val.length > 30) return 'Максимум 30 символов';
-    if (!/^[a-zA-Z0-9 _-]+$/.test(val)) return 'Только буквы, цифры, пробел, - и _';
+    if (!nicknamePattern.test(val)) return 'Только буквы, цифры, пробел, - и _';
     return null;
   };
 

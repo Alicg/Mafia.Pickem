@@ -92,6 +92,8 @@ public class NicknameServiceTests
     [InlineData("User-123")]
     [InlineData("Test Name")]
     [InlineData("Player_2024")]
+    [InlineData("Игрок_2024")]
+    [InlineData("Тестовый Ник")]
     public async Task ValidateAndSaveNickname_WithValidCharacters_ShouldSucceed(string nickname)
     {
         // Arrange

@@ -13,7 +13,7 @@ public partial class NicknameService : INicknameService
     private const int DuplicateKeyErrorNumber = 2601;
     private const int UniqueConstraintViolationErrorNumber = 2627;
 
-    [GeneratedRegex(@"^[a-zA-Z0-9 _-]+$")]
+    [GeneratedRegex(@"^[\p{L}\p{N} _-]+$", RegexOptions.CultureInvariant)]
     private static partial Regex NicknameRegex();
 
     public NicknameService(IPickemUserRepository userRepository)
