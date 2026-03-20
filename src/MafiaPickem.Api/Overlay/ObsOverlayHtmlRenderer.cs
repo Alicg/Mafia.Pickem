@@ -80,7 +80,7 @@ public static class ObsOverlayHtmlRenderer
 
         .overlay-layout {
             position: absolute;
-            top: 50%;
+            top: 45%;
             left: 0;
             width: 100%;
             display: grid;
