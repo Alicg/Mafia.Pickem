@@ -14,7 +14,7 @@ public static class ObsOverlayHtmlRenderer
     <style>
         :root {
             --panel-width: 232px;
-            --panel-offset-y: -68px;
+            --panel-offset-y: -108px;
             --card-bg: rgba(22, 58, 97, 0.92);
             --card-bg-soft: rgba(11, 31, 58, 0.86);
             --card-highlight: rgba(255, 243, 224, 0.09);
@@ -454,7 +454,7 @@ public static class ObsOverlayHtmlRenderer
                     </div>
                 </div>
 
-                <div class="chart-card">
+                <div class="chart-card" id="lastRoundCard">
                     <div class="chart-title">Последний круг</div>
                     <div class="vote-chart" id="lastRoundChart"></div>
                 </div>
@@ -471,7 +471,7 @@ public static class ObsOverlayHtmlRenderer
             </div>
 
             <div class="stack overlay-column is-right">
-                <div class="chart-card">
+                <div class="chart-card" id="voteChartCard">
                     <div class="chart-title">Заголосуют первым</div>
                     <div class="vote-chart" id="voteChart"></div>
                 </div>
@@ -489,6 +489,8 @@ public static class ObsOverlayHtmlRenderer
         const matchState = document.getElementById('matchState');
         const voteChart = document.getElementById('voteChart');
         const lastRoundChart = document.getElementById('lastRoundChart');
+        const voteChartCard = document.getElementById('voteChartCard');
+        const lastRoundCard = document.getElementById('lastRoundCard');
         const overlayPanel = document.getElementById('overlayPanel');
 
         const formatPercent = (value) => `${Number(value || 0).toFixed(1)}%`;
@@ -531,6 +533,14 @@ public static class ObsOverlayHtmlRenderer
 
         const setPanelVisible = (isVisible) => {
             overlayPanel.style.display = isVisible ? '' : 'none';
+        };
+
+        const setChartVisibility = (payload) => {
+            const currentMatchState = typeof payload?.matchState === 'string' ? payload.matchState : '';
+            const hasFirstVotedResult = currentMatchState === 'FirstVoted' || currentMatchState === 'Resolved';
+
+            voteChartCard.style.display = hasFirstVotedResult ? 'none' : '';
+            lastRoundCard.style.display = hasFirstVotedResult ? '' : 'none';
         };
 
         const renderSeats = (payload) => {
@@ -591,6 +601,7 @@ public static class ObsOverlayHtmlRenderer
             redBarFill.style.setProperty('--segment-width', '0%');
             blackBarFill.style.setProperty('--segment-width', '0%');
             totalPredictionsCount.textContent = formatPredictionsCount(0);
+            setChartVisibility({ matchState: '' });
             renderSeats({ seatVotes: [] });
             renderLastRound({ lastRoundVotes: [] });
         };
@@ -602,6 +613,7 @@ public static class ObsOverlayHtmlRenderer
             }
 
             setPanelVisible(true);
+            setChartVisibility(payload);
 
             if (payload.status !== 'ready') {
                 matchState.textContent = 'Ожидание';
@@ -617,7 +629,7 @@ public static class ObsOverlayHtmlRenderer
 
             const totalPredictions = Number(payload.totalPredictions || 0);
 
-            matchState.textContent = payload.matchState === 'Resolved' ? 'Закрыто' : payload.matchState === 'FirstVoted' ? '9-ка' : 'Лайв';
+            matchState.textContent = payload.matchState === 'Resolved' ? 'Закрыто' : payload.matchState === 'FirstVoted' ? 'Лайв' : 'Лайв';
             setSummary(
                 payload.redSide,
                 payload.blackSide,
