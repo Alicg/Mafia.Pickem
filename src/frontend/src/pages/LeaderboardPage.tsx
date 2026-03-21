@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import './LeaderboardPage.css';
 import { LeaderboardResponse, LeaderboardEntryDto } from '../types';
 import { getLeaderboard, getProfile } from '../lib/api';
+import { formatLeaderboardPoints } from '../lib/leaderboard';
 import { hapticFeedback } from '../lib/telegram';
 
 interface LeaderboardPageProps {
@@ -31,7 +32,7 @@ const LeaderboardRow: React.FC<{ entry: LeaderboardEntryDto; isCurrentUser: bool
              {isCurrentUser && <span className="you-badge">(Вы)</span>}
           </div>
       </div>
-      <span className="points-col">{entry.totalPoints}</span>
+      <span className="points-col">{formatLeaderboardPoints(entry.totalPoints)}</span>
     </div>
   );
 };

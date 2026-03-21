@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { LeaderboardResponse, LeaderboardEntryDto } from '../types';
 import { getLeaderboard } from '../lib/api';
+import { formatLeaderboardPoints } from '../lib/leaderboard';
 import './LeaderboardTab.css';
 
 interface LeaderboardTabProps {
@@ -42,7 +43,7 @@ const LeaderboardRow: React.FC<{ entry: LeaderboardEntryDto; isCurrentUser: bool
           {entry.teamName && <span className="lb-team-name">{entry.teamName}</span>}
         </div>
       </div>
-      <span className="lb-points">{entry.totalPoints}</span>
+      <span className="lb-points">{formatLeaderboardPoints(entry.totalPoints)}</span>
     </div>
   );
 };
@@ -65,7 +66,7 @@ const TeamLeaderboardRow: React.FC<{ entry: TeamLeaderboardEntry }> = ({ entry }
           <span className="lb-team-name">Участников: {entry.participantsCount}</span>
         </div>
       </div>
-      <span className="lb-points">{entry.totalPoints}</span>
+      <span className="lb-points">{formatLeaderboardPoints(entry.totalPoints)}</span>
     </div>
   );
 };
