@@ -8,6 +8,7 @@ import {
   LeaderboardResponse,
   TournamentStats,
   BlobMatchState,
+  cloneTournamentOverlaySettings,
 } from '../types';
 
 export const demoUser: UserProfile = {
@@ -91,6 +92,7 @@ export const demoTournament: TournamentDto = {
   selectedTeamName: 'Север',
   visibleOnHomePage: true,
   showTeamSelection: true,
+  overlaySettings: cloneTournamentOverlaySettings(),
   canManage: true,
   currentMatch: { id: 3, gameNumber: 3, tableNumber: 2, state: MatchState.Open }, // Game #3
 };
@@ -107,6 +109,7 @@ export const demoTournaments: TournamentDto[] = [
     selectedTeamName: null,
     visibleOnHomePage: true,
     showTeamSelection: true,
+    overlaySettings: cloneTournamentOverlaySettings(),
     canManage: false,
     currentMatch: null,
   },

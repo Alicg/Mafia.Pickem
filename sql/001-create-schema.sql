@@ -58,6 +58,7 @@ CREATE TABLE pickem.Tournament
     Active              bit             DEFAULT 1 NOT NULL,
     VisibleOnHomePage   bit             DEFAULT 1 NOT NULL,
     ShowTeamSelection   bit             DEFAULT 1 NOT NULL,
+    OverlaySettingsJson nvarchar(max),
     DateCreated         datetime2(0)    DEFAULT sysdatetime() NOT NULL
 );
 GO

@@ -14,7 +14,8 @@ import {
   ResolveMatchRequest,
   SetFirstVotedRequest,
   TournamentTeamSelectionDto,
-  TournamentStats
+  TournamentStats,
+  cloneTournamentOverlaySettings
 } from '../types';
 import { isDemoMode } from '../mocks/demo-mode';
 import { demoUser, demoTournament, demoTournaments, demoMatchInfos, demoMatches, demoPredictionsMap, demoLeaderboard, demoStats, demoBlobStates } from '../mocks/demo-data';
@@ -177,6 +178,7 @@ export async function adminCreateTournament(request: CreateTournamentRequest): P
       selectedTeamName: null,
       visibleOnHomePage: request.visibleOnHomePage,
       showTeamSelection: request.showTeamSelection,
+      overlaySettings: cloneTournamentOverlaySettings(request.overlaySettings),
       canManage: true,
       currentMatch: null,
     };
@@ -211,6 +213,7 @@ export async function adminUpdateTournament(tournamentId: number, request: Updat
       selectedTeamName: null,
       visibleOnHomePage: request.visibleOnHomePage,
       showTeamSelection: request.showTeamSelection,
+      overlaySettings: cloneTournamentOverlaySettings(request.overlaySettings),
       canManage: true,
       currentMatch: null,
     };

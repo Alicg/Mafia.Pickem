@@ -4,6 +4,7 @@ import { TournamentDto, UserProfile, MatchInfo, MatchState, PredictionsMap, Pred
 import { useMatchStates } from '../hooks/useMatchStates';
 import { MatchCard } from '../components/MatchCard';
 import { LeaderboardTab } from '../components/LeaderboardTab';
+import { CreateTournamentForm } from '../components/admin/CreateTournamentForm';
 import { CreateMatchForm } from '../components/admin/CreateMatchForm';
 import { ResolveForm } from '../components/admin/ResolveForm';
 import { SetFirstVotedForm } from '../components/admin/SetFirstVotedForm';
@@ -40,6 +41,7 @@ function getOverlayStatePriority(state: MatchState): number {
 
 export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBack }) => {
   const [activeTab, setActiveTab] = useState<TabState>('games');
+  const [editableTournament, setEditableTournament] = useState<TournamentDto>(tournament);
   const [matchInfos, setMatchInfos] = useState<MatchInfo[]>([]);
   const [predictions, setPredictions] = useState<PredictionsMap>({});
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -50,11 +52,16 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
   const [tournamentStats, setTournamentStats] = useState<TournamentStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedMatchId, setExpandedMatchId] = useState<number | null>(null);
+  const [showTournamentSettings, setShowTournamentSettings] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [resolvingMatch, setResolvingMatch] = useState<{ matchId: number; currentState: MatchState } | null>(null);
   const [firstVotedMatchId, setFirstVotedMatchId] = useState<number | null>(null);
   const canManage = tournament.canManage;
   const requiresTeamSelection = tournament.showTeamSelection && tournament.teams.length > 0 && !selectedTeamName;
+
+  useEffect(() => {
+    setEditableTournament(tournament);
+  }, [tournament]);
 
   // Blob polling for all matches
   const matchIds = useMemo(() => matchInfos.map(m => m.id), [matchInfos]);
@@ -364,12 +371,20 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
             )}
 
             {canManage && (
-              <button
-                className="create-match-btn"
-                onClick={() => { hapticFeedback('selection'); setShowCreateForm(true); }}
-              >
-                + Создать игру
-              </button>
+              <div className="manage-actions">
+                <button
+                  className="create-match-btn create-match-btn--secondary"
+                  onClick={() => { hapticFeedback('selection'); setShowTournamentSettings(true); }}
+                >
+                  Настройки турнира
+                </button>
+                <button
+                  className="create-match-btn"
+                  onClick={() => { hapticFeedback('selection'); setShowCreateForm(true); }}
+                >
+                  + Создать игру
+                </button>
+              </div>
             )}
 
             {matchInfos.length === 0 ? (
@@ -409,6 +424,20 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
           tournamentId={tournament.id}
           onSuccess={() => { setShowCreateForm(false); refreshMatchList(); }}
           onCancel={() => setShowCreateForm(false)}
+        />
+      )}
+
+      {showTournamentSettings && (
+        <CreateTournamentForm
+          tournament={editableTournament}
+          overlaySettingsOnly={true}
+          onSuccess={(updatedTournament) => {
+            if (updatedTournament) {
+              setEditableTournament(updatedTournament);
+            }
+            setShowTournamentSettings(false);
+          }}
+          onCancel={() => setShowTournamentSettings(false)}
         />
       )}
 

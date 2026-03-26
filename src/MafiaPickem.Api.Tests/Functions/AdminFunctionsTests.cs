@@ -6,6 +6,7 @@ using MafiaPickem.Api.Functions;
 using MafiaPickem.Api.Models.Enums;
 using MafiaPickem.Api.Models.Requests;
 using MafiaPickem.Api.Models.Domain;
+using MafiaPickem.Api.Overlay;
 using MafiaPickem.Api.Services;
 using MafiaPickem.Api.State;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -124,7 +125,8 @@ public class AdminFunctionsTests
                 null,
                 It.Is<IReadOnlyCollection<string>>(teams => teams.Count == 0),
                 true,
-                false))
+                false,
+                It.IsAny<TournamentOverlaySettings>()))
             .ReturnsAsync(createdTournament);
 
         var httpRequest = CreateMockHttpRequest("""
@@ -144,7 +146,8 @@ public class AdminFunctionsTests
             null,
             It.Is<IReadOnlyCollection<string>>(teams => teams.Count == 0),
             true,
-            false), Times.Once);
+            false,
+            It.IsAny<TournamentOverlaySettings>()), Times.Once);
     }
 
     [Fact]
@@ -163,7 +166,7 @@ public class AdminFunctionsTests
         var response = await _adminFunctions.CreateTournamentHttp(httpRequest);
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        _mockTournamentRepository.Verify(r => r.CreateAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.Never);
+        _mockTournamentRepository.Verify(r => r.CreateAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<TournamentOverlaySettings>()), Times.Never);
     }
 
     [Fact]
@@ -334,7 +337,7 @@ public class AdminFunctionsTests
         var response = await _adminFunctions.UpdateTournamentHttp(httpRequest, 7);
 
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
-        _mockTournamentRepository.Verify(r => r.UpdateAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.Never);
+        _mockTournamentRepository.Verify(r => r.UpdateAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<TournamentOverlaySettings>()), Times.Never);
         _mockTournamentOperatorRepository.Verify(r => r.ReplaceAsync(It.IsAny<int>(), It.IsAny<IReadOnlyCollection<string>>()), Times.Never);
     }
 
@@ -354,7 +357,7 @@ public class AdminFunctionsTests
         var response = await _adminFunctions.UpdateTournamentHttp(httpRequest, 7);
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
-        _mockTournamentRepository.Verify(r => r.UpdateAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.Never);
+        _mockTournamentRepository.Verify(r => r.UpdateAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<TournamentOverlaySettings>()), Times.Never);
         _mockTournamentOperatorRepository.Verify(r => r.ReplaceAsync(It.IsAny<int>(), It.IsAny<IReadOnlyCollection<string>>()), Times.Never);
     }
 
@@ -396,7 +399,8 @@ public class AdminFunctionsTests
                 "https://img.example/spring.png",
                 It.Is<IReadOnlyCollection<string>>(teams => teams.SequenceEqual(new[] { "North", "South" })),
                 false,
-                false))
+                false,
+                It.IsAny<TournamentOverlaySettings>()))
             .ReturnsAsync(updatedTournament);
         _mockTournamentOperatorRepository
             .Setup(r => r.ReplaceAsync(
@@ -426,10 +430,88 @@ public class AdminFunctionsTests
             "https://img.example/spring.png",
             It.Is<IReadOnlyCollection<string>>(teams => teams.SequenceEqual(new[] { "North", "South" })),
             false,
-            false), Times.Once);
+            false,
+            It.IsAny<TournamentOverlaySettings>()), Times.Once);
         _mockTournamentOperatorRepository.Verify(r => r.ReplaceAsync(
             tournamentId,
             It.Is<IReadOnlyCollection<string>>(operators => operators.SequenceEqual(new[] { "@chief", "@cohost" }))), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateTournament_AsOperator_ShouldOnlyPersistOverlaySettings()
+    {
+        _mockUserContext.SetupGet(u => u.IsAdmin).Returns(false);
+        _mockUserContext.SetupGet(u => u.TelegramUsername).Returns("@overlay_ops");
+
+        const int tournamentId = 17;
+        var existingTournament = new Tournament
+        {
+            Id = tournamentId,
+            Name = "Operator Cup",
+            Description = "Locked fields",
+            ImageUrl = "https://img.example/original.png",
+            Active = true,
+            VisibleOnHomePage = true,
+            ShowTeamSelection = true,
+            TeamsJson = "[\"Alpha\",\"Beta\"]"
+        };
+        var updatedTournament = new Tournament
+        {
+            Id = tournamentId,
+            Name = existingTournament.Name,
+            Description = existingTournament.Description,
+            ImageUrl = existingTournament.ImageUrl,
+            Active = true,
+            VisibleOnHomePage = existingTournament.VisibleOnHomePage,
+            ShowTeamSelection = existingTournament.ShowTeamSelection,
+            TeamsJson = existingTournament.TeamsJson,
+            OverlaySettingsJson = "{}"
+        };
+
+        _mockTournamentRepository.Setup(r => r.GetByIdAsync(tournamentId)).ReturnsAsync(existingTournament);
+        _mockTournamentOperatorRepository.Setup(r => r.IsOperatorAsync(tournamentId, "@overlay_ops")).ReturnsAsync(true);
+        _mockTournamentOperatorRepository.Setup(r => r.GetByTournamentIdAsync(tournamentId)).ReturnsAsync(new[] { "@overlay_ops" });
+        _mockTournamentRepository
+            .Setup(r => r.UpdateAsync(
+                tournamentId,
+                existingTournament.Name,
+                existingTournament.Description,
+                existingTournament.ImageUrl,
+                It.Is<IReadOnlyCollection<string>>(teams => teams.SequenceEqual(new[] { "Alpha", "Beta" })),
+                true,
+                true,
+                It.Is<TournamentOverlaySettings>(settings =>
+                    settings.HideBlocksByPhase == false &&
+                    settings.FirstVoteBlock.Side == OverlayBlockSide.Left &&
+                    settings.FirstVoteBlock.EdgeOffset == 48 &&
+                    settings.FirstVoteBlock.TopOffset == 222)))
+            .ReturnsAsync(updatedTournament);
+
+        var httpRequest = CreateMockHttpRequest("""
+            {
+              "name": "Operator tried to rename",
+              "description": "Operator tried to edit description",
+              "imageUrl": "https://img.example/changed.png",
+              "teams": ["Changed"],
+              "visibleOnHomePage": false,
+              "showTeamSelection": false,
+              "operatorUsernames": ["@other"],
+              "overlaySettings": {
+                "hideBlocksByPhase": false,
+                "firstVoteBlock": {
+                  "side": "left",
+                  "edgeOffset": 48,
+                  "topOffset": 222
+                }
+              }
+            }
+            """);
+
+        var response = await _adminFunctions.UpdateTournamentHttp(httpRequest, tournamentId);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        _mockTournamentRepository.VerifyAll();
+        _mockTournamentOperatorRepository.Verify(r => r.ReplaceAsync(It.IsAny<int>(), It.IsAny<IReadOnlyCollection<string>>()), Times.Never);
     }
 
     [Fact]

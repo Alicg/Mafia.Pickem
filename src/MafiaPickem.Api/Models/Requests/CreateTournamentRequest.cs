@@ -1,3 +1,5 @@
+using MafiaPickem.Api.Overlay;
+
 namespace MafiaPickem.Api.Models.Requests;
 
 public class CreateTournamentRequest
@@ -9,4 +11,5 @@ public class CreateTournamentRequest
     public List<string> OperatorUsernames { get; set; } = new();
     public bool? VisibleOnHomePage { get; set; }
     public bool? ShowTeamSelection { get; set; }
+    public TournamentOverlaySettings OverlaySettings { get; set; } = TournamentOverlaySettings.CreateDefault();
 }

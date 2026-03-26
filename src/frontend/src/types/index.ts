@@ -11,6 +11,78 @@ export interface UserProfile {
   isAdmin: boolean;
 }
 
+export type OverlayBlockSide = 'left' | 'right';
+
+export interface OverlayBlockLayout {
+  side: OverlayBlockSide;
+  edgeOffset: number;
+  topOffset: number;
+}
+
+export interface OverlayThemeSettings {
+  fillColorStart: string;
+  fillColorEnd: string;
+  fillOpacity: number;
+  useGradient: boolean;
+}
+
+export interface TournamentOverlaySettings {
+  hideBlocksByPhase: boolean;
+  theme: OverlayThemeSettings;
+  summaryBlock: OverlayBlockLayout;
+  firstVoteBlock: OverlayBlockLayout;
+  lastRoundBlock: OverlayBlockLayout;
+  footerBlock: OverlayBlockLayout;
+}
+
+export const DEFAULT_TOURNAMENT_OVERLAY_SETTINGS: TournamentOverlaySettings = {
+  hideBlocksByPhase: true,
+  theme: {
+    fillColorStart: '#163A61',
+    fillColorEnd: '#0B1F3A',
+    fillOpacity: 92,
+    useGradient: true,
+  },
+  summaryBlock: {
+    side: 'left',
+    edgeOffset: 15,
+    topOffset: 138,
+  },
+  firstVoteBlock: {
+    side: 'right',
+    edgeOffset: 15,
+    topOffset: 394,
+  },
+  lastRoundBlock: {
+    side: 'left',
+    edgeOffset: 15,
+    topOffset: 394,
+  },
+  footerBlock: {
+    side: 'left',
+    edgeOffset: 15,
+    topOffset: 736,
+  },
+};
+
+export function cloneTournamentOverlaySettings(settings?: TournamentOverlaySettings | null): TournamentOverlaySettings {
+  const source = settings ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS;
+
+  return {
+    hideBlocksByPhase: source.hideBlocksByPhase,
+    theme: {
+      fillColorStart: source.theme.fillColorStart,
+      fillColorEnd: source.theme.fillColorEnd,
+      fillOpacity: source.theme.fillOpacity,
+      useGradient: source.theme.useGradient,
+    },
+    summaryBlock: { ...source.summaryBlock },
+    firstVoteBlock: { ...source.firstVoteBlock },
+    lastRoundBlock: { ...source.lastRoundBlock },
+    footerBlock: { ...source.footerBlock },
+  };
+}
+
 export interface TournamentDto {
   id: number;
   name: string;
@@ -21,6 +93,7 @@ export interface TournamentDto {
   selectedTeamName: string | null;
   visibleOnHomePage: boolean;
   showTeamSelection: boolean;
+  overlaySettings: TournamentOverlaySettings;
   canManage: boolean;
   currentMatch: MatchInfo | null;
 }
@@ -118,6 +191,7 @@ export interface CreateTournamentRequest {
   operatorUsernames: string[];
   visibleOnHomePage: boolean;
   showTeamSelection: boolean;
+  overlaySettings: TournamentOverlaySettings;
 }
 
 export interface UpdateTournamentRequest {
@@ -128,6 +202,7 @@ export interface UpdateTournamentRequest {
   operatorUsernames: string[];
   visibleOnHomePage: boolean;
   showTeamSelection: boolean;
+  overlaySettings: TournamentOverlaySettings;
 }
 
 export interface SelectTournamentTeamRequest {

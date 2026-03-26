@@ -14,9 +14,7 @@ public static class ObsOverlayHtmlRenderer
     <style>
         :root {
             --panel-width: 232px;
-            --panel-offset-y: -108px;
-            --card-bg: rgba(22, 58, 97, 0.92);
-            --card-bg-soft: rgba(11, 31, 58, 0.86);
+            --overlay-panel-fill: linear-gradient(180deg, rgba(22, 58, 97, 0.92), rgba(11, 31, 58, 0.86));
             --card-highlight: rgba(255, 243, 224, 0.09);
             --card-edge: rgba(247, 224, 193, 0.18);
             --red-bar: linear-gradient(180deg, #d9342b 0%, #a91515 100%);
@@ -33,7 +31,6 @@ public static class ObsOverlayHtmlRenderer
             --badge-bg: rgba(245, 222, 192, 0.16);
             --badge-edge: rgba(255, 242, 224, 0.24);
             --badge-text: rgba(255, 246, 238, 0.98);
-            --footer-bg: linear-gradient(180deg, rgba(33, 57, 84, 0.92), rgba(21, 37, 58, 0.9));
             --footer-edge: rgba(255, 245, 230, 0.16);
             --footer-icon: #38bdf8;
             --first-track: linear-gradient(90deg, rgba(44, 97, 155, 0.32), rgba(28, 70, 121, 0.42));
@@ -75,31 +72,26 @@ public static class ObsOverlayHtmlRenderer
             width: 100vw;
             height: 100vh;
             pointer-events: none;
-            padding: 0 15px;
         }
 
-        .overlay-layout {
-            position: absolute;
-            top: 45%;
-            left: 0;
+        .overlay-panel {
+            position: relative;
             width: 100%;
-            display: grid;
-            grid-template-columns: var(--panel-width) minmax(0, 1fr) var(--panel-width);
-            align-items: start;
-            transform: translateY(calc(-50% + var(--panel-offset-y)));
+            height: 100%;
         }
 
-        .overlay-column {
+        .overlay-block {
+            position: absolute;
             width: var(--panel-width);
             max-width: 100%;
         }
 
-        .overlay-column.is-left {
-            grid-column: 1;
+        .overlay-block.is-left {
+            left: 15px;
         }
 
-        .overlay-column.is-right {
-            grid-column: 3;
+        .overlay-block.is-right {
+            right: 15px;
         }
 
         .overlay-footer__link {
@@ -109,7 +101,7 @@ public static class ObsOverlayHtmlRenderer
             min-height: 24px;
             padding: 0 10px;
             border-radius: 999px;
-            background: var(--footer-bg);
+            background: var(--overlay-panel-fill);
             border: 1px solid var(--footer-edge);
             color: rgba(255, 255, 255, 0.96);
             font-size: 17px;
@@ -119,7 +111,7 @@ public static class ObsOverlayHtmlRenderer
             box-shadow: 0 10px 24px rgba(2, 6, 23, 0.24);
             text-shadow: 0 1px 10px rgba(2, 6, 23, 0.4);
             pointer-events: auto;
-            align-self: flex-start;
+            max-width: 100%;
         }
 
         .overlay-footer__icon {
@@ -137,12 +129,6 @@ public static class ObsOverlayHtmlRenderer
             display: block;
         }
 
-        .stack {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
         .summary-card,
         .chart-card {
             position: relative;
@@ -151,7 +137,7 @@ public static class ObsOverlayHtmlRenderer
             background:
                 radial-gradient(circle at top right, rgba(255, 255, 255, 0.16), transparent 34%),
                 linear-gradient(135deg, var(--card-highlight), transparent 45%),
-                linear-gradient(180deg, var(--card-bg), var(--card-bg-soft));
+                var(--overlay-panel-fill);
             box-shadow: var(--shadow);
             border: 1px solid var(--card-edge);
         }
@@ -404,31 +390,17 @@ public static class ObsOverlayHtmlRenderer
         }
 
         @media (max-width: 900px) {
-            .overlay-layout {
-                position: static;
-                width: 100%;
-                display: grid;
-                grid-template-columns: 1fr;
-                justify-items: start;
-                transform: none;
-            }
-
-            .overlay-column.is-left,
-            .overlay-column.is-right {
-                grid-column: 1;
-            }
-
-            .overlay-column.is-right {
-                margin-top: 6px;
+            .overlay-block {
+                width: min(var(--panel-width), calc(100vw - 24px));
             }
         }
     </style>
 </head>
 <body>
     <div class="overlay-root">
-        <section class="overlay-layout" id="overlayPanel">
-            <div class="stack overlay-column is-left">
-                <div class="summary-card">
+        <section class="overlay-panel" id="overlayPanel">
+            <div class="overlay-block is-left" id="summaryBlock">
+                <div class="summary-card" id="summaryCard">
                     <div class="summary-top">
                         <div class="state-pill" id="matchState">Ожидание</div>
                     </div>
@@ -453,12 +425,16 @@ public static class ObsOverlayHtmlRenderer
                         <div class="summary-side__count" id="totalPredictionsCount">0 прогнозов</div>
                     </div>
                 </div>
+            </div>
 
+            <div class="overlay-block is-left" id="lastRoundBlock">
                 <div class="chart-card" id="lastRoundCard">
                     <div class="chart-title">Последний круг</div>
                     <div class="vote-chart" id="lastRoundChart"></div>
                 </div>
+            </div>
 
+            <div class="overlay-block is-left" id="footerBlock">
                 <a class="overlay-footer__link" href="https://t.me/MafiaPickemBot" target="_blank" rel="noreferrer noopener">
                     <span class="overlay-footer__icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -470,7 +446,7 @@ public static class ObsOverlayHtmlRenderer
                 </a>
             </div>
 
-            <div class="stack overlay-column is-right">
+            <div class="overlay-block is-right" id="voteChartBlock">
                 <div class="chart-card" id="voteChartCard">
                     <div class="chart-title">Заголосуют первым</div>
                     <div class="vote-chart" id="voteChart"></div>
@@ -491,7 +467,26 @@ public static class ObsOverlayHtmlRenderer
         const lastRoundChart = document.getElementById('lastRoundChart');
         const voteChartCard = document.getElementById('voteChartCard');
         const lastRoundCard = document.getElementById('lastRoundCard');
+        const summaryBlock = document.getElementById('summaryBlock');
+        const voteChartBlock = document.getElementById('voteChartBlock');
+        const lastRoundBlock = document.getElementById('lastRoundBlock');
+        const footerBlock = document.getElementById('footerBlock');
         const overlayPanel = document.getElementById('overlayPanel');
+        const rootStyles = document.documentElement;
+
+        const defaultOverlaySettings = {
+            hideBlocksByPhase: true,
+            theme: {
+                fillColorStart: '#163A61',
+                fillColorEnd: '#0B1F3A',
+                fillOpacity: 92,
+                useGradient: true,
+            },
+            summaryBlock: { side: 'left', edgeOffset: 15, topOffset: 138 },
+            firstVoteBlock: { side: 'right', edgeOffset: 15, topOffset: 394 },
+            lastRoundBlock: { side: 'left', edgeOffset: 15, topOffset: 394 },
+            footerBlock: { side: 'left', edgeOffset: 15, topOffset: 736 },
+        };
 
         const formatPercent = (value) => `${Number(value || 0).toFixed(1)}%`;
         const formatPredictionsCount = (value) => {
@@ -517,6 +512,83 @@ public static class ObsOverlayHtmlRenderer
             return url.toString();
         };
 
+        const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+        const normalizeColor = (value, fallback) => {
+            if (typeof value !== 'string') {
+                return fallback;
+            }
+
+            const trimmed = value.trim();
+            return /^#[0-9a-fA-F]{6}$/.test(trimmed) ? trimmed.toUpperCase() : fallback;
+        };
+
+        const normalizeBlockLayout = (layout, fallback) => {
+            const side = layout?.side === 'right' ? 'right' : layout?.side === 'left' ? 'left' : fallback.side;
+            const edgeOffset = clamp(Number(layout?.edgeOffset ?? fallback.edgeOffset) || 0, 0, 4000);
+            const topOffset = clamp(Number(layout?.topOffset ?? fallback.topOffset) || 0, 0, 4000);
+
+            return {
+                side,
+                edgeOffset,
+                topOffset,
+            };
+        };
+
+        const normalizeOverlaySettings = (settings) => ({
+            hideBlocksByPhase: typeof settings?.hideBlocksByPhase === 'boolean'
+                ? settings.hideBlocksByPhase
+                : defaultOverlaySettings.hideBlocksByPhase,
+            theme: {
+                fillColorStart: normalizeColor(settings?.theme?.fillColorStart, defaultOverlaySettings.theme.fillColorStart),
+                fillColorEnd: normalizeColor(settings?.theme?.fillColorEnd, defaultOverlaySettings.theme.fillColorEnd),
+                fillOpacity: clamp(Number(settings?.theme?.fillOpacity ?? defaultOverlaySettings.theme.fillOpacity) || 0, 0, 100),
+                useGradient: typeof settings?.theme?.useGradient === 'boolean'
+                    ? settings.theme.useGradient
+                    : defaultOverlaySettings.theme.useGradient,
+            },
+            summaryBlock: normalizeBlockLayout(settings?.summaryBlock, defaultOverlaySettings.summaryBlock),
+            firstVoteBlock: normalizeBlockLayout(settings?.firstVoteBlock, defaultOverlaySettings.firstVoteBlock),
+            lastRoundBlock: normalizeBlockLayout(settings?.lastRoundBlock, defaultOverlaySettings.lastRoundBlock),
+            footerBlock: normalizeBlockLayout(settings?.footerBlock, defaultOverlaySettings.footerBlock),
+        });
+
+        const hexToRgb = (value) => {
+            const normalized = normalizeColor(value, '#000000');
+            return [1, 3, 5]
+                .map((start) => Number.parseInt(normalized.slice(start, start + 2), 16))
+                .join(', ');
+        };
+
+        const buildPanelFill = (theme) => {
+            const opacity = clamp(theme.fillOpacity, 0, 100) / 100;
+            const start = `rgba(${hexToRgb(theme.fillColorStart)}, ${opacity})`;
+            const end = `rgba(${hexToRgb(theme.fillColorEnd)}, ${opacity})`;
+            return theme.useGradient ? `linear-gradient(180deg, ${start}, ${end})` : start;
+        };
+
+        const applyBlockLayout = (element, layout) => {
+            if (!element) {
+                return;
+            }
+
+            element.classList.toggle('is-left', layout.side === 'left');
+            element.classList.toggle('is-right', layout.side === 'right');
+            element.style.top = `${layout.topOffset}px`;
+            element.style.left = layout.side === 'left' ? `${layout.edgeOffset}px` : 'auto';
+            element.style.right = layout.side === 'right' ? `${layout.edgeOffset}px` : 'auto';
+        };
+
+        const applyOverlaySettings = (payload) => {
+            const settings = normalizeOverlaySettings(payload?.overlaySettings);
+            rootStyles.style.setProperty('--overlay-panel-fill', buildPanelFill(settings.theme));
+            applyBlockLayout(summaryBlock, settings.summaryBlock);
+            applyBlockLayout(voteChartBlock, settings.firstVoteBlock);
+            applyBlockLayout(lastRoundBlock, settings.lastRoundBlock);
+            applyBlockLayout(footerBlock, settings.footerBlock);
+            return settings;
+        };
+
         const setSummary = (redSide, blackSide, totalPredictions) => {
             const redValue = Number(redSide?.percent || 0);
             const blackValue = Number(blackSide?.percent || 0);
@@ -535,12 +607,20 @@ public static class ObsOverlayHtmlRenderer
             overlayPanel.style.display = isVisible ? '' : 'none';
         };
 
-        const setChartVisibility = (payload) => {
+        const setChartVisibility = (payload, settings) => {
+            if (!settings.hideBlocksByPhase) {
+                voteChartBlock.style.display = '';
+                lastRoundBlock.style.display = '';
+                return;
+            }
+
             const currentMatchState = typeof payload?.matchState === 'string' ? payload.matchState : '';
             const hasFirstVotedResult = currentMatchState === 'FirstVoted' || currentMatchState === 'Resolved';
 
-            voteChartCard.style.display = hasFirstVotedResult ? 'none' : '';
-            lastRoundCard.style.display = hasFirstVotedResult ? '' : 'none';
+            voteChartBlock.style.display = hasFirstVotedResult ? 'none' : '';
+            lastRoundBlock.style.display = hasFirstVotedResult ? '' : 'none';
+            voteChartCard.style.display = '';
+            lastRoundCard.style.display = '';
         };
 
         const renderSeats = (payload) => {
@@ -601,19 +681,22 @@ public static class ObsOverlayHtmlRenderer
             redBarFill.style.setProperty('--segment-width', '0%');
             blackBarFill.style.setProperty('--segment-width', '0%');
             totalPredictionsCount.textContent = formatPredictionsCount(0);
-            setChartVisibility({ matchState: '' });
+            const settings = applyOverlaySettings(null);
+            setChartVisibility({ matchState: '' }, settings);
             renderSeats({ seatVotes: [] });
             renderLastRound({ lastRoundVotes: [] });
         };
 
         const renderPayload = (payload) => {
+            const settings = applyOverlaySettings(payload);
+
             if (payload.status === 'no-match') {
                 setPanelVisible(false);
                 return;
             }
 
             setPanelVisible(true);
-            setChartVisibility(payload);
+            setChartVisibility(payload, settings);
 
             if (payload.status !== 'ready') {
                 matchState.textContent = 'Ожидание';

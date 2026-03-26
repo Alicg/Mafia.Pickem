@@ -1,3 +1,4 @@
+using MafiaPickem.Api.Overlay;
 using MafiaPickem.Api.Models.Enums;
 
 namespace MafiaPickem.Api.Models.Responses;
@@ -13,6 +14,7 @@ public class TournamentDto
     public string? SelectedTeamName { get; set; }
     public bool VisibleOnHomePage { get; set; }
     public bool ShowTeamSelection { get; set; }
+    public TournamentOverlaySettings OverlaySettings { get; set; } = TournamentOverlaySettings.CreateDefault();
     public bool CanManage { get; set; }
     public MatchDto? CurrentMatch { get; set; }
 }

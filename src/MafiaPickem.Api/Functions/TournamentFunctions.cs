@@ -4,6 +4,7 @@ using MafiaPickem.Api.Models.Domain;
 using MafiaPickem.Api.Models.Enums;
 using MafiaPickem.Api.Models.Requests;
 using MafiaPickem.Api.Models.Responses;
+using MafiaPickem.Api.Overlay;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
@@ -335,6 +336,7 @@ public class TournamentFunctions
             SelectedTeamName = selectedTeamName,
             VisibleOnHomePage = tournament.VisibleOnHomePage,
             ShowTeamSelection = tournament.ShowTeamSelection,
+            OverlaySettings = TournamentOverlaySettingsSerializer.Deserialize(tournament.OverlaySettingsJson),
             CanManage = canManage,
             CurrentMatch = currentMatch != null ? MapMatchToDto(currentMatch) : null
         };

@@ -11,6 +11,7 @@ namespace MafiaPickem.Api.Tests.Overlay;
 public class ObsOverlayServiceTests
 {
     private readonly Mock<IMatchRepository> _matchRepositoryMock;
+    private readonly Mock<ITournamentRepository> _tournamentRepositoryMock;
     private readonly Mock<IMatchStateBlobReader> _blobReaderMock;
     private readonly Mock<ITournamentOverlayClientStateStore> _overlayClientStateStoreMock;
     private readonly ObsOverlayService _service;
@@ -18,12 +19,13 @@ public class ObsOverlayServiceTests
     public ObsOverlayServiceTests()
     {
         _matchRepositoryMock = new Mock<IMatchRepository>();
+        _tournamentRepositoryMock = new Mock<ITournamentRepository>();
         _blobReaderMock = new Mock<IMatchStateBlobReader>();
         _overlayClientStateStoreMock = new Mock<ITournamentOverlayClientStateStore>();
         _overlayClientStateStoreMock
             .Setup(store => store.ReadAsync(It.IsAny<int>()))
             .ReturnsAsync((TournamentOverlayClientState?)null);
-        _service = new ObsOverlayService(_matchRepositoryMock.Object, _blobReaderMock.Object, _overlayClientStateStoreMock.Object);
+        _service = new ObsOverlayService(_matchRepositoryMock.Object, _tournamentRepositoryMock.Object, _blobReaderMock.Object, _overlayClientStateStoreMock.Object);
     }
 
     [Fact]

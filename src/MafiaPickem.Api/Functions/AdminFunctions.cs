@@ -1,8 +1,10 @@
 using MafiaPickem.Api.Auth;
 using MafiaPickem.Api.Data;
+using MafiaPickem.Api.Models.Domain;
 using MafiaPickem.Api.Models.Enums;
 using MafiaPickem.Api.Models.Requests;
 using MafiaPickem.Api.Models.Responses;
+using MafiaPickem.Api.Overlay;
 using MafiaPickem.Api.Services;
 using MafiaPickem.Api.State;
 using MafiaPickem.Api.Utils;
@@ -60,7 +62,7 @@ public class AdminFunctions
         }
 
         var request = await req.ReadFromJsonAsync<CreateTournamentRequest>();
-        var validationError = TryNormalizeTournamentRequest(request, out var name, out var description, out var imageUrl, out var teams, out var showTeamSelection);
+        var validationError = TryNormalizeTournamentRequest(request, out var name, out var description, out var imageUrl, out var teams, out var showTeamSelection, out var overlaySettings);
         if (validationError != null)
         {
             var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
@@ -68,7 +70,7 @@ public class AdminFunctions
             return badRequestResponse;
         }
 
-        var operatorUsernames = request.OperatorUsernames
+        var operatorUsernames = (request?.OperatorUsernames ?? new List<string>())
             .Select(TelegramUsernameNormalizer.NormalizeMention)
             .Where(username => username != null)
             .Cast<string>()
@@ -82,25 +84,15 @@ public class AdminFunctions
             imageUrl,
             teams,
             visibleOnHomePage,
-            showTeamSelection);
+            showTeamSelection,
+            overlaySettings);
 
         if (operatorUsernames.Count > 0)
         {
             await _tournamentOperatorRepository.AddRangeAsync(tournament.Id, operatorUsernames);
         }
 
-        var dto = new TournamentDto
-        {
-            Id = tournament.Id,
-            Name = tournament.Name,
-            Description = tournament.Description,
-            ImageUrl = tournament.ImageUrl,
-            Teams = teams,
-            OperatorUsernames = operatorUsernames,
-            VisibleOnHomePage = tournament.VisibleOnHomePage,
-            ShowTeamSelection = tournament.ShowTeamSelection,
-            CanManage = true
-        };
+        var dto = CreateTournamentDto(tournament, teams, operatorUsernames);
 
         var response = req.CreateResponse(HttpStatusCode.Created);
         await response.WriteAsJsonAsync(dto);
@@ -112,9 +104,9 @@ public class AdminFunctions
         [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "manage/tournaments/{id}")] HttpRequestData req,
         int id)
     {
-        if (!_userContext.IsAdmin)
+        if (!await CanManageTournamentAsync(id))
         {
-            return await CreateForbiddenResponseAsync(req, "Admin access required");
+            return await CreateForbiddenResponseAsync(req, "Tournament admin or operator access required");
         }
 
         var existingTournament = await _tournamentRepository.GetByIdAsync(id);
@@ -126,7 +118,7 @@ public class AdminFunctions
         }
 
         var request = await req.ReadFromJsonAsync<CreateTournamentRequest>();
-        var validationError = TryNormalizeTournamentRequest(request, out var name, out var description, out var imageUrl, out var teams, out var showTeamSelection);
+        var validationError = TryNormalizeTournamentRequest(request, out var name, out var description, out var imageUrl, out var teams, out var showTeamSelection, out var overlaySettings);
         if (validationError != null)
         {
             var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
@@ -134,30 +126,33 @@ public class AdminFunctions
             return badRequestResponse;
         }
 
-        var operatorUsernames = request!.OperatorUsernames
-            .Select(TelegramUsernameNormalizer.NormalizeMention)
-            .Where(username => username != null)
-            .Cast<string>()
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
-        var visibleOnHomePage = request.VisibleOnHomePage ?? existingTournament.VisibleOnHomePage;
-        showTeamSelection = request.ShowTeamSelection ?? existingTournament.ShowTeamSelection;
+        var canAdministerTournament = _userContext.IsAdmin;
+        var operatorUsernames = canAdministerTournament
+            ? (request?.OperatorUsernames ?? new List<string>())
+                .Select(TelegramUsernameNormalizer.NormalizeMention)
+                .Where(username => username != null)
+                .Cast<string>()
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList()
+            : (await _tournamentOperatorRepository.GetByTournamentIdAsync(id)).ToList();
+        var visibleOnHomePage = canAdministerTournament
+            ? request!.VisibleOnHomePage ?? existingTournament.VisibleOnHomePage
+            : existingTournament.VisibleOnHomePage;
+        showTeamSelection = canAdministerTournament
+            ? request!.ShowTeamSelection ?? existingTournament.ShowTeamSelection
+            : existingTournament.ShowTeamSelection;
+        var effectiveName = canAdministerTournament ? name : existingTournament.Name;
+        var effectiveDescription = canAdministerTournament ? description : existingTournament.Description;
+        var effectiveImageUrl = canAdministerTournament ? imageUrl : existingTournament.ImageUrl;
+        var effectiveTeams = canAdministerTournament ? teams : ParseTeams(existingTournament.TeamsJson);
 
-        var tournament = await _tournamentRepository.UpdateAsync(id, name, description, imageUrl, teams, visibleOnHomePage, showTeamSelection);
-        await _tournamentOperatorRepository.ReplaceAsync(id, operatorUsernames);
-
-        var dto = new TournamentDto
+        var tournament = await _tournamentRepository.UpdateAsync(id, effectiveName, effectiveDescription, effectiveImageUrl, effectiveTeams, visibleOnHomePage, showTeamSelection, overlaySettings);
+        if (canAdministerTournament)
         {
-            Id = tournament.Id,
-            Name = tournament.Name,
-            Description = tournament.Description,
-            ImageUrl = tournament.ImageUrl,
-            Teams = teams,
-            OperatorUsernames = operatorUsernames,
-            VisibleOnHomePage = tournament.VisibleOnHomePage,
-            ShowTeamSelection = tournament.ShowTeamSelection,
-            CanManage = true
-        };
+            await _tournamentOperatorRepository.ReplaceAsync(id, operatorUsernames);
+        }
+
+        var dto = CreateTournamentDto(tournament, effectiveTeams, operatorUsernames);
 
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(dto);
@@ -692,13 +687,15 @@ public class AdminFunctions
         out string? description,
         out string? imageUrl,
         out List<string> teams,
-        out bool showTeamSelection)
+        out bool showTeamSelection,
+        out TournamentOverlaySettings overlaySettings)
     {
         name = string.Empty;
         description = null;
         imageUrl = null;
         teams = new List<string>();
         showTeamSelection = true;
+        overlaySettings = TournamentOverlaySettings.CreateDefault();
 
         if (request == null || string.IsNullOrWhiteSpace(request.Name))
         {
@@ -709,13 +706,48 @@ public class AdminFunctions
         description = NormalizeOptionalText(request.Description);
         imageUrl = NormalizeOptionalText(request.ImageUrl);
         showTeamSelection = request.ShowTeamSelection ?? true;
-        teams = request.Teams
+        overlaySettings = TournamentOverlaySettings.Normalize(request.OverlaySettings);
+        teams = (request.Teams ?? new List<string>())
             .Where(team => !string.IsNullOrWhiteSpace(team))
             .Select(team => team.Trim())
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
 
         return showTeamSelection && teams.Count == 0 ? "At least one team is required when team selection is enabled" : null;
+    }
+
+    private static TournamentDto CreateTournamentDto(Tournament tournament, List<string> teams, List<string> operatorUsernames)
+    {
+        return new TournamentDto
+        {
+            Id = tournament.Id,
+            Name = tournament.Name,
+            Description = tournament.Description,
+            ImageUrl = tournament.ImageUrl,
+            Teams = teams,
+            OperatorUsernames = operatorUsernames,
+            VisibleOnHomePage = tournament.VisibleOnHomePage,
+            ShowTeamSelection = tournament.ShowTeamSelection,
+            OverlaySettings = TournamentOverlaySettingsSerializer.Deserialize(tournament.OverlaySettingsJson),
+            CanManage = true
+        };
+    }
+
+    private static List<string> ParseTeams(string? teamsJson)
+    {
+        if (string.IsNullOrWhiteSpace(teamsJson))
+        {
+            return new List<string>();
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(teamsJson) ?? new List<string>();
+        }
+        catch (JsonException)
+        {
+            return new List<string>();
+        }
     }
 
     private static string? NormalizeOptionalText(string? value)

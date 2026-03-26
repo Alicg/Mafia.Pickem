@@ -1,17 +1,49 @@
 import React, { useEffect, useState } from 'react';
 import { adminCreateTournament, adminUpdateTournament } from '../../lib/api';
-import { CreateTournamentRequest, TournamentDto, UpdateTournamentRequest } from '../../types';
+import {
+  cloneTournamentOverlaySettings,
+  CreateTournamentRequest,
+  OverlayBlockLayout,
+  TournamentDto,
+  TournamentOverlaySettings,
+  UpdateTournamentRequest,
+} from '../../types';
 import { hapticFeedback } from '../../lib/telegram';
 import './admin.css';
 
 interface CreateTournamentFormProps {
   tournament?: TournamentDto;
-  onSuccess: () => void;
+  overlaySettingsOnly?: boolean;
+  onSuccess: (tournament?: TournamentDto) => void;
   onCancel: () => void;
 }
 
-export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ tournament, onSuccess, onCancel }) => {
+type OverlayBlockKey = 'summaryBlock' | 'firstVoteBlock' | 'lastRoundBlock' | 'footerBlock';
+
+const overlayBlockSections: Array<{ key: OverlayBlockKey; title: string; hint: string }> = [
+  { key: 'summaryBlock', title: 'Сводка', hint: 'Блок с процентами по красным и чёрным.' },
+  { key: 'firstVoteBlock', title: 'Заголосуют первым', hint: 'Блок с прогнозом первого голосования.' },
+  { key: 'lastRoundBlock', title: 'Последний круг', hint: 'Блок с вариантами последнего круга.' },
+  { key: 'footerBlock', title: 'Подпись', hint: 'Ссылка на mini app / Telegram.' },
+];
+
+const parseNonNegativeNumber = (value: string): number => {
+  const parsed = Number.parseInt(value, 10);
+  if (Number.isNaN(parsed) || parsed < 0) {
+    return 0;
+  }
+
+  return parsed;
+};
+
+export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({
+  tournament,
+  overlaySettingsOnly = false,
+  onSuccess,
+  onCancel,
+}) => {
   const isEditMode = Boolean(tournament);
+  const isOverlaySettingsOnly = overlaySettingsOnly && isEditMode;
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [imageUrl, setImageUrl] = useState('');
@@ -19,6 +51,7 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ tour
   const [operatorUsernamesText, setOperatorUsernamesText] = useState('');
   const [visibleOnHomePage, setVisibleOnHomePage] = useState(true);
   const [showTeamSelection, setShowTeamSelection] = useState(true);
+  const [overlaySettings, setOverlaySettings] = useState<TournamentOverlaySettings>(cloneTournamentOverlaySettings());
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,6 +63,7 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ tour
     setOperatorUsernamesText(tournament?.operatorUsernames.join('\n') ?? '');
     setVisibleOnHomePage(tournament?.visibleOnHomePage ?? true);
     setShowTeamSelection(tournament?.showTeamSelection ?? true);
+    setOverlaySettings(cloneTournamentOverlaySettings(tournament?.overlaySettings));
     setError(null);
   }, [tournament]);
 
@@ -46,11 +80,21 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ tour
     .map(username => username.startsWith('@') ? username : `@${username}`)
     .filter((username, index, all) => all.findIndex(item => item.toLowerCase() === username.toLowerCase()) === index);
 
+  const updateBlock = (blockKey: OverlayBlockKey, field: keyof OverlayBlockLayout, value: string | number) => {
+    setOverlaySettings(prev => ({
+      ...prev,
+      [blockKey]: {
+        ...prev[blockKey],
+        [field]: value,
+      },
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
 
-    if (showTeamSelection && parsedTeams.length === 0) {
+    if (!isOverlaySettingsOnly && showTeamSelection && parsedTeams.length === 0) {
       setError('Добавьте хотя бы одну команду, если выбор команды включен.');
       return;
     }
@@ -60,34 +104,28 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ tour
     hapticFeedback();
 
     try {
+      const requestBase = {
+        name: name.trim(),
+        description: description.trim() || undefined,
+        imageUrl: imageUrl.trim() || undefined,
+        teams: parsedTeams,
+        operatorUsernames: parsedOperatorUsernames,
+        visibleOnHomePage,
+        showTeamSelection,
+        overlaySettings: cloneTournamentOverlaySettings(overlaySettings),
+      };
+
+      let savedTournament: TournamentDto;
       if (isEditMode && tournament) {
-        const request: UpdateTournamentRequest = {
-          name: name.trim(),
-          description: description.trim() || undefined,
-          imageUrl: imageUrl.trim() || undefined,
-          teams: parsedTeams,
-          operatorUsernames: parsedOperatorUsernames,
-          visibleOnHomePage,
-          showTeamSelection,
-        };
-
-        await adminUpdateTournament(tournament.id, request);
+        const request: UpdateTournamentRequest = requestBase;
+        savedTournament = await adminUpdateTournament(tournament.id, request);
       } else {
-        const request: CreateTournamentRequest = {
-          name: name.trim(),
-          description: description.trim() || undefined,
-          imageUrl: imageUrl.trim() || undefined,
-          teams: parsedTeams,
-          operatorUsernames: parsedOperatorUsernames,
-          visibleOnHomePage,
-          showTeamSelection,
-        };
-
-        await adminCreateTournament(request);
+        const request: CreateTournamentRequest = requestBase;
+        savedTournament = await adminCreateTournament(request);
       }
 
       hapticFeedback('success');
-      onSuccess();
+      onSuccess(savedTournament);
     } catch (err) {
       setError(err instanceof Error ? err.message : (isEditMode ? 'Ошибка обновления турнира' : 'Ошибка создания турнира'));
       hapticFeedback('error');
@@ -99,107 +137,284 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ tour
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        <h2 className="modal-title">{isEditMode ? 'Редактировать турнир' : 'Новый турнир'}</h2>
+        <h2 className="modal-title">
+          {isOverlaySettingsOnly
+            ? 'Настройки OBS overlay'
+            : isEditMode
+              ? 'Редактировать турнир'
+              : 'Новый турнир'}
+        </h2>
 
         {error && <div className="error-message" style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
 
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label">Название *</label>
-            <input
-              type="text"
-              className="form-input"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Например: Кубок Мафии 2026"
-              required
-              maxLength={300}
-            />
-          </div>
+          {!isOverlaySettingsOnly && (
+            <>
+              <div className="form-group">
+                <label className="form-label">Название *</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Например: Кубок Мафии 2026"
+                  required
+                  maxLength={300}
+                />
+              </div>
 
-          <div className="form-group">
-            <label className="form-label">Описание</label>
-            <textarea
-              className="form-input"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Краткое описание турнира"
-              rows={3}
-              maxLength={1000}
-              style={{ resize: 'vertical' }}
-            />
-          </div>
+              <div className="form-group">
+                <label className="form-label">Описание</label>
+                <textarea
+                  className="form-input"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Краткое описание турнира"
+                  rows={3}
+                  maxLength={1000}
+                  style={{ resize: 'vertical' }}
+                />
+              </div>
 
-          <div className="form-group">
-            <label className="form-label">URL изображения</label>
-            <input
-              type="url"
-              className="form-input"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="https://..."
-            />
-          </div>
+              <div className="form-group">
+                <label className="form-label">URL изображения</label>
+                <input
+                  type="url"
+                  className="form-input"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="https://..."
+                />
+              </div>
 
-          <div className="form-group">
-            <label className="form-label">Команды {showTeamSelection ? '*' : '(необязательно)'}</label>
-            <textarea
-              className="form-input"
-              value={teamsText}
-              onChange={(e) => setTeamsText(e.target.value)}
-              placeholder={"Одна команда на строку\nНапример:\nСевер\nЮг\nЗапад"}
-              rows={5}
-              style={{ resize: 'vertical' }}
-            />
-            <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--tg-theme-hint-color)' }}>
-              {showTeamSelection
-                ? 'Пользователь выбирает команду один раз и больше не сможет изменить выбор.'
-                : 'Список можно оставить пустым, если в этом турнире выбор команды не нужен.'}
+              <div className="form-group">
+                <label className="form-label">Команды {showTeamSelection ? '*' : '(необязательно)'}</label>
+                <textarea
+                  className="form-input"
+                  value={teamsText}
+                  onChange={(e) => setTeamsText(e.target.value)}
+                  placeholder={"Одна команда на строку\nНапример:\nСевер\nЮг\nЗапад"}
+                  rows={5}
+                  style={{ resize: 'vertical' }}
+                />
+                <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--tg-theme-hint-color)' }}>
+                  {showTeamSelection
+                    ? 'Пользователь выбирает команду один раз и больше не сможет изменить выбор.'
+                    : 'Список можно оставить пустым, если в этом турнире выбор команды не нужен.'}
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={showTeamSelection}
+                    onChange={(e) => setShowTeamSelection(e.target.checked)}
+                    disabled={isLoading}
+                  />
+                  <span>Показывать пользователю выбор команды</span>
+                </label>
+                <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--tg-theme-hint-color)' }}>
+                  Если снять галочку, пользователи смогут участвовать в турнире без выбора команды.
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Операторы турнира</label>
+                <textarea
+                  className="form-input"
+                  value={operatorUsernamesText}
+                  onChange={(e) => setOperatorUsernamesText(e.target.value)}
+                  placeholder={"Добавьте Telegram usernames через @userName\nНапример:\n@ivan_admin\n@marina_ops"}
+                  rows={4}
+                  style={{ resize: 'vertical' }}
+                />
+                <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--tg-theme-hint-color)' }}>
+                  Операторы смогут создавать игры и менять статусы игр этого турнира. Пользователь должен хотя бы один раз открыть mini app.
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={visibleOnHomePage}
+                    onChange={(e) => setVisibleOnHomePage(e.target.checked)}
+                    disabled={isLoading}
+                  />
+                  <span>Показывать турнир зрителям на главной странице</span>
+                </label>
+                <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--tg-theme-hint-color)' }}>
+                  Если снять галочку, турнир останется доступен администраторам и операторам, но исчезнет из общего списка для зрителей.
+                </div>
+              </div>
+            </>
+          )}
+
+          {isOverlaySettingsOnly && (
+            <div className="form-section-note" style={{ marginBottom: '16px' }}>
+              Здесь можно менять только расположение и палитру OBS overlay. Остальные параметры турнира остаются под управлением администратора.
             </div>
-          </div>
+          )}
 
-          <div className="form-group">
-            <label className="form-checkbox-label">
-              <input
-                type="checkbox"
-                checked={showTeamSelection}
-                onChange={(e) => setShowTeamSelection(e.target.checked)}
-                disabled={isLoading}
-              />
-              <span>Показывать пользователю выбор команды</span>
-            </label>
-            <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--tg-theme-hint-color)' }}>
-              Если снять галочку, пользователи смогут участвовать в турнире без выбора команды.
+          <div className="form-section">
+            <div className="form-section-title">OBS overlay</div>
+            <div className="form-section-note">
+              Для каждого блока задаётся сторона, отступ от края и отступ сверху. Все значения в пикселях.
             </div>
-          </div>
 
-          <div className="form-group">
-            <label className="form-label">Операторы турнира</label>
-            <textarea
-              className="form-input"
-              value={operatorUsernamesText}
-              onChange={(e) => setOperatorUsernamesText(e.target.value)}
-              placeholder={"Добавьте Telegram usernames через @userName\nНапример:\n@ivan_admin\n@marina_ops"}
-              rows={4}
-              style={{ resize: 'vertical' }}
-            />
-            <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--tg-theme-hint-color)' }}>
-              Операторы смогут создавать игры и менять статусы игр этого турнира. Пользователь должен хотя бы один раз открыть mini app.
+            <div className="form-group">
+              <label className="form-checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={overlaySettings.hideBlocksByPhase}
+                  onChange={(e) => setOverlaySettings(prev => ({ ...prev, hideBlocksByPhase: e.target.checked }))}
+                  disabled={isLoading}
+                />
+                <span>Скрывать блоки по фазе игры</span>
+              </label>
+              <div className="form-section-note" style={{ marginTop: '8px' }}>
+                Если галочка включена, блоки «Заголосуют первым» и «Последний круг» будут переключаться автоматически в зависимости от фазы игры. Если выключена, оба блока отображаются одновременно.
+              </div>
             </div>
-          </div>
 
-          <div className="form-group">
-            <label className="form-checkbox-label">
-              <input
-                type="checkbox"
-                checked={visibleOnHomePage}
-                onChange={(e) => setVisibleOnHomePage(e.target.checked)}
-                disabled={isLoading}
-              />
-              <span>Показывать турнир зрителям на главной странице</span>
-            </label>
-            <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--tg-theme-hint-color)' }}>
-              Если снять галочку, турнир останется доступен администраторам и операторам, но исчезнет из общего списка для зрителей.
+            <div className="overlay-theme-grid">
+              <div className="form-group">
+                <label className="form-label">Цвет заливки 1</label>
+                <div className="form-color-row">
+                  <input
+                    type="color"
+                    className="form-color-input"
+                    value={overlaySettings.theme.fillColorStart}
+                    onChange={(e) => setOverlaySettings(prev => ({
+                      ...prev,
+                      theme: { ...prev.theme, fillColorStart: e.target.value.toUpperCase() },
+                    }))}
+                    disabled={isLoading}
+                  />
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={overlaySettings.theme.fillColorStart}
+                    onChange={(e) => setOverlaySettings(prev => ({
+                      ...prev,
+                      theme: { ...prev.theme, fillColorStart: e.target.value },
+                    }))}
+                    disabled={isLoading}
+                    maxLength={7}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Цвет заливки 2</label>
+                <div className="form-color-row">
+                  <input
+                    type="color"
+                    className="form-color-input"
+                    value={overlaySettings.theme.fillColorEnd}
+                    onChange={(e) => setOverlaySettings(prev => ({
+                      ...prev,
+                      theme: { ...prev.theme, fillColorEnd: e.target.value.toUpperCase() },
+                    }))}
+                    disabled={isLoading}
+                  />
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={overlaySettings.theme.fillColorEnd}
+                    onChange={(e) => setOverlaySettings(prev => ({
+                      ...prev,
+                      theme: { ...prev.theme, fillColorEnd: e.target.value },
+                    }))}
+                    disabled={isLoading}
+                    maxLength={7}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Прозрачность</label>
+                <input
+                  type="number"
+                  className="form-input"
+                  min={0}
+                  max={100}
+                  value={overlaySettings.theme.fillOpacity}
+                  onChange={(e) => setOverlaySettings(prev => ({
+                    ...prev,
+                    theme: { ...prev.theme, fillOpacity: parseNonNegativeNumber(e.target.value) },
+                  }))}
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={overlaySettings.theme.useGradient}
+                    onChange={(e) => setOverlaySettings(prev => ({
+                      ...prev,
+                      theme: { ...prev.theme, useGradient: e.target.checked },
+                    }))}
+                    disabled={isLoading}
+                  />
+                  <span>Использовать градиент</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="overlay-settings-grid">
+              {overlayBlockSections.map((section) => {
+                const block = overlaySettings[section.key];
+
+                return (
+                  <div key={section.key} className="overlay-settings-card">
+                    <div className="overlay-settings-card__title">{section.title}</div>
+                    <div className="overlay-settings-card__hint">{section.hint}</div>
+
+                    <div className="overlay-settings-fields">
+                      <div className="form-group">
+                        <label className="form-label">Сторона</label>
+                        <select
+                          className="form-input"
+                          value={block.side}
+                          onChange={(e) => updateBlock(section.key, 'side', e.target.value)}
+                          disabled={isLoading}
+                        >
+                          <option value="left">Слева</option>
+                          <option value="right">Справа</option>
+                        </select>
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label">Отступ от края</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          min={0}
+                          value={block.edgeOffset}
+                          onChange={(e) => updateBlock(section.key, 'edgeOffset', parseNonNegativeNumber(e.target.value))}
+                          disabled={isLoading}
+                        />
+                      </div>
+
+                      <div className="form-group overlay-settings-fields__full-width">
+                        <label className="form-label">Отступ сверху</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          min={0}
+                          value={block.topOffset}
+                          onChange={(e) => updateBlock(section.key, 'topOffset', parseNonNegativeNumber(e.target.value))}
+                          disabled={isLoading}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -215,10 +430,14 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ tour
             <button
               type="submit"
               className="btn btn-primary"
-              disabled={isLoading || !name.trim() || (showTeamSelection && parsedTeams.length === 0)}
+              disabled={isLoading || !name.trim() || (!isOverlaySettingsOnly && showTeamSelection && parsedTeams.length === 0)}
             >
               {isLoading && <span className="btn-spinner" />}
-              {isLoading ? (isEditMode ? 'Сохранение...' : 'Создание...') : (isEditMode ? 'Сохранить' : 'Создать')}
+              {isLoading
+                ? (isEditMode ? 'Сохранение...' : 'Создание...')
+                : isOverlaySettingsOnly
+                  ? 'Сохранить overlay'
+                  : (isEditMode ? 'Сохранить' : 'Создать')}
             </button>
           </div>
         </form>

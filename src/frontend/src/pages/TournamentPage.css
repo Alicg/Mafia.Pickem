@@ -194,6 +194,18 @@
   box-shadow: 0 2px 12px var(--pm-gradient-accent-shadow);
 }
 
+.manage-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.create-match-btn--secondary {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--pm-card-border);
+  box-shadow: none;
+}
+
 .matches-accordion {
   display: flex;
   flex-direction: column;

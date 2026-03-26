@@ -10,5 +10,6 @@ public class Tournament
     public bool Active { get; set; }
     public bool VisibleOnHomePage { get; set; }
     public bool ShowTeamSelection { get; set; } = true;
+    public string? OverlaySettingsJson { get; set; }
     public DateTime DateCreated { get; set; }
 }

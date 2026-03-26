@@ -19,6 +19,7 @@ public class ObsOverlayPayload
     public List<int> ResolvedSlots { get; set; } = new();
     public List<OverlayLastRoundVote> LastRoundVotes { get; set; } = new();
     public byte? ResolvedLastRound { get; set; }
+    public TournamentOverlaySettings OverlaySettings { get; set; } = TournamentOverlaySettings.CreateDefault();
 }
 
 public class OverlaySideStat

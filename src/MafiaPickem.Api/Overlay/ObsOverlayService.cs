@@ -9,21 +9,26 @@ public class ObsOverlayService : IObsOverlayService
 {
     private static readonly TimeSpan ClientStateTtl = TimeSpan.FromSeconds(30);
     private readonly IMatchRepository _matchRepository;
+    private readonly ITournamentRepository _tournamentRepository;
     private readonly IMatchStateBlobReader _matchStateBlobReader;
     private readonly ITournamentOverlayClientStateStore _overlayClientStateStore;
 
     public ObsOverlayService(
         IMatchRepository matchRepository,
+        ITournamentRepository tournamentRepository,
         IMatchStateBlobReader matchStateBlobReader,
         ITournamentOverlayClientStateStore overlayClientStateStore)
     {
         _matchRepository = matchRepository;
+        _tournamentRepository = tournamentRepository;
         _matchStateBlobReader = matchStateBlobReader;
         _overlayClientStateStore = overlayClientStateStore;
     }
 
     public async Task<ObsOverlayPayload> GetOverlayPayloadAsync(int tournamentId)
     {
+        var tournament = await _tournamentRepository.GetByIdAsync(tournamentId);
+        var overlaySettings = TournamentOverlaySettingsSerializer.Deserialize(tournament?.OverlaySettingsJson);
         var matches = (await _matchRepository.GetByTournamentAndStateAsync(
             tournamentId,
             MatchState.Open,
@@ -34,12 +39,12 @@ public class ObsOverlayService : IObsOverlayService
         var selectedMatch = SelectMatch(matches, clientState);
         if (clientState != null && IsFresh(clientState) && !clientState.ActiveMatchId.HasValue)
         {
-            return CreateBasePayload(tournamentId, "no-match", "No open, locked, or first-voted match is available for this tournament.");
+            return CreateBasePayload(tournamentId, overlaySettings, "no-match", "No open, locked, or first-voted match is available for this tournament.");
         }
 
         if (selectedMatch == null)
         {
-            return CreateBasePayload(tournamentId, "no-match", "No open, locked, or first-voted match is available for this tournament.");
+            return CreateBasePayload(tournamentId, overlaySettings, "no-match", "No open, locked, or first-voted match is available for this tournament.");
         }
 
         var blobState = await _matchStateBlobReader.ReadStateAsync(selectedMatch.Id);
@@ -47,6 +52,7 @@ public class ObsOverlayService : IObsOverlayService
         {
             return CreateBasePayload(
                 tournamentId,
+                overlaySettings,
                 "missing-state",
                 $"Published state was not found for match {selectedMatch.Id}.",
                 selectedMatch);
@@ -59,7 +65,7 @@ public class ObsOverlayService : IObsOverlayService
         var lastRoundLookup = (blobState.LastRoundVotes ?? new List<LastRoundVoteEntry>())
             .ToDictionary(entry => entry.LastRound);
 
-        var payload = CreateBasePayload(tournamentId, "ready", string.Empty, selectedMatch);
+        var payload = CreateBasePayload(tournamentId, overlaySettings, "ready", string.Empty, selectedMatch);
         payload.MatchState = blobState.State;
         payload.MatchStateLabel = GetStateLabel(blobState.State);
         payload.UpdatedAt = blobState.UpdatedAt;
@@ -162,7 +168,7 @@ public class ObsOverlayService : IObsOverlayService
         return clientState.UpdatedAt >= DateTime.UtcNow.Subtract(ClientStateTtl);
     }
 
-    private static ObsOverlayPayload CreateBasePayload(int tournamentId, string status, string message, Match? match = null)
+    private static ObsOverlayPayload CreateBasePayload(int tournamentId, TournamentOverlaySettings overlaySettings, string status, string message, Match? match = null)
     {
         return new ObsOverlayPayload
         {
@@ -174,6 +180,7 @@ public class ObsOverlayService : IObsOverlayService
             TableNumber = match?.TableNumber,
             MatchState = match?.State.ToString() ?? string.Empty,
             MatchStateLabel = match == null ? string.Empty : GetStateLabel(match.State.ToString()),
+            OverlaySettings = overlaySettings,
             SeatVotes = Enumerable.Range(1, 10)
                 .Select(slot => new OverlaySeatVote { Slot = slot })
                 .ToList()
