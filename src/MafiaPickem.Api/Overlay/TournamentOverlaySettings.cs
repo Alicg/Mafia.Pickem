@@ -5,6 +5,7 @@ namespace MafiaPickem.Api.Overlay;
 
 public class TournamentOverlaySettings
 {
+    public string OverlayType { get; set; } = ObsOverlayType.Classic;
     public bool HideBlocksByPhase { get; set; } = true;
     public OverlayThemeSettings Theme { get; set; } = new();
     public OverlayStackPanelLayout LeftPanel { get; set; } = new() { EdgeOffset = 15, TopOffset = 138 };
@@ -13,6 +14,7 @@ public class TournamentOverlaySettings
     public OverlayBlockPlacement FirstVoteBlock { get; set; } = new() { Panel = OverlayPanelSide.Right };
     public OverlayBlockPlacement LastRoundBlock { get; set; } = new() { Panel = OverlayPanelSide.Left };
     public OverlayBlockPlacement FooterBlock { get; set; } = new() { Panel = OverlayPanelSide.Left };
+    public ViewerSympathyOverlayBlockSettings ViewerSympathyBlock { get; set; } = new();
 
     public static TournamentOverlaySettings CreateDefault()
     {
@@ -23,6 +25,7 @@ public class TournamentOverlaySettings
     {
         return new TournamentOverlaySettings
         {
+            OverlayType = ObsOverlayType.Normalize(settings?.OverlayType),
             HideBlocksByPhase = settings?.HideBlocksByPhase ?? true,
             Theme = OverlayThemeSettings.Normalize(settings?.Theme),
             LeftPanel = OverlayStackPanelLayout.Normalize(settings?.LeftPanel, 15, 138, settings?.SummaryBlock, settings?.LastRoundBlock, settings?.FooterBlock, settings?.FirstVoteBlock),
@@ -30,8 +33,29 @@ public class TournamentOverlaySettings
             SummaryBlock = OverlayBlockPlacement.Normalize(settings?.SummaryBlock, OverlayPanelSide.Left),
             FirstVoteBlock = OverlayBlockPlacement.Normalize(settings?.FirstVoteBlock, OverlayPanelSide.Right),
             LastRoundBlock = OverlayBlockPlacement.Normalize(settings?.LastRoundBlock, OverlayPanelSide.Left),
-            FooterBlock = OverlayBlockPlacement.Normalize(settings?.FooterBlock, OverlayPanelSide.Left)
+            FooterBlock = OverlayBlockPlacement.Normalize(settings?.FooterBlock, OverlayPanelSide.Left),
+            ViewerSympathyBlock = ViewerSympathyOverlayBlockSettings.Normalize(settings?.ViewerSympathyBlock)
         };
+    }
+}
+
+public class ViewerSympathyOverlayBlockSettings
+{
+    public int HorizontalOffset { get; set; }
+    public int VerticalOffset { get; set; } = 24;
+
+    public static ViewerSympathyOverlayBlockSettings Normalize(ViewerSympathyOverlayBlockSettings? settings)
+    {
+        return new ViewerSympathyOverlayBlockSettings
+        {
+            HorizontalOffset = NormalizeOffset(settings?.HorizontalOffset ?? 0),
+            VerticalOffset = NormalizeOffset(settings?.VerticalOffset ?? 24)
+        };
+    }
+
+    private static int NormalizeOffset(int value)
+    {
+        return Math.Clamp(value, -4000, 4000);
     }
 }
 
@@ -160,6 +184,19 @@ public static class OverlayPanelSide
             : string.Equals(value, Left, StringComparison.OrdinalIgnoreCase)
                 ? Left
                 : fallback;
+    }
+}
+
+public static class ObsOverlayType
+{
+    public const string Classic = "classic";
+    public const string ViewerSympathy = "viewer-sympathy";
+
+    public static string Normalize(string? value)
+    {
+        return string.Equals(value, ViewerSympathy, StringComparison.OrdinalIgnoreCase)
+            ? ViewerSympathy
+            : Classic;
     }
 }
 

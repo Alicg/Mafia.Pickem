@@ -360,6 +360,14 @@
   grid-column: 1 / -1;
 }
 
+.overlay-settings-fields--single-column {
+  grid-template-columns: 1fr;
+}
+
+.overlay-type-description {
+  margin-top: -2px;
+}
+
 .form-color-row {
   display: flex;
   align-items: center;

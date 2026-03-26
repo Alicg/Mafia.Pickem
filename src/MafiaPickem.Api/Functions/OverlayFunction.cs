@@ -1,4 +1,5 @@
 using MafiaPickem.Api.Overlay;
+using MafiaPickem.Api.Data;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
@@ -9,13 +10,16 @@ namespace MafiaPickem.Api.Functions;
 public class OverlayFunction
 {
     private readonly IObsOverlayService _overlayService;
+    private readonly ITournamentRepository _tournamentRepository;
     private readonly ILogger<OverlayFunction> _logger;
 
     public OverlayFunction(
         IObsOverlayService overlayService,
+        ITournamentRepository tournamentRepository,
         ILogger<OverlayFunction>? logger = null)
     {
         _overlayService = overlayService;
+        _tournamentRepository = tournamentRepository;
         _logger = logger ?? null!;
     }
 
@@ -26,10 +30,15 @@ public class OverlayFunction
     {
         try
         {
+            var tournament = await _tournamentRepository.GetByIdAsync(tournamentId);
+            var overlaySettings = TournamentOverlaySettingsSerializer.Deserialize(tournament?.OverlaySettingsJson);
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "text/html; charset=utf-8");
             response.Headers.Add("Cache-Control", "no-store, no-cache, must-revalidate");
-            await response.WriteStringAsync(ObsOverlayHtmlRenderer.Render(tournamentId));
+            var html = overlaySettings.OverlayType == ObsOverlayType.ViewerSympathy
+                ? ObsViewerSympathyHtmlRenderer.Render(tournamentId)
+                : ObsOverlayHtmlRenderer.Render(tournamentId);
+            await response.WriteStringAsync(html);
             return response;
         }
         catch (Exception ex)

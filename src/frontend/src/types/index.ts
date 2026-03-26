@@ -37,7 +37,15 @@ export interface OverlayThemeSettings {
   useGradient: boolean;
 }
 
+export type TournamentOverlayType = 'classic' | 'viewer-sympathy';
+
+export interface ViewerSympathyOverlayBlockSettings {
+  horizontalOffset: number;
+  verticalOffset: number;
+}
+
 export interface TournamentOverlaySettings {
+  overlayType: TournamentOverlayType;
   hideBlocksByPhase: boolean;
   theme: OverlayThemeSettings;
   leftPanel: OverlayStackPanelLayout;
@@ -46,9 +54,11 @@ export interface TournamentOverlaySettings {
   firstVoteBlock: OverlayBlockPlacement;
   lastRoundBlock: OverlayBlockPlacement;
   footerBlock: OverlayBlockPlacement;
+  viewerSympathyBlock: ViewerSympathyOverlayBlockSettings;
 }
 
 export const DEFAULT_TOURNAMENT_OVERLAY_SETTINGS: TournamentOverlaySettings = {
+  overlayType: 'classic',
   hideBlocksByPhase: true,
   theme: {
     fillColorStart: '#163A61',
@@ -100,12 +110,17 @@ export const DEFAULT_TOURNAMENT_OVERLAY_SETTINGS: TournamentOverlaySettings = {
       visibleDurationSeconds: 8,
     },
   },
+  viewerSympathyBlock: {
+    horizontalOffset: 0,
+    verticalOffset: 24,
+  },
 };
 
 export function cloneTournamentOverlaySettings(settings?: TournamentOverlaySettings | null): TournamentOverlaySettings {
   const source = settings ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS;
 
   return {
+    overlayType: source.overlayType ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.overlayType,
     hideBlocksByPhase: source.hideBlocksByPhase,
     theme: {
       fillColorStart: source.theme.fillColorStart,
@@ -150,6 +165,10 @@ export function cloneTournamentOverlaySettings(settings?: TournamentOverlaySetti
         intervalSeconds: source.footerBlock?.dynamicDisplay?.intervalSeconds ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.footerBlock.dynamicDisplay.intervalSeconds,
         visibleDurationSeconds: source.footerBlock?.dynamicDisplay?.visibleDurationSeconds ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.footerBlock.dynamicDisplay.visibleDurationSeconds,
       },
+    },
+    viewerSympathyBlock: {
+      horizontalOffset: source.viewerSympathyBlock?.horizontalOffset ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.viewerSympathyBlock.horizontalOffset,
+      verticalOffset: source.viewerSympathyBlock?.verticalOffset ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.viewerSympathyBlock.verticalOffset,
     },
   };
 }
