@@ -102,6 +102,17 @@ public static class ObsOverlayHtmlRenderer
             width: 100%;
         }
 
+        #summaryBlock,
+        #lastRoundBlock {
+            width: min(196px, 100%);
+        }
+
+        #voteChartBlock {
+            width: calc(var(--panel-width) / 2);
+            max-width: 100%;
+            margin-left: auto;
+        }
+
         .overlay-footer__link {
             display: inline-flex;
             align-items: center;
@@ -182,35 +193,31 @@ public static class ObsOverlayHtmlRenderer
             gap: 8px;
         }
 
-        .summary-sides {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            align-items: end;
+        .summary-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
         }
 
         .summary-side {
             display: flex;
-            flex-direction: column;
-            gap: 1px;
-        }
-
-        .summary-side.is-right {
-            align-items: flex-end;
-            text-align: right;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 8px;
         }
 
         .summary-side__percent {
-            font-size: 29px;
-            line-height: 0.92;
+            font-size: 25px;
+            line-height: 1;
             font-weight: 900;
             letter-spacing: -0.06em;
             color: var(--accent-warm);
             text-shadow: 0 2px 14px rgba(15, 23, 42, 0.32);
+            white-space: nowrap;
         }
 
         .summary-side__label {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 700;
             letter-spacing: 0.08em;
             text-transform: uppercase;
@@ -221,7 +228,7 @@ public static class ObsOverlayHtmlRenderer
         .summary-bar {
             display: flex;
             width: 100%;
-            height: 14px;
+            height: 12px;
             border-radius: 999px;
             background: linear-gradient(90deg, var(--track-soft), var(--track));
             overflow: hidden;
@@ -232,6 +239,7 @@ public static class ObsOverlayHtmlRenderer
         .summary-bar__segment {
             width: var(--segment-width, 0%);
             height: 100%;
+            border-radius: inherit;
         }
 
         .summary-bar__segment.is-left {
@@ -245,7 +253,7 @@ public static class ObsOverlayHtmlRenderer
         }
 
         .summary-side__count {
-            font-size: 19px;
+            font-size: 12px;
             font-weight: 800;
             line-height: 1;
             color: var(--text-soft);
@@ -257,11 +265,12 @@ public static class ObsOverlayHtmlRenderer
 
         .chart-title {
             margin-bottom: 7px;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 800;
             letter-spacing: 0.16em;
             text-transform: uppercase;
-            color: var(--text-faint);
+            color: var(--text-faint);  
+            text-align: center;
         }
 
         .vote-chart {
@@ -278,8 +287,8 @@ public static class ObsOverlayHtmlRenderer
         }
 
         .vote-bar.is-last-round {
-            grid-template-columns: 76px minmax(0, 1fr) auto;
-            gap: 8px;
+            grid-template-columns: 64px minmax(0, 1fr) auto;
+            gap: 6px;
         }
 
         .vote-bar__slot {
@@ -415,20 +424,24 @@ public static class ObsOverlayHtmlRenderer
                         </div>
 
                         <div class="summary-main">
-                            <div class="summary-sides">
+                            <div class="summary-flow">
                                 <div class="summary-side">
-                                    <div class="summary-side__percent" id="redPercent">-</div>
                                     <div class="summary-side__label">за красных</div>
+                                    <div class="summary-side__percent" id="redPercent">-</div>
                                 </div>
-                                <div class="summary-side is-right">
-                                    <div class="summary-side__percent" id="blackPercent">-</div>
-                                    <div class="summary-side__label">за черных</div>
-                                </div>
-                            </div>
 
-                            <div class="summary-bar" aria-hidden="true">
-                                <div class="summary-bar__segment is-left" id="redBarFill"></div>
-                                <div class="summary-bar__segment is-right" id="blackBarFill"></div>
+                                <div class="summary-bar" aria-hidden="true">
+                                    <div class="summary-bar__segment is-left" id="redBarFill"></div>
+                                </div>
+
+                                <div class="summary-bar" aria-hidden="true">
+                                    <div class="summary-bar__segment is-right" id="blackBarFill"></div>
+                                </div>
+
+                                <div class="summary-side">
+                                    <div class="summary-side__label">за черных</div>
+                                    <div class="summary-side__percent" id="blackPercent">-</div>
+                                </div>
                             </div>
 
                             <div class="summary-side__count" id="totalPredictionsCount">0 прогнозов</div>
@@ -635,14 +648,11 @@ public static class ObsOverlayHtmlRenderer
         const setSummary = (redSide, blackSide, totalPredictions) => {
             const redValue = Number(redSide?.percent || 0);
             const blackValue = Number(blackSide?.percent || 0);
-            const totalValue = redValue + blackValue;
-            const normalizedRed = totalValue > 0 ? (redValue / totalValue) * 100 : 0;
-            const normalizedBlack = totalValue > 0 ? 100 - normalizedRed : 0;
 
             redPercent.textContent = formatPercent(redValue);
             blackPercent.textContent = formatPercent(blackValue);
-            redBarFill.style.setProperty('--segment-width', `${Math.max(0, Math.min(normalizedRed, 100))}%`);
-            blackBarFill.style.setProperty('--segment-width', `${Math.max(0, Math.min(normalizedBlack, 100))}%`);
+            redBarFill.style.setProperty('--segment-width', `${Math.max(0, Math.min(redValue, 100))}%`);
+            blackBarFill.style.setProperty('--segment-width', `${Math.max(0, Math.min(blackValue, 100))}%`);
             totalPredictionsCount.textContent = formatPredictionsCount(totalPredictions);
         };
 
