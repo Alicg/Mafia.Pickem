@@ -2,8 +2,18 @@ namespace MafiaPickem.Api.Overlay;
 
 public static class ObsViewerSympathyHtmlRenderer
 {
+    private static readonly Lazy<string> FontBase64 = new(() =>
+    {
+        using var stream = typeof(ObsViewerSympathyHtmlRenderer).Assembly
+            .GetManifestResourceStream("Actay-Regular.otf")!;
+        using var ms = new MemoryStream();
+        stream.CopyTo(ms);
+        return Convert.ToBase64String(ms.ToArray());
+    });
+
     public static string Render(int tournamentId)
     {
+        var fontBase64 = FontBase64.Value;
         return $$"""
 <!DOCTYPE html>
 <html lang="ru">
@@ -12,6 +22,14 @@ public static class ObsViewerSympathyHtmlRenderer
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Mafia Pickem Overlay</title>
     <style>
+        @font-face {
+            font-family: 'Actay';
+            src: url('data:font/otf;base64,{{fontBase64}}') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: block;
+        }
+
         :root {
             --offset-x: 0px;
             --offset-y: 24px;
@@ -29,7 +47,7 @@ public static class ObsViewerSympathyHtmlRenderer
             --mafia-fill: linear-gradient(90deg, #88a0e8 0%, #b2c1ff 100%);
             --badge-live-bg: linear-gradient(180deg, #6e2a2a 0%, #3a1515 100%);
             --badge-finish-bg: linear-gradient(180deg, #2d4d30 0%, #18321c 100%);
-            font-family: "Bahnschrift", "Segoe UI Variable Display", "Trebuchet MS", sans-serif;
+            font-family: "Actay", "Bahnschrift", "Segoe UI Variable Display", "Trebuchet MS", sans-serif;
         }
 
         * {
@@ -83,7 +101,7 @@ public static class ObsViewerSympathyHtmlRenderer
         .sympathy-card {
             width: 100%;
             padding: 10px 16px;
-            border-radius: 26px;
+            border-radius: 999px;
             border: 1px solid var(--card-edge);
             background:
                 radial-gradient(circle at top left, rgba(255, 255, 255, 0.08), transparent 34%),
@@ -169,7 +187,9 @@ public static class ObsViewerSympathyHtmlRenderer
             border-radius: 50%;
             font-size: 26px;
             font-weight: 700;
-            letter-spacing: -0.02em;
+            line-height: 1;
+            letter-spacing: 0;
+            text-align: center;
             color: var(--text-main);
             margin: 0 2px;
         }
@@ -210,7 +230,7 @@ public static class ObsViewerSympathyHtmlRenderer
         @media (max-width: 720px) {
             .sympathy-card {
                 padding: 8px 14px;
-                border-radius: 22px;
+                border-radius: 999px;
             }
 
             .sympathy-title {

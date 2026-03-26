@@ -23,4 +23,8 @@
     <ProjectReference Include="..\MafiaPickem.ServiceDefaults\MafiaPickem.ServiceDefaults.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Overlay\Actay-Regular.otf" LogicalName="Actay-Regular.otf" />
+  </ItemGroup>
+
 </Project>
