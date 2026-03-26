@@ -42,6 +42,7 @@ export type TournamentOverlayType = 'classic' | 'viewer-sympathy';
 export interface ViewerSympathyOverlayBlockSettings {
   horizontalOffset: number;
   verticalOffset: number;
+  scale: number;
 }
 
 export interface TournamentOverlaySettings {
@@ -113,6 +114,7 @@ export const DEFAULT_TOURNAMENT_OVERLAY_SETTINGS: TournamentOverlaySettings = {
   viewerSympathyBlock: {
     horizontalOffset: 0,
     verticalOffset: 24,
+    scale: 10,
   },
 };
 
@@ -169,6 +171,7 @@ export function cloneTournamentOverlaySettings(settings?: TournamentOverlaySetti
     viewerSympathyBlock: {
       horizontalOffset: source.viewerSympathyBlock?.horizontalOffset ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.viewerSympathyBlock.horizontalOffset,
       verticalOffset: source.viewerSympathyBlock?.verticalOffset ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.viewerSympathyBlock.verticalOffset,
+      scale: source.viewerSympathyBlock?.scale ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.viewerSympathyBlock.scale,
     },
   };
 }

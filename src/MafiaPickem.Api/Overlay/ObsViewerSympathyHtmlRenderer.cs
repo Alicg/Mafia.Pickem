@@ -62,9 +62,10 @@ public static class ObsViewerSympathyHtmlRenderer
 
         .sympathy-wrap {
             position: absolute;
-            top: calc(18px + var(--offset-y));
-            left: calc(50% + var(--offset-x));
-            transform: translateX(-50%);
+            top: calc(var(--offset-y));
+            left: calc(var(--offset-x));
+            transform: scale(var(--overlay-scale, 1));
+            transform-origin: top left;
             width: min(640px, calc(100vw - 32px));
             display: flex;
             flex-direction: column;
@@ -278,6 +279,7 @@ public static class ObsViewerSympathyHtmlRenderer
             viewerSympathyBlock: {
                 horizontalOffset: 0,
                 verticalOffset: 24,
+                scale: 10,
             },
         };
 
@@ -303,6 +305,7 @@ public static class ObsViewerSympathyHtmlRenderer
         const normalizeViewerSympathyBlock = (settings) => ({
             horizontalOffset: clamp(Number(settings?.horizontalOffset ?? defaultOverlaySettings.viewerSympathyBlock.horizontalOffset) || 0, -4000, 4000),
             verticalOffset: clamp(Number(settings?.verticalOffset ?? defaultOverlaySettings.viewerSympathyBlock.verticalOffset) || 0, -4000, 4000),
+            scale: clamp(Number(settings?.scale ?? defaultOverlaySettings.viewerSympathyBlock.scale) || 10, 1, 10),
         });
 
         const getDataUrl = () => {
@@ -316,6 +319,7 @@ public static class ObsViewerSympathyHtmlRenderer
             const block = normalizeViewerSympathyBlock(payload?.overlaySettings?.viewerSympathyBlock);
             rootStyles.style.setProperty('--offset-x', `${block.horizontalOffset}px`);
             rootStyles.style.setProperty('--offset-y', `${block.verticalOffset}px`);
+            rootStyles.style.setProperty('--overlay-scale', `${block.scale / 10}`);
         };
 
         const setSummary = (redSide, blackSide, totalPredictions) => {

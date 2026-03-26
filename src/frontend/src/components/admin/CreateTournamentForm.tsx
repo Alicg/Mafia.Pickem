@@ -156,7 +156,7 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({
     }));
   };
 
-  const updateViewerSympathyBlock = (field: 'horizontalOffset' | 'verticalOffset', value: number) => {
+  const updateViewerSympathyBlock = (field: 'horizontalOffset' | 'verticalOffset' | 'scale', value: number) => {
     setOverlaySettings(prev => ({
       ...prev,
       viewerSympathyBlock: {
@@ -637,12 +637,12 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({
                   <div className="overlay-settings-card overlay-settings-card--full-width">
                     <div className="overlay-settings-card__title">Зрительские симпатии</div>
                     <div className="overlay-settings-card__hint">
-                      Настройка положения единственного блока относительно верхнего центра сцены OBS.
+                      Настройка положения блока относительно левого верхнего угла сцены OBS.
                     </div>
 
                     <div className="overlay-settings-fields">
                       <div className="form-group">
-                        <label className="form-label">Горизонтальное смещение</label>
+                        <label className="form-label">Отступ слева</label>
                         <input
                           type="number"
                           className="form-input"
@@ -653,7 +653,7 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({
                       </div>
 
                       <div className="form-group">
-                        <label className="form-label">Вертикальное смещение</label>
+                        <label className="form-label">Отступ сверху</label>
                         <input
                           type="number"
                           className="form-input"
@@ -663,8 +663,21 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({
                         />
                       </div>
 
+                      <div className="form-group">
+                        <label className="form-label">Масштаб (1–10)</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          min={1}
+                          max={10}
+                          value={overlaySettings.viewerSympathyBlock.scale}
+                          onChange={(e) => updateViewerSympathyBlock('scale', Math.max(1, Math.min(10, parseInt(e.target.value, 10) || 10)))}
+                          disabled={isLoading}
+                        />
+                      </div>
+
                       <div className="form-section-note overlay-settings-fields__full-width">
-                        Положительное горизонтальное значение сдвигает блок вправо, отрицательное влево. Положительное вертикальное значение сдвигает блок вниз, отрицательное вверх.
+                        Отступ слева и сверху задают положение блока от левого верхнего угла сцены. Масштаб 10 — полный размер, 1 — минимальный.
                       </div>
                     </div>
                   </div>

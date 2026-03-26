@@ -43,13 +43,15 @@ public class ViewerSympathyOverlayBlockSettings
 {
     public int HorizontalOffset { get; set; }
     public int VerticalOffset { get; set; } = 24;
+    public int Scale { get; set; } = 10;
 
     public static ViewerSympathyOverlayBlockSettings Normalize(ViewerSympathyOverlayBlockSettings? settings)
     {
         return new ViewerSympathyOverlayBlockSettings
         {
             HorizontalOffset = NormalizeOffset(settings?.HorizontalOffset ?? 0),
-            VerticalOffset = NormalizeOffset(settings?.VerticalOffset ?? 24)
+            VerticalOffset = NormalizeOffset(settings?.VerticalOffset ?? 24),
+            Scale = Math.Clamp(settings?.Scale ?? 10, 1, 10)
         };
     }
 
