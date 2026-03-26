@@ -270,7 +270,7 @@ public class AdminFunctionsTests
         var response = await _adminFunctions.UpdateTournamentHttp(httpRequest, 7);
 
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
-        _mockTournamentRepository.Verify(r => r.UpdateAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IReadOnlyCollection<string>>()), Times.Never);
+        _mockTournamentRepository.Verify(r => r.UpdateAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>()), Times.Never);
         _mockTournamentOperatorRepository.Verify(r => r.ReplaceAsync(It.IsAny<int>(), It.IsAny<IReadOnlyCollection<string>>()), Times.Never);
     }
 
@@ -290,7 +290,7 @@ public class AdminFunctionsTests
         var response = await _adminFunctions.UpdateTournamentHttp(httpRequest, 7);
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
-        _mockTournamentRepository.Verify(r => r.UpdateAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IReadOnlyCollection<string>>()), Times.Never);
+        _mockTournamentRepository.Verify(r => r.UpdateAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>()), Times.Never);
         _mockTournamentOperatorRepository.Verify(r => r.ReplaceAsync(It.IsAny<int>(), It.IsAny<IReadOnlyCollection<string>>()), Times.Never);
     }
 
@@ -307,6 +307,7 @@ public class AdminFunctionsTests
             Description = "Old description",
             ImageUrl = "https://old.example/image.png",
             Active = true,
+            VisibleOnHomePage = true,
             TeamsJson = "[\"Old\"]"
         };
         var updatedTournament = new Tournament
@@ -316,6 +317,7 @@ public class AdminFunctionsTests
             Description = "Fresh season",
             ImageUrl = "https://img.example/spring.png",
             Active = true,
+            VisibleOnHomePage = false,
             TeamsJson = "[\"North\",\"South\"]"
         };
 
@@ -326,7 +328,8 @@ public class AdminFunctionsTests
                 "Spring Cup 2026",
                 "Fresh season",
                 "https://img.example/spring.png",
-                It.Is<IReadOnlyCollection<string>>(teams => teams.SequenceEqual(new[] { "North", "South" }))))
+                It.Is<IReadOnlyCollection<string>>(teams => teams.SequenceEqual(new[] { "North", "South" })),
+                false))
             .ReturnsAsync(updatedTournament);
         _mockTournamentOperatorRepository
             .Setup(r => r.ReplaceAsync(
@@ -340,6 +343,7 @@ public class AdminFunctionsTests
               "description": "  Fresh season  ",
               "imageUrl": "  https://img.example/spring.png  ",
               "teams": [" North ", "South", "north"],
+                            "visibleOnHomePage": false,
               "operatorUsernames": ["chief", "@cohost", "@Chief"]
             }
             """);
@@ -352,7 +356,8 @@ public class AdminFunctionsTests
             "Spring Cup 2026",
             "Fresh season",
             "https://img.example/spring.png",
-            It.Is<IReadOnlyCollection<string>>(teams => teams.SequenceEqual(new[] { "North", "South" }))), Times.Once);
+            It.Is<IReadOnlyCollection<string>>(teams => teams.SequenceEqual(new[] { "North", "South" })),
+            false), Times.Once);
         _mockTournamentOperatorRepository.Verify(r => r.ReplaceAsync(
             tournamentId,
             It.Is<IReadOnlyCollection<string>>(operators => operators.SequenceEqual(new[] { "@chief", "@cohost" }))), Times.Once);
@@ -370,6 +375,7 @@ public class AdminFunctionsTests
             Id = tournamentId,
             Name = "Spring Cup",
             Active = true,
+            VisibleOnHomePage = true,
             TeamsJson = "[]"
         };
         var matches = new List<DomainMatch>
@@ -470,3 +476,4 @@ public class AdminFunctionsTests
         return request.Object;
     }
 }
+

@@ -56,6 +56,7 @@ CREATE TABLE pickem.Tournament
     ImageUrl            nvarchar(max),
     TeamsJson           nvarchar(max),
     Active              bit             DEFAULT 1 NOT NULL,
+    VisibleOnHomePage   bit             DEFAULT 1 NOT NULL,
     DateCreated         datetime2(0)    DEFAULT sysdatetime() NOT NULL
 );
 GO

@@ -7,4 +7,5 @@ public class CreateTournamentRequest
     public string? ImageUrl { get; set; }
     public List<string> Teams { get; set; } = new();
     public List<string> OperatorUsernames { get; set; } = new();
+    public bool? VisibleOnHomePage { get; set; }
 }

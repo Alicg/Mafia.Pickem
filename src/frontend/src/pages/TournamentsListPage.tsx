@@ -106,6 +106,9 @@ export const TournamentsListPage: React.FC<TournamentsListPageProps> = ({ onSele
             {tournaments.map(t => (
               <div key={t.id} className="tournament-card">
                 <button className="tournament-card-main" onClick={() => handleSelect(t)}>
+                  {t.canManage && !t.visibleOnHomePage && (
+                    <div className="tournament-visibility-badge">Скрыт для зрителей</div>
+                  )}
                   <div className="tournament-card-name">{t.name}</div>
                   {t.description && (
                     <div className="tournament-card-desc">{t.description}</div>

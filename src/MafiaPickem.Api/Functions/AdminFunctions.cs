@@ -74,12 +74,14 @@ public class AdminFunctions
             .Cast<string>()
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
+        var visibleOnHomePage = request.VisibleOnHomePage ?? true;
 
         var tournament = await _tournamentRepository.CreateAsync(
             name,
             description,
             imageUrl,
-            teams);
+            teams,
+            visibleOnHomePage);
 
         if (operatorUsernames.Count > 0)
         {
@@ -94,6 +96,7 @@ public class AdminFunctions
             ImageUrl = tournament.ImageUrl,
             Teams = teams,
             OperatorUsernames = operatorUsernames,
+            VisibleOnHomePage = tournament.VisibleOnHomePage,
             CanManage = true
         };
 
@@ -135,8 +138,9 @@ public class AdminFunctions
             .Cast<string>()
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
+        var visibleOnHomePage = request.VisibleOnHomePage ?? existingTournament.VisibleOnHomePage;
 
-        var tournament = await _tournamentRepository.UpdateAsync(id, name, description, imageUrl, teams);
+        var tournament = await _tournamentRepository.UpdateAsync(id, name, description, imageUrl, teams, visibleOnHomePage);
         await _tournamentOperatorRepository.ReplaceAsync(id, operatorUsernames);
 
         var dto = new TournamentDto
@@ -147,6 +151,7 @@ public class AdminFunctions
             ImageUrl = tournament.ImageUrl,
             Teams = teams,
             OperatorUsernames = operatorUsernames,
+            VisibleOnHomePage = tournament.VisibleOnHomePage,
             CanManage = true
         };
 

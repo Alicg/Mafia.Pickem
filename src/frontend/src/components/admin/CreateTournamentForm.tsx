@@ -17,6 +17,7 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ tour
   const [imageUrl, setImageUrl] = useState('');
   const [teamsText, setTeamsText] = useState('');
   const [operatorUsernamesText, setOperatorUsernamesText] = useState('');
+  const [visibleOnHomePage, setVisibleOnHomePage] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,6 +27,7 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ tour
     setImageUrl(tournament?.imageUrl ?? '');
     setTeamsText(tournament?.teams.join('\n') ?? '');
     setOperatorUsernamesText(tournament?.operatorUsernames.join('\n') ?? '');
+    setVisibleOnHomePage(tournament?.visibleOnHomePage ?? true);
     setError(null);
   }, [tournament]);
 
@@ -58,6 +60,7 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ tour
           imageUrl: imageUrl.trim() || undefined,
           teams: parsedTeams,
           operatorUsernames: parsedOperatorUsernames,
+          visibleOnHomePage,
         };
 
         await adminUpdateTournament(tournament.id, request);
@@ -68,6 +71,7 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ tour
           imageUrl: imageUrl.trim() || undefined,
           teams: parsedTeams,
           operatorUsernames: parsedOperatorUsernames,
+          visibleOnHomePage,
         };
 
         await adminCreateTournament(request);
@@ -155,6 +159,21 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ tour
             />
             <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--tg-theme-hint-color)' }}>
               Операторы смогут создавать игры и менять статусы игр этого турнира. Пользователь должен хотя бы один раз открыть mini app.
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-checkbox-label">
+              <input
+                type="checkbox"
+                checked={visibleOnHomePage}
+                onChange={(e) => setVisibleOnHomePage(e.target.checked)}
+                disabled={isLoading}
+              />
+              <span>Показывать турнир зрителям на главной странице</span>
+            </label>
+            <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--tg-theme-hint-color)' }}>
+              Если снять галочку, турнир останется доступен администраторам и операторам, но исчезнет из общего списка для зрителей.
             </div>
           </div>
 

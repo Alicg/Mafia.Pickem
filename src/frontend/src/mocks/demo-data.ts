@@ -89,6 +89,7 @@ export const demoTournament: TournamentDto = {
   teams: ['Север', 'Юг', 'Запад'],
   operatorUsernames: ['@ivan_admin', '@marina_ops'],
   selectedTeamName: 'Север',
+  visibleOnHomePage: true,
   canManage: true,
   currentMatch: { id: 3, gameNumber: 3, tableNumber: 2, state: MatchState.Open }, // Game #3
 };
@@ -103,6 +104,7 @@ export const demoTournaments: TournamentDto[] = [
     teams: ['Альфа', 'Браво'],
     operatorUsernames: [],
     selectedTeamName: null,
+    visibleOnHomePage: true,
     canManage: false,
     currentMatch: null,
   },

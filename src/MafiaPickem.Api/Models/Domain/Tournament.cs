@@ -8,5 +8,6 @@ public class Tournament
     public string? ImageUrl { get; set; }
     public string? TeamsJson { get; set; }
     public bool Active { get; set; }
+    public bool VisibleOnHomePage { get; set; }
     public DateTime DateCreated { get; set; }
 }

@@ -52,9 +52,14 @@ public class TournamentFunctions
 
             foreach (var tournament in tournaments)
             {
+                var canManage = _userContext.IsAdmin || manageableTournamentIds.Contains(tournament.Id);
+                if (!tournament.VisibleOnHomePage && !canManage)
+                {
+                    continue;
+                }
+
                 var currentMatch = await _matchRepository.GetCurrentMatchByTournamentIdAsync(tournament.Id);
                 var selectedTeamName = await GetSelectedTeamNameAsync(tournament.Id);
-                var canManage = _userContext.IsAdmin || manageableTournamentIds.Contains(tournament.Id);
                 var operatorUsernames = canManage
                     ? (await _tournamentOperatorRepository.GetByTournamentIdAsync(tournament.Id)).ToList()
                     : new List<string>();
@@ -321,6 +326,7 @@ public class TournamentFunctions
             Teams = ParseTeams(tournament.TeamsJson),
             OperatorUsernames = operatorUsernames ?? new List<string>(),
             SelectedTeamName = selectedTeamName,
+            VisibleOnHomePage = tournament.VisibleOnHomePage,
             CanManage = canManage,
             CurrentMatch = currentMatch != null ? MapMatchToDto(currentMatch) : null
         };

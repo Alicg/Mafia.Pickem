@@ -100,6 +100,19 @@
   letter-spacing: 0;
 }
 
+.tournament-visibility-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .tournament-card-desc {
   font-size: 15px;
   color: var(--tg-theme-hint-color);
