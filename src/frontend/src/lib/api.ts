@@ -176,6 +176,7 @@ export async function adminCreateTournament(request: CreateTournamentRequest): P
       operatorUsernames: [...request.operatorUsernames],
       selectedTeamName: null,
       visibleOnHomePage: request.visibleOnHomePage,
+      showTeamSelection: request.showTeamSelection,
       canManage: true,
       currentMatch: null,
     };
@@ -209,6 +210,7 @@ export async function adminUpdateTournament(tournamentId: number, request: Updat
       operatorUsernames: [...request.operatorUsernames],
       selectedTeamName: null,
       visibleOnHomePage: request.visibleOnHomePage,
+      showTeamSelection: request.showTeamSelection,
       canManage: true,
       currentMatch: null,
     };

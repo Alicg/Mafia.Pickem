@@ -18,6 +18,7 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ tour
   const [teamsText, setTeamsText] = useState('');
   const [operatorUsernamesText, setOperatorUsernamesText] = useState('');
   const [visibleOnHomePage, setVisibleOnHomePage] = useState(true);
+  const [showTeamSelection, setShowTeamSelection] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,6 +29,7 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ tour
     setTeamsText(tournament?.teams.join('\n') ?? '');
     setOperatorUsernamesText(tournament?.operatorUsernames.join('\n') ?? '');
     setVisibleOnHomePage(tournament?.visibleOnHomePage ?? true);
+    setShowTeamSelection(tournament?.showTeamSelection ?? true);
     setError(null);
   }, [tournament]);
 
@@ -46,7 +48,12 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ tour
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || parsedTeams.length === 0) return;
+    if (!name.trim()) return;
+
+    if (showTeamSelection && parsedTeams.length === 0) {
+      setError('Добавьте хотя бы одну команду, если выбор команды включен.');
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
@@ -61,6 +68,7 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ tour
           teams: parsedTeams,
           operatorUsernames: parsedOperatorUsernames,
           visibleOnHomePage,
+          showTeamSelection,
         };
 
         await adminUpdateTournament(tournament.id, request);
@@ -72,6 +80,7 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ tour
           teams: parsedTeams,
           operatorUsernames: parsedOperatorUsernames,
           visibleOnHomePage,
+          showTeamSelection,
         };
 
         await adminCreateTournament(request);
@@ -133,7 +142,7 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ tour
           </div>
 
           <div className="form-group">
-            <label className="form-label">Команды *</label>
+            <label className="form-label">Команды {showTeamSelection ? '*' : '(необязательно)'}</label>
             <textarea
               className="form-input"
               value={teamsText}
@@ -143,7 +152,24 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ tour
               style={{ resize: 'vertical' }}
             />
             <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--tg-theme-hint-color)' }}>
-              Пользователь выбирает команду один раз и больше не сможет изменить выбор.
+              {showTeamSelection
+                ? 'Пользователь выбирает команду один раз и больше не сможет изменить выбор.'
+                : 'Список можно оставить пустым, если в этом турнире выбор команды не нужен.'}
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-checkbox-label">
+              <input
+                type="checkbox"
+                checked={showTeamSelection}
+                onChange={(e) => setShowTeamSelection(e.target.checked)}
+                disabled={isLoading}
+              />
+              <span>Показывать пользователю выбор команды</span>
+            </label>
+            <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--tg-theme-hint-color)' }}>
+              Если снять галочку, пользователи смогут участвовать в турнире без выбора команды.
             </div>
           </div>
 
@@ -189,7 +215,7 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({ tour
             <button
               type="submit"
               className="btn btn-primary"
-              disabled={isLoading || !name.trim() || parsedTeams.length === 0}
+              disabled={isLoading || !name.trim() || (showTeamSelection && parsedTeams.length === 0)}
             >
               {isLoading && <span className="btn-spinner" />}
               {isLoading ? (isEditMode ? 'Сохранение...' : 'Создание...') : (isEditMode ? 'Сохранить' : 'Создать')}

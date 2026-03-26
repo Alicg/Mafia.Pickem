@@ -20,6 +20,7 @@ export interface TournamentDto {
   operatorUsernames: string[];
   selectedTeamName: string | null;
   visibleOnHomePage: boolean;
+  showTeamSelection: boolean;
   canManage: boolean;
   currentMatch: MatchInfo | null;
 }
@@ -116,6 +117,7 @@ export interface CreateTournamentRequest {
   teams: string[];
   operatorUsernames: string[];
   visibleOnHomePage: boolean;
+  showTeamSelection: boolean;
 }
 
 export interface UpdateTournamentRequest {
@@ -125,6 +127,7 @@ export interface UpdateTournamentRequest {
   teams: string[];
   operatorUsernames: string[];
   visibleOnHomePage: boolean;
+  showTeamSelection: boolean;
 }
 
 export interface SelectTournamentTeamRequest {

@@ -18,7 +18,7 @@ public class TournamentRepository : ITournamentRepository
         using var connection = _connectionFactory.CreateConnection();
 
         const string sql = """
-            SELECT Id, Name, Description, ImageUrl, TeamsJson, Active, VisibleOnHomePage, DateCreated
+            SELECT Id, Name, Description, ImageUrl, TeamsJson, Active, VisibleOnHomePage, ShowTeamSelection, DateCreated
             FROM pickem.Tournament
             WHERE Active = 1
             ORDER BY DateCreated DESC
@@ -32,7 +32,7 @@ public class TournamentRepository : ITournamentRepository
         using var connection = _connectionFactory.CreateConnection();
 
         const string sql = """
-            SELECT Id, Name, Description, ImageUrl, TeamsJson, Active, VisibleOnHomePage, DateCreated
+            SELECT Id, Name, Description, ImageUrl, TeamsJson, Active, VisibleOnHomePage, ShowTeamSelection, DateCreated
             FROM pickem.Tournament
             WHERE Id = @Id
             """;
@@ -40,23 +40,23 @@ public class TournamentRepository : ITournamentRepository
         return await connection.QuerySingleOrDefaultAsync<Tournament>(sql, new { Id = id });
     }
 
-    public async Task<Tournament> CreateAsync(string name, string? description, string? imageUrl, IReadOnlyCollection<string> teams, bool visibleOnHomePage)
+    public async Task<Tournament> CreateAsync(string name, string? description, string? imageUrl, IReadOnlyCollection<string> teams, bool visibleOnHomePage, bool showTeamSelection)
     {
         using var connection = _connectionFactory.CreateConnection();
         var teamsJson = JsonSerializer.Serialize(teams);
 
         const string sql = """
-            INSERT INTO pickem.Tournament (Name, Description, ImageUrl, TeamsJson, VisibleOnHomePage)
-            VALUES (@Name, @Description, @ImageUrl, @TeamsJson, @VisibleOnHomePage);
+            INSERT INTO pickem.Tournament (Name, Description, ImageUrl, TeamsJson, VisibleOnHomePage, ShowTeamSelection)
+            VALUES (@Name, @Description, @ImageUrl, @TeamsJson, @VisibleOnHomePage, @ShowTeamSelection);
             SELECT CAST(SCOPE_IDENTITY() AS int);
             """;
 
-        var id = await connection.QuerySingleAsync<int>(sql, new { Name = name, Description = description, ImageUrl = imageUrl, TeamsJson = teamsJson, VisibleOnHomePage = visibleOnHomePage });
+        var id = await connection.QuerySingleAsync<int>(sql, new { Name = name, Description = description, ImageUrl = imageUrl, TeamsJson = teamsJson, VisibleOnHomePage = visibleOnHomePage, ShowTeamSelection = showTeamSelection });
 
         return (await GetByIdAsync(id))!;
     }
 
-    public async Task<Tournament> UpdateAsync(int id, string name, string? description, string? imageUrl, IReadOnlyCollection<string> teams, bool visibleOnHomePage)
+    public async Task<Tournament> UpdateAsync(int id, string name, string? description, string? imageUrl, IReadOnlyCollection<string> teams, bool visibleOnHomePage, bool showTeamSelection)
     {
         using var connection = _connectionFactory.CreateConnection();
         var teamsJson = JsonSerializer.Serialize(teams);
@@ -67,11 +67,12 @@ public class TournamentRepository : ITournamentRepository
                 Description = @Description,
                 ImageUrl = @ImageUrl,
                 TeamsJson = @TeamsJson,
-                VisibleOnHomePage = @VisibleOnHomePage
+                VisibleOnHomePage = @VisibleOnHomePage,
+                ShowTeamSelection = @ShowTeamSelection
             WHERE Id = @Id
             """;
 
-        await connection.ExecuteAsync(sql, new { Id = id, Name = name, Description = description, ImageUrl = imageUrl, TeamsJson = teamsJson, VisibleOnHomePage = visibleOnHomePage });
+        await connection.ExecuteAsync(sql, new { Id = id, Name = name, Description = description, ImageUrl = imageUrl, TeamsJson = teamsJson, VisibleOnHomePage = visibleOnHomePage, ShowTeamSelection = showTeamSelection });
 
         return (await GetByIdAsync(id))!;
     }

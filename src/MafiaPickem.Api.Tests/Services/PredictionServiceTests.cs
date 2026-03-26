@@ -42,7 +42,7 @@ public class PredictionServiceTests
         byte predictedWinner = 0;
         byte predictedVotedOut = 5;
         var match = new DomainMatch { Id = matchId, TournamentId = 77, State = MatchState.Open };
-        var tournament = new Tournament { Id = 77, TeamsJson = "[\"North\",\"South\"]" };
+        var tournament = new Tournament { Id = 77, TeamsJson = "[\"North\",\"South\"]", ShowTeamSelection = true };
 
         _mockMatchRepo.Setup(r => r.GetByIdAsync(matchId))
             .ReturnsAsync(match);
@@ -183,7 +183,7 @@ public class PredictionServiceTests
         var matchId = 1;
         var userId = 100;
         var match = new DomainMatch { Id = matchId, TournamentId = 77, State = MatchState.Open };
-        var tournament = new Tournament { Id = 77, TeamsJson = "[\"North\",\"South\"]" };
+        var tournament = new Tournament { Id = 77, TeamsJson = "[\"North\",\"South\"]", ShowTeamSelection = true };
 
         _mockMatchRepo.Setup(r => r.GetByIdAsync(matchId))
             .ReturnsAsync(match);
@@ -199,5 +199,29 @@ public class PredictionServiceTests
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("User must select a team for this tournament before submitting predictions");
+    }
+
+    [Fact]
+    public async Task SubmitPrediction_WhenTeamSelectionHidden_ShouldNotRequireParticipantSelection()
+    {
+        var matchId = 1;
+        var userId = 100;
+        byte predictedWinner = 0;
+        byte predictedVotedOut = 5;
+        var match = new DomainMatch { Id = matchId, TournamentId = 77, State = MatchState.Open };
+        var tournament = new Tournament { Id = 77, TeamsJson = "[\"North\",\"South\"]", ShowTeamSelection = false };
+
+        _mockMatchRepo.Setup(r => r.GetByIdAsync(matchId))
+            .ReturnsAsync(match);
+        _mockTournamentRepo.Setup(r => r.GetByIdAsync(match.TournamentId))
+            .ReturnsAsync(tournament);
+        _mockUserContext.Setup(u => u.IsRegistered).Returns(true);
+        _mockPredictionRepo.Setup(r => r.UpsertAsync(matchId, userId, predictedWinner, predictedVotedOut, 0))
+            .Returns(Task.CompletedTask);
+
+        await _predictionService.SubmitPredictionAsync(matchId, userId, predictedWinner, predictedVotedOut, 0);
+
+        _mockTournamentParticipantRepo.Verify(r => r.HasTeamSelectionAsync(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
+        _mockPredictionRepo.Verify(r => r.UpsertAsync(matchId, userId, predictedWinner, predictedVotedOut, 0), Times.Once);
     }
 }

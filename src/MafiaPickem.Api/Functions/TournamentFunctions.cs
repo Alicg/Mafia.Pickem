@@ -222,6 +222,13 @@ public class TournamentFunctions
                 return notFoundResponse;
             }
 
+            if (!tournament.ShowTeamSelection)
+            {
+                var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                await badRequestResponse.WriteStringAsync("Team selection is disabled for this tournament");
+                return badRequestResponse;
+            }
+
             var teams = ParseTeams(tournament.TeamsJson);
             if (teams.Count == 0)
             {
@@ -327,6 +334,7 @@ public class TournamentFunctions
             OperatorUsernames = operatorUsernames ?? new List<string>(),
             SelectedTeamName = selectedTeamName,
             VisibleOnHomePage = tournament.VisibleOnHomePage,
+            ShowTeamSelection = tournament.ShowTeamSelection,
             CanManage = canManage,
             CurrentMatch = currentMatch != null ? MapMatchToDto(currentMatch) : null
         };

@@ -54,7 +54,7 @@ export const TournamentPage: React.FC<TournamentPageProps> = ({ tournament, onBa
   const [resolvingMatch, setResolvingMatch] = useState<{ matchId: number; currentState: MatchState } | null>(null);
   const [firstVotedMatchId, setFirstVotedMatchId] = useState<number | null>(null);
   const canManage = tournament.canManage;
-  const requiresTeamSelection = tournament.teams.length > 0 && !selectedTeamName;
+  const requiresTeamSelection = tournament.showTeamSelection && tournament.teams.length > 0 && !selectedTeamName;
 
   // Blob polling for all matches
   const matchIds = useMemo(() => matchInfos.map(m => m.id), [matchInfos]);

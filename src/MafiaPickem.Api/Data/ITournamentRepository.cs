@@ -6,7 +6,7 @@ public interface ITournamentRepository
 {
     Task<IEnumerable<Tournament>> GetActiveAsync();
     Task<Tournament?> GetByIdAsync(int id);
-    Task<Tournament> CreateAsync(string name, string? description, string? imageUrl, IReadOnlyCollection<string> teams, bool visibleOnHomePage);
-    Task<Tournament> UpdateAsync(int id, string name, string? description, string? imageUrl, IReadOnlyCollection<string> teams, bool visibleOnHomePage);
+    Task<Tournament> CreateAsync(string name, string? description, string? imageUrl, IReadOnlyCollection<string> teams, bool visibleOnHomePage, bool showTeamSelection);
+    Task<Tournament> UpdateAsync(int id, string name, string? description, string? imageUrl, IReadOnlyCollection<string> teams, bool visibleOnHomePage, bool showTeamSelection);
     Task DeleteAsync(int id);
 }

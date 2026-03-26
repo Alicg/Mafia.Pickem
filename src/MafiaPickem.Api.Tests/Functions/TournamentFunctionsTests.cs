@@ -73,6 +73,7 @@ public class TournamentFunctionsTests
         payload.Should().HaveCount(1);
         payload[0].Id.Should().Be(1);
         payload[0].VisibleOnHomePage.Should().BeTrue();
+        payload[0].ShowTeamSelection.Should().BeTrue();
         _mockMatchRepository.Verify(x => x.GetCurrentMatchByTournamentIdAsync(1), Times.Once);
         _mockMatchRepository.Verify(x => x.GetCurrentMatchByTournamentIdAsync(2), Times.Never);
     }
@@ -101,10 +102,30 @@ public class TournamentFunctionsTests
         payload.Should().HaveCount(1);
         payload[0].Id.Should().Be(7);
         payload[0].VisibleOnHomePage.Should().BeFalse();
+        payload[0].ShowTeamSelection.Should().BeTrue();
         payload[0].CanManage.Should().BeTrue();
     }
 
-    private static Tournament CreateTournament(int id, string name, bool visibleOnHomePage)
+    [Fact]
+    public async Task SelectTournamentTeam_WhenSelectionDisabled_ShouldReturn400()
+    {
+        _mockUserContext.SetupGet(x => x.IsRegistered).Returns(true);
+        _mockTournamentRepository.Setup(x => x.GetByIdAsync(3))
+            .ReturnsAsync(CreateTournament(3, "No Teams Cup", true, false));
+
+        var request = CreateMockHttpRequest("""
+            {
+              "teamName": "North"
+            }
+            """);
+
+        var response = await _tournamentFunctions.SelectTournamentTeamHttp(request, 3);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        _mockTournamentParticipantRepository.Verify(x => x.CreateAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>()), Times.Never);
+    }
+
+    private static Tournament CreateTournament(int id, string name, bool visibleOnHomePage, bool showTeamSelection = true)
     {
         return new Tournament
         {
@@ -112,6 +133,7 @@ public class TournamentFunctionsTests
             Name = name,
             Active = true,
             VisibleOnHomePage = visibleOnHomePage,
+            ShowTeamSelection = showTeamSelection,
             TeamsJson = "[]"
         };
     }

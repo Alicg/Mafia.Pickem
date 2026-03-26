@@ -60,7 +60,7 @@ public class AdminFunctions
         }
 
         var request = await req.ReadFromJsonAsync<CreateTournamentRequest>();
-        var validationError = TryNormalizeTournamentRequest(request, out var name, out var description, out var imageUrl, out var teams);
+        var validationError = TryNormalizeTournamentRequest(request, out var name, out var description, out var imageUrl, out var teams, out var showTeamSelection);
         if (validationError != null)
         {
             var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
@@ -81,7 +81,8 @@ public class AdminFunctions
             description,
             imageUrl,
             teams,
-            visibleOnHomePage);
+            visibleOnHomePage,
+            showTeamSelection);
 
         if (operatorUsernames.Count > 0)
         {
@@ -97,6 +98,7 @@ public class AdminFunctions
             Teams = teams,
             OperatorUsernames = operatorUsernames,
             VisibleOnHomePage = tournament.VisibleOnHomePage,
+            ShowTeamSelection = tournament.ShowTeamSelection,
             CanManage = true
         };
 
@@ -124,7 +126,7 @@ public class AdminFunctions
         }
 
         var request = await req.ReadFromJsonAsync<CreateTournamentRequest>();
-        var validationError = TryNormalizeTournamentRequest(request, out var name, out var description, out var imageUrl, out var teams);
+        var validationError = TryNormalizeTournamentRequest(request, out var name, out var description, out var imageUrl, out var teams, out var showTeamSelection);
         if (validationError != null)
         {
             var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
@@ -139,8 +141,9 @@ public class AdminFunctions
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
         var visibleOnHomePage = request.VisibleOnHomePage ?? existingTournament.VisibleOnHomePage;
+        showTeamSelection = request.ShowTeamSelection ?? existingTournament.ShowTeamSelection;
 
-        var tournament = await _tournamentRepository.UpdateAsync(id, name, description, imageUrl, teams, visibleOnHomePage);
+        var tournament = await _tournamentRepository.UpdateAsync(id, name, description, imageUrl, teams, visibleOnHomePage, showTeamSelection);
         await _tournamentOperatorRepository.ReplaceAsync(id, operatorUsernames);
 
         var dto = new TournamentDto
@@ -152,6 +155,7 @@ public class AdminFunctions
             Teams = teams,
             OperatorUsernames = operatorUsernames,
             VisibleOnHomePage = tournament.VisibleOnHomePage,
+            ShowTeamSelection = tournament.ShowTeamSelection,
             CanManage = true
         };
 
@@ -687,12 +691,14 @@ public class AdminFunctions
         out string name,
         out string? description,
         out string? imageUrl,
-        out List<string> teams)
+        out List<string> teams,
+        out bool showTeamSelection)
     {
         name = string.Empty;
         description = null;
         imageUrl = null;
         teams = new List<string>();
+        showTeamSelection = true;
 
         if (request == null || string.IsNullOrWhiteSpace(request.Name))
         {
@@ -702,13 +708,14 @@ public class AdminFunctions
         name = request.Name.Trim();
         description = NormalizeOptionalText(request.Description);
         imageUrl = NormalizeOptionalText(request.ImageUrl);
+        showTeamSelection = request.ShowTeamSelection ?? true;
         teams = request.Teams
             .Where(team => !string.IsNullOrWhiteSpace(team))
             .Select(team => team.Trim())
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        return teams.Count == 0 ? "At least one team is required" : null;
+        return showTeamSelection && teams.Count == 0 ? "At least one team is required when team selection is enabled" : null;
     }
 
     private static string? NormalizeOptionalText(string? value)

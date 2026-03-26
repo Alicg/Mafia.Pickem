@@ -9,5 +9,6 @@ public class Tournament
     public string? TeamsJson { get; set; }
     public bool Active { get; set; }
     public bool VisibleOnHomePage { get; set; }
+    public bool ShowTeamSelection { get; set; } = true;
     public DateTime DateCreated { get; set; }
 }

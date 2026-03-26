@@ -103,6 +103,70 @@ public class AdminFunctionsTests
     }
 
     [Fact]
+    public async Task CreateTournament_AsAdmin_ShouldAllowNoTeamsWhenTeamSelectionDisabled()
+    {
+        _mockUserContext.Setup(u => u.IsAdmin).Returns(true);
+
+        var createdTournament = new Tournament
+        {
+            Id = 15,
+            Name = "Silent Cup",
+            Active = true,
+            VisibleOnHomePage = true,
+            ShowTeamSelection = false,
+            TeamsJson = "[]"
+        };
+
+        _mockTournamentRepository
+            .Setup(r => r.CreateAsync(
+                "Silent Cup",
+                null,
+                null,
+                It.Is<IReadOnlyCollection<string>>(teams => teams.Count == 0),
+                true,
+                false))
+            .ReturnsAsync(createdTournament);
+
+        var httpRequest = CreateMockHttpRequest("""
+            {
+              "name": "Silent Cup",
+              "teams": [],
+              "showTeamSelection": false
+            }
+            """);
+
+        var response = await _adminFunctions.CreateTournamentHttp(httpRequest);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        _mockTournamentRepository.Verify(r => r.CreateAsync(
+            "Silent Cup",
+            null,
+            null,
+            It.Is<IReadOnlyCollection<string>>(teams => teams.Count == 0),
+            true,
+            false), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateTournament_WhenTeamSelectionEnabledAndTeamsMissing_ShouldReturn400()
+    {
+        _mockUserContext.Setup(u => u.IsAdmin).Returns(true);
+
+        var httpRequest = CreateMockHttpRequest("""
+            {
+              "name": "Spring Cup",
+              "teams": [],
+              "showTeamSelection": true
+            }
+            """);
+
+        var response = await _adminFunctions.CreateTournamentHttp(httpRequest);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        _mockTournamentRepository.Verify(r => r.CreateAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.Never);
+    }
+
+    [Fact]
     public void OpenMatch_AsAdmin_ShouldCallServices()
     {
         // Arrange - Test service coordination without HTTP layer
@@ -270,7 +334,7 @@ public class AdminFunctionsTests
         var response = await _adminFunctions.UpdateTournamentHttp(httpRequest, 7);
 
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
-        _mockTournamentRepository.Verify(r => r.UpdateAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>()), Times.Never);
+        _mockTournamentRepository.Verify(r => r.UpdateAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.Never);
         _mockTournamentOperatorRepository.Verify(r => r.ReplaceAsync(It.IsAny<int>(), It.IsAny<IReadOnlyCollection<string>>()), Times.Never);
     }
 
@@ -290,7 +354,7 @@ public class AdminFunctionsTests
         var response = await _adminFunctions.UpdateTournamentHttp(httpRequest, 7);
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
-        _mockTournamentRepository.Verify(r => r.UpdateAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>()), Times.Never);
+        _mockTournamentRepository.Verify(r => r.UpdateAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.Never);
         _mockTournamentOperatorRepository.Verify(r => r.ReplaceAsync(It.IsAny<int>(), It.IsAny<IReadOnlyCollection<string>>()), Times.Never);
     }
 
@@ -308,6 +372,7 @@ public class AdminFunctionsTests
             ImageUrl = "https://old.example/image.png",
             Active = true,
             VisibleOnHomePage = true,
+            ShowTeamSelection = true,
             TeamsJson = "[\"Old\"]"
         };
         var updatedTournament = new Tournament
@@ -318,6 +383,7 @@ public class AdminFunctionsTests
             ImageUrl = "https://img.example/spring.png",
             Active = true,
             VisibleOnHomePage = false,
+            ShowTeamSelection = false,
             TeamsJson = "[\"North\",\"South\"]"
         };
 
@@ -329,6 +395,7 @@ public class AdminFunctionsTests
                 "Fresh season",
                 "https://img.example/spring.png",
                 It.Is<IReadOnlyCollection<string>>(teams => teams.SequenceEqual(new[] { "North", "South" })),
+                false,
                 false))
             .ReturnsAsync(updatedTournament);
         _mockTournamentOperatorRepository
@@ -344,6 +411,7 @@ public class AdminFunctionsTests
               "imageUrl": "  https://img.example/spring.png  ",
               "teams": [" North ", "South", "north"],
                             "visibleOnHomePage": false,
+                            "showTeamSelection": false,
               "operatorUsernames": ["chief", "@cohost", "@Chief"]
             }
             """);
@@ -357,6 +425,7 @@ public class AdminFunctionsTests
             "Fresh season",
             "https://img.example/spring.png",
             It.Is<IReadOnlyCollection<string>>(teams => teams.SequenceEqual(new[] { "North", "South" })),
+            false,
             false), Times.Once);
         _mockTournamentOperatorRepository.Verify(r => r.ReplaceAsync(
             tournamentId,
@@ -376,6 +445,7 @@ public class AdminFunctionsTests
             Name = "Spring Cup",
             Active = true,
             VisibleOnHomePage = true,
+            ShowTeamSelection = true,
             TeamsJson = "[]"
         };
         var matches = new List<DomainMatch>

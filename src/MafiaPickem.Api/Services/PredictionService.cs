@@ -1,6 +1,8 @@
 using MafiaPickem.Api.Auth;
 using MafiaPickem.Api.Data;
+using MafiaPickem.Api.Models.Domain;
 using MafiaPickem.Api.Models.Enums;
+using System.Text.Json;
 
 namespace MafiaPickem.Api.Services;
 
@@ -49,7 +51,7 @@ public class PredictionService : IPredictionService
         var tournament = await _tournamentRepository.GetByIdAsync(match.TournamentId)
             ?? throw new InvalidOperationException($"Tournament with ID {match.TournamentId} not found");
 
-        if (!string.IsNullOrWhiteSpace(tournament.TeamsJson))
+        if (RequiresTeamSelection(tournament))
         {
             var hasTeamSelection = await _tournamentParticipantRepository.HasTeamSelectionAsync(match.TournamentId, userId);
             if (!hasTeamSelection)
@@ -91,5 +93,23 @@ public class PredictionService : IPredictionService
 
         // Submit prediction
         await _predictionRepository.UpsertAsync(matchId, userId, predictedWinner, predictedVotedOut, predictedLastRound);
+    }
+
+    private static bool RequiresTeamSelection(Tournament tournament)
+    {
+        if (!tournament.ShowTeamSelection || string.IsNullOrWhiteSpace(tournament.TeamsJson))
+        {
+            return false;
+        }
+
+        try
+        {
+            var teams = JsonSerializer.Deserialize<List<string>>(tournament.TeamsJson);
+            return teams?.Any(team => !string.IsNullOrWhiteSpace(team)) == true;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
     }
 }
