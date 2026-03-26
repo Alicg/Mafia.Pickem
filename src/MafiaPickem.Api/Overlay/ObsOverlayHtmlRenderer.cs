@@ -80,18 +80,26 @@ public static class ObsOverlayHtmlRenderer
             height: 100%;
         }
 
-        .overlay-block {
+        .overlay-stack-panel {
             position: absolute;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
             width: var(--panel-width);
             max-width: 100%;
         }
 
-        .overlay-block.is-left {
+        .overlay-stack-panel.is-left {
             left: 15px;
         }
 
-        .overlay-block.is-right {
+        .overlay-stack-panel.is-right {
             right: 15px;
+        }
+
+        .overlay-block {
+            position: relative;
+            width: 100%;
         }
 
         .overlay-footer__link {
@@ -390,7 +398,7 @@ public static class ObsOverlayHtmlRenderer
         }
 
         @media (max-width: 900px) {
-            .overlay-block {
+            .overlay-stack-panel {
                 width: min(var(--panel-width), calc(100vw - 24px));
             }
         }
@@ -399,57 +407,61 @@ public static class ObsOverlayHtmlRenderer
 <body>
     <div class="overlay-root">
         <section class="overlay-panel" id="overlayPanel">
-            <div class="overlay-block is-left" id="summaryBlock">
-                <div class="summary-card" id="summaryCard">
-                    <div class="summary-top">
-                        <div class="state-pill" id="matchState">Ожидание</div>
-                    </div>
-
-                    <div class="summary-main">
-                        <div class="summary-sides">
-                            <div class="summary-side">
-                                <div class="summary-side__percent" id="redPercent">-</div>
-                                <div class="summary-side__label">за красных</div>
-                            </div>
-                            <div class="summary-side is-right">
-                                <div class="summary-side__percent" id="blackPercent">-</div>
-                                <div class="summary-side__label">за черных</div>
-                            </div>
+            <div class="overlay-stack-panel is-left" id="leftStackPanel">
+                <div class="overlay-block" id="summaryBlock">
+                    <div class="summary-card" id="summaryCard">
+                        <div class="summary-top">
+                            <div class="state-pill" id="matchState">Ожидание</div>
                         </div>
 
-                        <div class="summary-bar" aria-hidden="true">
-                            <div class="summary-bar__segment is-left" id="redBarFill"></div>
-                            <div class="summary-bar__segment is-right" id="blackBarFill"></div>
-                        </div>
+                        <div class="summary-main">
+                            <div class="summary-sides">
+                                <div class="summary-side">
+                                    <div class="summary-side__percent" id="redPercent">-</div>
+                                    <div class="summary-side__label">за красных</div>
+                                </div>
+                                <div class="summary-side is-right">
+                                    <div class="summary-side__percent" id="blackPercent">-</div>
+                                    <div class="summary-side__label">за черных</div>
+                                </div>
+                            </div>
 
-                        <div class="summary-side__count" id="totalPredictionsCount">0 прогнозов</div>
+                            <div class="summary-bar" aria-hidden="true">
+                                <div class="summary-bar__segment is-left" id="redBarFill"></div>
+                                <div class="summary-bar__segment is-right" id="blackBarFill"></div>
+                            </div>
+
+                            <div class="summary-side__count" id="totalPredictionsCount">0 прогнозов</div>
+                        </div>
                     </div>
+                </div>
+
+                <div class="overlay-block" id="lastRoundBlock">
+                    <div class="chart-card" id="lastRoundCard">
+                        <div class="chart-title">Последний круг</div>
+                        <div class="vote-chart" id="lastRoundChart"></div>
+                    </div>
+                </div>
+
+                <div class="overlay-block" id="footerBlock">
+                    <a class="overlay-footer__link" href="https://t.me/MafiaPickemBot" target="_blank" rel="noreferrer noopener">
+                        <span class="overlay-footer__icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="12" cy="12" r="12" fill="currentColor" fill-opacity="0.18" />
+                                <path d="M17.94 6.62L5.98 11.23C5.17 11.56 5.18 12.01 5.83 12.21L8.9 13.17L15.99 8.69C16.33 8.48 16.64 8.59 16.39 8.81L10.65 13.99L10.43 17.12C10.75 17.12 10.89 16.97 11.07 16.79L12.56 15.34L15.66 17.63C16.23 17.94 16.64 17.78 16.78 17.12L18.81 7.54C19.02 6.73 18.49 6.36 17.94 6.62Z" fill="currentColor" />
+                            </svg>
+                        </span>
+                        <span>@MafiaPickemBot</span>
+                    </a>
                 </div>
             </div>
 
-            <div class="overlay-block is-left" id="lastRoundBlock">
-                <div class="chart-card" id="lastRoundCard">
-                    <div class="chart-title">Последний круг</div>
-                    <div class="vote-chart" id="lastRoundChart"></div>
-                </div>
-            </div>
-
-            <div class="overlay-block is-left" id="footerBlock">
-                <a class="overlay-footer__link" href="https://t.me/MafiaPickemBot" target="_blank" rel="noreferrer noopener">
-                    <span class="overlay-footer__icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="12" cy="12" r="12" fill="currentColor" fill-opacity="0.18" />
-                            <path d="M17.94 6.62L5.98 11.23C5.17 11.56 5.18 12.01 5.83 12.21L8.9 13.17L15.99 8.69C16.33 8.48 16.64 8.59 16.39 8.81L10.65 13.99L10.43 17.12C10.75 17.12 10.89 16.97 11.07 16.79L12.56 15.34L15.66 17.63C16.23 17.94 16.64 17.78 16.78 17.12L18.81 7.54C19.02 6.73 18.49 6.36 17.94 6.62Z" fill="currentColor" />
-                        </svg>
-                    </span>
-                    <span>@MafiaPickemBot</span>
-                </a>
-            </div>
-
-            <div class="overlay-block is-right" id="voteChartBlock">
-                <div class="chart-card" id="voteChartCard">
-                    <div class="chart-title">Заголосуют первым</div>
-                    <div class="vote-chart" id="voteChart"></div>
+            <div class="overlay-stack-panel is-right" id="rightStackPanel">
+                <div class="overlay-block" id="voteChartBlock">
+                    <div class="chart-card" id="voteChartCard">
+                        <div class="chart-title">Заголосуют первым</div>
+                        <div class="vote-chart" id="voteChart"></div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -467,6 +479,8 @@ public static class ObsOverlayHtmlRenderer
         const lastRoundChart = document.getElementById('lastRoundChart');
         const voteChartCard = document.getElementById('voteChartCard');
         const lastRoundCard = document.getElementById('lastRoundCard');
+        const leftStackPanel = document.getElementById('leftStackPanel');
+        const rightStackPanel = document.getElementById('rightStackPanel');
         const summaryBlock = document.getElementById('summaryBlock');
         const voteChartBlock = document.getElementById('voteChartBlock');
         const lastRoundBlock = document.getElementById('lastRoundBlock');
@@ -482,10 +496,12 @@ public static class ObsOverlayHtmlRenderer
                 fillOpacity: 92,
                 useGradient: true,
             },
-            summaryBlock: { side: 'left', edgeOffset: 15, topOffset: 138 },
-            firstVoteBlock: { side: 'right', edgeOffset: 15, topOffset: 394 },
-            lastRoundBlock: { side: 'left', edgeOffset: 15, topOffset: 394 },
-            footerBlock: { side: 'left', edgeOffset: 15, topOffset: 736 },
+            leftPanel: { edgeOffset: 15, topOffset: 138 },
+            rightPanel: { edgeOffset: 15, topOffset: 394 },
+            summaryBlock: { panel: 'left' },
+            firstVoteBlock: { panel: 'right' },
+            lastRoundBlock: { panel: 'left' },
+            footerBlock: { panel: 'left' },
         };
 
         const formatPercent = (value) => `${Number(value || 0).toFixed(1)}%`;
@@ -523,17 +539,23 @@ public static class ObsOverlayHtmlRenderer
             return /^#[0-9a-fA-F]{6}$/.test(trimmed) ? trimmed.toUpperCase() : fallback;
         };
 
-        const normalizeBlockLayout = (layout, fallback) => {
-            const side = layout?.side === 'right' ? 'right' : layout?.side === 'left' ? 'left' : fallback.side;
+        const normalizePanelLayout = (layout, fallback) => {
             const edgeOffset = clamp(Number(layout?.edgeOffset ?? fallback.edgeOffset) || 0, 0, 4000);
             const topOffset = clamp(Number(layout?.topOffset ?? fallback.topOffset) || 0, 0, 4000);
 
             return {
-                side,
                 edgeOffset,
                 topOffset,
             };
         };
+
+        const normalizeBlockPlacement = (placement, fallback) => ({
+            panel: placement?.panel === 'right'
+                ? 'right'
+                : placement?.panel === 'left'
+                    ? 'left'
+                    : fallback.panel,
+        });
 
         const normalizeOverlaySettings = (settings) => ({
             hideBlocksByPhase: typeof settings?.hideBlocksByPhase === 'boolean'
@@ -547,10 +569,12 @@ public static class ObsOverlayHtmlRenderer
                     ? settings.theme.useGradient
                     : defaultOverlaySettings.theme.useGradient,
             },
-            summaryBlock: normalizeBlockLayout(settings?.summaryBlock, defaultOverlaySettings.summaryBlock),
-            firstVoteBlock: normalizeBlockLayout(settings?.firstVoteBlock, defaultOverlaySettings.firstVoteBlock),
-            lastRoundBlock: normalizeBlockLayout(settings?.lastRoundBlock, defaultOverlaySettings.lastRoundBlock),
-            footerBlock: normalizeBlockLayout(settings?.footerBlock, defaultOverlaySettings.footerBlock),
+            leftPanel: normalizePanelLayout(settings?.leftPanel, defaultOverlaySettings.leftPanel),
+            rightPanel: normalizePanelLayout(settings?.rightPanel, defaultOverlaySettings.rightPanel),
+            summaryBlock: normalizeBlockPlacement(settings?.summaryBlock, defaultOverlaySettings.summaryBlock),
+            firstVoteBlock: normalizeBlockPlacement(settings?.firstVoteBlock, defaultOverlaySettings.firstVoteBlock),
+            lastRoundBlock: normalizeBlockPlacement(settings?.lastRoundBlock, defaultOverlaySettings.lastRoundBlock),
+            footerBlock: normalizeBlockPlacement(settings?.footerBlock, defaultOverlaySettings.footerBlock),
         });
 
         const hexToRgb = (value) => {
@@ -567,25 +591,44 @@ public static class ObsOverlayHtmlRenderer
             return theme.useGradient ? `linear-gradient(180deg, ${start}, ${end})` : start;
         };
 
-        const applyBlockLayout = (element, layout) => {
+        const applyPanelLayout = (element, side, layout) => {
             if (!element) {
                 return;
             }
 
-            element.classList.toggle('is-left', layout.side === 'left');
-            element.classList.toggle('is-right', layout.side === 'right');
+            element.classList.toggle('is-left', side === 'left');
+            element.classList.toggle('is-right', side === 'right');
             element.style.top = `${layout.topOffset}px`;
-            element.style.left = layout.side === 'left' ? `${layout.edgeOffset}px` : 'auto';
-            element.style.right = layout.side === 'right' ? `${layout.edgeOffset}px` : 'auto';
+            element.style.left = side === 'left' ? `${layout.edgeOffset}px` : 'auto';
+            element.style.right = side === 'right' ? `${layout.edgeOffset}px` : 'auto';
+        };
+
+        const arrangeBlocksIntoPanels = (settings) => {
+            const blocks = [
+                { element: summaryBlock, placement: settings.summaryBlock },
+                { element: voteChartBlock, placement: settings.firstVoteBlock },
+                { element: lastRoundBlock, placement: settings.lastRoundBlock },
+                { element: footerBlock, placement: settings.footerBlock },
+            ];
+
+            blocks.forEach(({ element, placement }) => {
+                if (!element) {
+                    return;
+                }
+
+                const targetPanel = placement.panel === 'right' ? rightStackPanel : leftStackPanel;
+                if (targetPanel && element.parentElement !== targetPanel) {
+                    targetPanel.appendChild(element);
+                }
+            });
         };
 
         const applyOverlaySettings = (payload) => {
             const settings = normalizeOverlaySettings(payload?.overlaySettings);
             rootStyles.style.setProperty('--overlay-panel-fill', buildPanelFill(settings.theme));
-            applyBlockLayout(summaryBlock, settings.summaryBlock);
-            applyBlockLayout(voteChartBlock, settings.firstVoteBlock);
-            applyBlockLayout(lastRoundBlock, settings.lastRoundBlock);
-            applyBlockLayout(footerBlock, settings.footerBlock);
+            applyPanelLayout(leftStackPanel, 'left', settings.leftPanel);
+            applyPanelLayout(rightStackPanel, 'right', settings.rightPanel);
+            arrangeBlocksIntoPanels(settings);
             return settings;
         };
 

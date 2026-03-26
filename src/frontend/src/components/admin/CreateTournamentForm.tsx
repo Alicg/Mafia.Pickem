@@ -3,7 +3,8 @@ import { adminCreateTournament, adminUpdateTournament } from '../../lib/api';
 import {
   cloneTournamentOverlaySettings,
   CreateTournamentRequest,
-  OverlayBlockLayout,
+  OverlayBlockPlacement,
+  OverlayStackPanelLayout,
   TournamentDto,
   TournamentOverlaySettings,
   UpdateTournamentRequest,
@@ -19,6 +20,12 @@ interface CreateTournamentFormProps {
 }
 
 type OverlayBlockKey = 'summaryBlock' | 'firstVoteBlock' | 'lastRoundBlock' | 'footerBlock';
+type OverlayPanelKey = 'leftPanel' | 'rightPanel';
+
+const overlayPanelSections: Array<{ key: OverlayPanelKey; title: string; hint: string }> = [
+  { key: 'leftPanel', title: 'Левая стек-панель', hint: 'Общий контейнер для блоков слева.' },
+  { key: 'rightPanel', title: 'Правая стек-панель', hint: 'Общий контейнер для блоков справа.' },
+];
 
 const overlayBlockSections: Array<{ key: OverlayBlockKey; title: string; hint: string }> = [
   { key: 'summaryBlock', title: 'Сводка', hint: 'Блок с процентами по красным и чёрным.' },
@@ -80,7 +87,17 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({
     .map(username => username.startsWith('@') ? username : `@${username}`)
     .filter((username, index, all) => all.findIndex(item => item.toLowerCase() === username.toLowerCase()) === index);
 
-  const updateBlock = (blockKey: OverlayBlockKey, field: keyof OverlayBlockLayout, value: string | number) => {
+  const updatePanel = (panelKey: OverlayPanelKey, field: keyof OverlayStackPanelLayout, value: number) => {
+    setOverlaySettings(prev => ({
+      ...prev,
+      [panelKey]: {
+        ...prev[panelKey],
+        [field]: value,
+      },
+    }));
+  };
+
+  const updateBlock = (blockKey: OverlayBlockKey, field: keyof OverlayBlockPlacement, value: string) => {
     setOverlaySettings(prev => ({
       ...prev,
       [blockKey]: {
@@ -260,7 +277,7 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({
           <div className="form-section">
             <div className="form-section-title">OBS overlay</div>
             <div className="form-section-note">
-              Для каждого блока задаётся сторона, отступ от края и отступ сверху. Все значения в пикселях.
+              Для каждой стек-панели задаются отступ от края и отступ сверху. Каждый блок можно назначить только в левую или правую панель.
             </div>
 
             <div className="form-group">
@@ -366,8 +383,8 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({
             </div>
 
             <div className="overlay-settings-grid">
-              {overlayBlockSections.map((section) => {
-                const block = overlaySettings[section.key];
+              {overlayPanelSections.map((section) => {
+                const panel = overlaySettings[section.key];
 
                 return (
                   <div key={section.key} className="overlay-settings-card">
@@ -376,40 +393,53 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({
 
                     <div className="overlay-settings-fields">
                       <div className="form-group">
-                        <label className="form-label">Сторона</label>
-                        <select
-                          className="form-input"
-                          value={block.side}
-                          onChange={(e) => updateBlock(section.key, 'side', e.target.value)}
-                          disabled={isLoading}
-                        >
-                          <option value="left">Слева</option>
-                          <option value="right">Справа</option>
-                        </select>
-                      </div>
-
-                      <div className="form-group">
                         <label className="form-label">Отступ от края</label>
                         <input
                           type="number"
                           className="form-input"
                           min={0}
-                          value={block.edgeOffset}
-                          onChange={(e) => updateBlock(section.key, 'edgeOffset', parseNonNegativeNumber(e.target.value))}
+                          value={panel.edgeOffset}
+                          onChange={(e) => updatePanel(section.key, 'edgeOffset', parseNonNegativeNumber(e.target.value))}
                           disabled={isLoading}
                         />
                       </div>
 
-                      <div className="form-group overlay-settings-fields__full-width">
+                      <div className="form-group">
                         <label className="form-label">Отступ сверху</label>
                         <input
                           type="number"
                           className="form-input"
                           min={0}
-                          value={block.topOffset}
-                          onChange={(e) => updateBlock(section.key, 'topOffset', parseNonNegativeNumber(e.target.value))}
+                          value={panel.topOffset}
+                          onChange={(e) => updatePanel(section.key, 'topOffset', parseNonNegativeNumber(e.target.value))}
                           disabled={isLoading}
                         />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {overlayBlockSections.map((section) => {
+                const block = overlaySettings[section.key];
+
+                return (
+                  <div key={`${section.key}-placement`} className="overlay-settings-card">
+                    <div className="overlay-settings-card__title">{section.title}</div>
+                    <div className="overlay-settings-card__hint">{section.hint}</div>
+
+                    <div className="overlay-settings-fields">
+                      <div className="form-group">
+                        <label className="form-label">Панель</label>
+                        <select
+                          className="form-input"
+                          value={block.panel}
+                          onChange={(e) => updateBlock(section.key, 'panel', e.target.value)}
+                          disabled={isLoading}
+                        >
+                          <option value="left">Левая</option>
+                          <option value="right">Правая</option>
+                        </select>
                       </div>
                     </div>
                   </div>

@@ -7,10 +7,12 @@ public class TournamentOverlaySettings
 {
     public bool HideBlocksByPhase { get; set; } = true;
     public OverlayThemeSettings Theme { get; set; } = new();
-    public OverlayBlockLayout SummaryBlock { get; set; } = new() { Side = OverlayBlockSide.Left, EdgeOffset = 15, TopOffset = 138 };
-    public OverlayBlockLayout FirstVoteBlock { get; set; } = new() { Side = OverlayBlockSide.Right, EdgeOffset = 15, TopOffset = 394 };
-    public OverlayBlockLayout LastRoundBlock { get; set; } = new() { Side = OverlayBlockSide.Left, EdgeOffset = 15, TopOffset = 394 };
-    public OverlayBlockLayout FooterBlock { get; set; } = new() { Side = OverlayBlockSide.Left, EdgeOffset = 15, TopOffset = 736 };
+    public OverlayStackPanelLayout LeftPanel { get; set; } = new() { EdgeOffset = 15, TopOffset = 138 };
+    public OverlayStackPanelLayout RightPanel { get; set; } = new() { EdgeOffset = 15, TopOffset = 394 };
+    public OverlayBlockPlacement SummaryBlock { get; set; } = new() { Panel = OverlayPanelSide.Left };
+    public OverlayBlockPlacement FirstVoteBlock { get; set; } = new() { Panel = OverlayPanelSide.Right };
+    public OverlayBlockPlacement LastRoundBlock { get; set; } = new() { Panel = OverlayPanelSide.Left };
+    public OverlayBlockPlacement FooterBlock { get; set; } = new() { Panel = OverlayPanelSide.Left };
 
     public static TournamentOverlaySettings CreateDefault()
     {
@@ -23,33 +25,70 @@ public class TournamentOverlaySettings
         {
             HideBlocksByPhase = settings?.HideBlocksByPhase ?? true,
             Theme = OverlayThemeSettings.Normalize(settings?.Theme),
-            SummaryBlock = OverlayBlockLayout.Normalize(settings?.SummaryBlock, OverlayBlockSide.Left, 15, 138),
-            FirstVoteBlock = OverlayBlockLayout.Normalize(settings?.FirstVoteBlock, OverlayBlockSide.Right, 15, 394),
-            LastRoundBlock = OverlayBlockLayout.Normalize(settings?.LastRoundBlock, OverlayBlockSide.Left, 15, 394),
-            FooterBlock = OverlayBlockLayout.Normalize(settings?.FooterBlock, OverlayBlockSide.Left, 15, 736)
+            LeftPanel = OverlayStackPanelLayout.Normalize(settings?.LeftPanel, 15, 138, settings?.SummaryBlock, settings?.LastRoundBlock, settings?.FooterBlock, settings?.FirstVoteBlock),
+            RightPanel = OverlayStackPanelLayout.Normalize(settings?.RightPanel, 15, 394, settings?.FirstVoteBlock, settings?.SummaryBlock, settings?.LastRoundBlock, settings?.FooterBlock),
+            SummaryBlock = OverlayBlockPlacement.Normalize(settings?.SummaryBlock, OverlayPanelSide.Left),
+            FirstVoteBlock = OverlayBlockPlacement.Normalize(settings?.FirstVoteBlock, OverlayPanelSide.Right),
+            LastRoundBlock = OverlayBlockPlacement.Normalize(settings?.LastRoundBlock, OverlayPanelSide.Left),
+            FooterBlock = OverlayBlockPlacement.Normalize(settings?.FooterBlock, OverlayPanelSide.Left)
         };
     }
 }
 
-public class OverlayBlockLayout
+public class OverlayStackPanelLayout
 {
-    public string Side { get; set; } = OverlayBlockSide.Left;
     public int EdgeOffset { get; set; }
     public int TopOffset { get; set; }
 
-    public static OverlayBlockLayout Normalize(OverlayBlockLayout? block, string defaultSide, int defaultEdgeOffset, int defaultTopOffset)
+    public static OverlayStackPanelLayout Normalize(OverlayStackPanelLayout? panel, int defaultEdgeOffset, int defaultTopOffset, params OverlayBlockPlacement?[] legacyBlocks)
     {
-        return new OverlayBlockLayout
+        var legacyPosition = GetLegacyPosition(legacyBlocks);
+
+        return new OverlayStackPanelLayout
         {
-            Side = OverlayBlockSide.Normalize(block?.Side, defaultSide),
-            EdgeOffset = NormalizeOffset(block?.EdgeOffset ?? defaultEdgeOffset),
-            TopOffset = NormalizeOffset(block?.TopOffset ?? defaultTopOffset)
+            EdgeOffset = NormalizeOffset(panel?.EdgeOffset ?? legacyPosition.EdgeOffset ?? defaultEdgeOffset),
+            TopOffset = NormalizeOffset(panel?.TopOffset ?? legacyPosition.TopOffset ?? defaultTopOffset)
         };
+    }
+
+    private static (int? EdgeOffset, int? TopOffset) GetLegacyPosition(IEnumerable<OverlayBlockPlacement?> legacyBlocks)
+    {
+        foreach (var block in legacyBlocks)
+        {
+            if (block?.LegacyEdgeOffset is int edgeOffset || block?.LegacyTopOffset is int topOffset)
+            {
+                return (block?.LegacyEdgeOffset, block?.LegacyTopOffset);
+            }
+        }
+
+        return (null, null);
     }
 
     private static int NormalizeOffset(int value)
     {
         return Math.Clamp(value, 0, 4000);
+    }
+}
+
+public class OverlayBlockPlacement
+{
+    public string Panel { get; set; } = OverlayPanelSide.Left;
+
+    // Legacy properties kept for backward compatibility with already stored JSON.
+    public string? Side { get; set; }
+    public int? EdgeOffset { get; set; }
+    public int? TopOffset { get; set; }
+    public bool? PlaceBelowPrevious { get; set; }
+
+    public int? LegacyEdgeOffset => EdgeOffset;
+    public int? LegacyTopOffset => TopOffset;
+
+    public static OverlayBlockPlacement Normalize(OverlayBlockPlacement? block, string defaultPanel)
+    {
+        return new OverlayBlockPlacement
+        {
+            Panel = OverlayPanelSide.Normalize(block?.Panel, OverlayPanelSide.Normalize(block?.Side, defaultPanel))
+        };
     }
 }
 
@@ -85,7 +124,7 @@ public class OverlayThemeSettings
     }
 }
 
-public static class OverlayBlockSide
+public static class OverlayPanelSide
 {
     public const string Left = "left";
     public const string Right = "right";

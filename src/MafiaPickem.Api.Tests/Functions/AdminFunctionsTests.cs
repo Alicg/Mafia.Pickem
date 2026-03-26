@@ -482,9 +482,9 @@ public class AdminFunctionsTests
                 true,
                 It.Is<TournamentOverlaySettings>(settings =>
                     settings.HideBlocksByPhase == false &&
-                    settings.FirstVoteBlock.Side == OverlayBlockSide.Left &&
-                    settings.FirstVoteBlock.EdgeOffset == 48 &&
-                    settings.FirstVoteBlock.TopOffset == 222)))
+                    settings.FirstVoteBlock.Panel == OverlayPanelSide.Left &&
+                    settings.LeftPanel.EdgeOffset == 48 &&
+                    settings.LeftPanel.TopOffset == 222)))
             .ReturnsAsync(updatedTournament);
 
         var httpRequest = CreateMockHttpRequest("""
@@ -498,10 +498,12 @@ public class AdminFunctionsTests
               "operatorUsernames": ["@other"],
               "overlaySettings": {
                 "hideBlocksByPhase": false,
+                                "leftPanel": {
+                                    "edgeOffset": 48,
+                                    "topOffset": 222
+                                },
                 "firstVoteBlock": {
-                  "side": "left",
-                  "edgeOffset": 48,
-                  "topOffset": 222
+                                    "panel": "left"
                 }
               }
             }

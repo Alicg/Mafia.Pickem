@@ -11,12 +11,15 @@ export interface UserProfile {
   isAdmin: boolean;
 }
 
-export type OverlayBlockSide = 'left' | 'right';
+export type OverlayPanelSide = 'left' | 'right';
 
-export interface OverlayBlockLayout {
-  side: OverlayBlockSide;
+export interface OverlayStackPanelLayout {
   edgeOffset: number;
   topOffset: number;
+}
+
+export interface OverlayBlockPlacement {
+  panel: OverlayPanelSide;
 }
 
 export interface OverlayThemeSettings {
@@ -29,10 +32,12 @@ export interface OverlayThemeSettings {
 export interface TournamentOverlaySettings {
   hideBlocksByPhase: boolean;
   theme: OverlayThemeSettings;
-  summaryBlock: OverlayBlockLayout;
-  firstVoteBlock: OverlayBlockLayout;
-  lastRoundBlock: OverlayBlockLayout;
-  footerBlock: OverlayBlockLayout;
+  leftPanel: OverlayStackPanelLayout;
+  rightPanel: OverlayStackPanelLayout;
+  summaryBlock: OverlayBlockPlacement;
+  firstVoteBlock: OverlayBlockPlacement;
+  lastRoundBlock: OverlayBlockPlacement;
+  footerBlock: OverlayBlockPlacement;
 }
 
 export const DEFAULT_TOURNAMENT_OVERLAY_SETTINGS: TournamentOverlaySettings = {
@@ -43,25 +48,25 @@ export const DEFAULT_TOURNAMENT_OVERLAY_SETTINGS: TournamentOverlaySettings = {
     fillOpacity: 92,
     useGradient: true,
   },
-  summaryBlock: {
-    side: 'left',
+  leftPanel: {
     edgeOffset: 15,
     topOffset: 138,
   },
-  firstVoteBlock: {
-    side: 'right',
+  rightPanel: {
     edgeOffset: 15,
     topOffset: 394,
+  },
+  summaryBlock: {
+    panel: 'left',
+  },
+  firstVoteBlock: {
+    panel: 'right',
   },
   lastRoundBlock: {
-    side: 'left',
-    edgeOffset: 15,
-    topOffset: 394,
+    panel: 'left',
   },
   footerBlock: {
-    side: 'left',
-    edgeOffset: 15,
-    topOffset: 736,
+    panel: 'left',
   },
 };
 
@@ -76,6 +81,8 @@ export function cloneTournamentOverlaySettings(settings?: TournamentOverlaySetti
       fillOpacity: source.theme.fillOpacity,
       useGradient: source.theme.useGradient,
     },
+    leftPanel: { ...source.leftPanel },
+    rightPanel: { ...source.rightPanel },
     summaryBlock: { ...source.summaryBlock },
     firstVoteBlock: { ...source.firstVoteBlock },
     lastRoundBlock: { ...source.lastRoundBlock },
