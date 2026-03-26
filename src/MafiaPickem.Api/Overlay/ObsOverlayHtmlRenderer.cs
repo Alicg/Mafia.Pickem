@@ -102,21 +102,33 @@ public static class ObsOverlayHtmlRenderer
             width: 100%;
         }
 
-        #summaryBlock,
-        #lastRoundBlock {
-            width: min(196px, 100%);
+        .overlay-block.is-dynamic-managed {
+            transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1), opacity 320ms ease;
+            will-change: transform, opacity;
         }
 
-        #voteChartBlock {
-            width: calc(var(--panel-width) / 2);
-            max-width: 100%;
-            margin-left: auto;
+        .overlay-block.is-dynamic-hidden-left {
+            transform: translateX(calc(-100% - 24px));
+            opacity: 0;
+        }
+
+        .overlay-block.is-dynamic-hidden-right {
+            transform: translateX(calc(100% + 24px));
+            opacity: 0;
+        }
+
+        #summaryBlock,
+        #lastRoundBlock,
+        #footerBlock {
+            width: min(182px, 100%);
         }
 
         .overlay-footer__link {
-            display: inline-flex;
+            display: flex;
             align-items: center;
+            justify-content: center;
             gap: 7px;
+            width: 100%;
             min-height: 24px;
             padding: 0 10px;
             border-radius: 999px;
@@ -203,11 +215,11 @@ public static class ObsOverlayHtmlRenderer
             display: flex;
             align-items: baseline;
             justify-content: space-between;
-            gap: 8px;
+            gap: 6px;
         }
 
         .summary-side__percent {
-            font-size: 25px;
+            font-size: 21px;
             line-height: 1;
             font-weight: 900;
             letter-spacing: -0.06em;
@@ -217,7 +229,7 @@ public static class ObsOverlayHtmlRenderer
         }
 
         .summary-side__label {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 700;
             letter-spacing: 0.08em;
             text-transform: uppercase;
@@ -500,6 +512,8 @@ public static class ObsOverlayHtmlRenderer
         const footerBlock = document.getElementById('footerBlock');
         const overlayPanel = document.getElementById('overlayPanel');
         const rootStyles = document.documentElement;
+        const dynamicDisplayControllers = new Map();
+        const dynamicDisplayAnimationMs = 420;
 
         const defaultOverlaySettings = {
             hideBlocksByPhase: true,
@@ -511,13 +525,13 @@ public static class ObsOverlayHtmlRenderer
             },
             leftPanel: { edgeOffset: 15, topOffset: 138 },
             rightPanel: { edgeOffset: 15, topOffset: 394 },
-            summaryBlock: { panel: 'left' },
-            firstVoteBlock: { panel: 'right' },
-            lastRoundBlock: { panel: 'left' },
-            footerBlock: { panel: 'left' },
+            summaryBlock: { panel: 'left', isVisible: true, dynamicDisplay: { enabled: false, intervalSeconds: 30, visibleDurationSeconds: 8 } },
+            firstVoteBlock: { panel: 'right', isVisible: true, dynamicDisplay: { enabled: false, intervalSeconds: 30, visibleDurationSeconds: 8 } },
+            lastRoundBlock: { panel: 'left', isVisible: true, dynamicDisplay: { enabled: false, intervalSeconds: 30, visibleDurationSeconds: 8 } },
+            footerBlock: { panel: 'left', isVisible: true, dynamicDisplay: { enabled: false, intervalSeconds: 30, visibleDurationSeconds: 8 } },
         };
 
-        const formatPercent = (value) => `${Number(value || 0).toFixed(1)}%`;
+        const formatPercent = (value) => `${Math.round(Number(value || 0))}%`;
         const formatPredictionsCount = (value) => {
             const count = Math.max(0, Math.trunc(Number(value || 0)));
             const mod10 = count % 10;
@@ -562,12 +576,29 @@ public static class ObsOverlayHtmlRenderer
             };
         };
 
+        const normalizeDynamicDisplay = (dynamicDisplay, fallback) => {
+            const intervalSeconds = clamp(Number(dynamicDisplay?.intervalSeconds ?? fallback.intervalSeconds) || 0, 1, 3600);
+            const visibleDurationSeconds = clamp(Number(dynamicDisplay?.visibleDurationSeconds ?? fallback.visibleDurationSeconds) || 0, 1, 3600);
+
+            return {
+                enabled: typeof dynamicDisplay?.enabled === 'boolean'
+                    ? dynamicDisplay.enabled
+                    : fallback.enabled,
+                intervalSeconds,
+                visibleDurationSeconds: Math.min(visibleDurationSeconds, intervalSeconds),
+            };
+        };
+
         const normalizeBlockPlacement = (placement, fallback) => ({
             panel: placement?.panel === 'right'
                 ? 'right'
                 : placement?.panel === 'left'
                     ? 'left'
                     : fallback.panel,
+            isVisible: typeof placement?.isVisible === 'boolean'
+                ? placement.isVisible
+                : fallback.isVisible,
+            dynamicDisplay: normalizeDynamicDisplay(placement?.dynamicDisplay, fallback.dynamicDisplay),
         });
 
         const normalizeOverlaySettings = (settings) => ({
@@ -636,6 +667,156 @@ public static class ObsOverlayHtmlRenderer
             });
         };
 
+        const getDynamicDisplayController = (blockKey) => {
+            let controller = dynamicDisplayControllers.get(blockKey);
+            if (!controller) {
+                controller = {
+                    signature: '',
+                    cycleTimerId: 0,
+                    hideTimerId: 0,
+                    finalizeHideTimerId: 0,
+                    animationFrameId: 0,
+                    token: 0,
+                    active: false,
+                };
+                dynamicDisplayControllers.set(blockKey, controller);
+            }
+
+            return controller;
+        };
+
+        const clearDynamicDisplayController = (controller) => {
+            if (controller.cycleTimerId) {
+                window.clearTimeout(controller.cycleTimerId);
+                controller.cycleTimerId = 0;
+            }
+
+            if (controller.hideTimerId) {
+                window.clearTimeout(controller.hideTimerId);
+                controller.hideTimerId = 0;
+            }
+
+            if (controller.finalizeHideTimerId) {
+                window.clearTimeout(controller.finalizeHideTimerId);
+                controller.finalizeHideTimerId = 0;
+            }
+
+            if (controller.animationFrameId) {
+                window.cancelAnimationFrame(controller.animationFrameId);
+                controller.animationFrameId = 0;
+            }
+
+            controller.token += 1;
+            controller.active = false;
+        };
+
+        const resetDynamicDisplayClasses = (element) => {
+            if (!element) {
+                return;
+            }
+
+            element.classList.remove('is-dynamic-managed', 'is-dynamic-hidden-left', 'is-dynamic-hidden-right');
+        };
+
+        const getHiddenDirectionClass = (panel) => panel === 'right' ? 'is-dynamic-hidden-right' : 'is-dynamic-hidden-left';
+
+        const runDynamicDisplayCycle = (controller, element, panel, dynamicDisplay, token) => {
+            if (!controller.active || controller.token !== token || !element) {
+                return;
+            }
+
+            const hiddenClass = getHiddenDirectionClass(panel);
+            const oppositeHiddenClass = hiddenClass === 'is-dynamic-hidden-right' ? 'is-dynamic-hidden-left' : 'is-dynamic-hidden-right';
+
+            element.style.display = '';
+            element.classList.add('is-dynamic-managed');
+            element.classList.remove(oppositeHiddenClass);
+            element.classList.add(hiddenClass);
+            void element.offsetWidth;
+
+            controller.animationFrameId = window.requestAnimationFrame(() => {
+                if (!controller.active || controller.token !== token) {
+                    return;
+                }
+
+                element.classList.remove(hiddenClass);
+            });
+
+            controller.hideTimerId = window.setTimeout(() => {
+                if (!controller.active || controller.token !== token) {
+                    return;
+                }
+
+                element.classList.add(hiddenClass);
+                controller.finalizeHideTimerId = window.setTimeout(() => {
+                    if (!controller.active || controller.token !== token) {
+                        return;
+                    }
+
+                    element.style.display = 'none';
+                    controller.cycleTimerId = window.setTimeout(
+                        () => runDynamicDisplayCycle(controller, element, panel, dynamicDisplay, token),
+                        dynamicDisplay.intervalSeconds * 1000
+                    );
+                }, dynamicDisplayAnimationMs);
+            }, dynamicDisplay.visibleDurationSeconds * 1000);
+        };
+
+        const syncBlockDisplay = (blockKey, element, placement, shouldBeVisible) => {
+            if (!element) {
+                return;
+            }
+
+            const controller = getDynamicDisplayController(blockKey);
+            const signature = JSON.stringify({
+                panel: placement.panel,
+                shouldBeVisible,
+                dynamicDisplay: placement.dynamicDisplay,
+            });
+
+            if (controller.signature === signature) {
+                return;
+            }
+
+            clearDynamicDisplayController(controller);
+            controller.signature = signature;
+            resetDynamicDisplayClasses(element);
+
+            if (!shouldBeVisible) {
+                element.style.display = 'none';
+                return;
+            }
+
+            if (!placement.dynamicDisplay.enabled) {
+                element.style.display = '';
+                return;
+            }
+
+            controller.active = true;
+            const token = controller.token;
+            runDynamicDisplayCycle(controller, element, placement.panel, placement.dynamicDisplay, token);
+        };
+
+        const getBlockVisibilityState = (payload, settings) => {
+            const currentMatchState = typeof payload?.matchState === 'string' ? payload.matchState : '';
+            const hasFirstVotedResult = currentMatchState === 'FirstVoted' || currentMatchState === 'Resolved';
+
+            return {
+                summaryBlock: settings.summaryBlock.isVisible,
+                firstVoteBlock: settings.firstVoteBlock.isVisible && (!settings.hideBlocksByPhase || !hasFirstVotedResult),
+                lastRoundBlock: settings.lastRoundBlock.isVisible && (!settings.hideBlocksByPhase || hasFirstVotedResult),
+                footerBlock: settings.footerBlock.isVisible,
+            };
+        };
+
+        const syncOverlayBlocks = (payload, settings) => {
+            const visibilityState = getBlockVisibilityState(payload, settings);
+            syncBlockDisplay('summaryBlock', summaryBlock, settings.summaryBlock, visibilityState.summaryBlock);
+            syncBlockDisplay('firstVoteBlock', voteChartBlock, settings.firstVoteBlock, visibilityState.firstVoteBlock);
+            syncBlockDisplay('lastRoundBlock', lastRoundBlock, settings.lastRoundBlock, visibilityState.lastRoundBlock);
+            syncBlockDisplay('footerBlock', footerBlock, settings.footerBlock, visibilityState.footerBlock);
+        };
+
         const applyOverlaySettings = (payload) => {
             const settings = normalizeOverlaySettings(payload?.overlaySettings);
             rootStyles.style.setProperty('--overlay-panel-fill', buildPanelFill(settings.theme));
@@ -658,22 +839,6 @@ public static class ObsOverlayHtmlRenderer
 
         const setPanelVisible = (isVisible) => {
             overlayPanel.style.display = isVisible ? '' : 'none';
-        };
-
-        const setChartVisibility = (payload, settings) => {
-            if (!settings.hideBlocksByPhase) {
-                voteChartBlock.style.display = '';
-                lastRoundBlock.style.display = '';
-                return;
-            }
-
-            const currentMatchState = typeof payload?.matchState === 'string' ? payload.matchState : '';
-            const hasFirstVotedResult = currentMatchState === 'FirstVoted' || currentMatchState === 'Resolved';
-
-            voteChartBlock.style.display = hasFirstVotedResult ? 'none' : '';
-            lastRoundBlock.style.display = hasFirstVotedResult ? '' : 'none';
-            voteChartCard.style.display = '';
-            lastRoundCard.style.display = '';
         };
 
         const renderSeats = (payload) => {
@@ -735,7 +900,7 @@ public static class ObsOverlayHtmlRenderer
             blackBarFill.style.setProperty('--segment-width', '0%');
             totalPredictionsCount.textContent = formatPredictionsCount(0);
             const settings = applyOverlaySettings(null);
-            setChartVisibility({ matchState: '' }, settings);
+            syncOverlayBlocks({ matchState: '' }, settings);
             renderSeats({ seatVotes: [] });
             renderLastRound({ lastRoundVotes: [] });
         };
@@ -749,7 +914,7 @@ public static class ObsOverlayHtmlRenderer
             }
 
             setPanelVisible(true);
-            setChartVisibility(payload, settings);
+            syncOverlayBlocks(payload, settings);
 
             if (payload.status !== 'ready') {
                 matchState.textContent = 'Ожидание';

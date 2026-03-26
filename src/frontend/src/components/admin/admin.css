@@ -278,18 +278,44 @@
   color: var(--tg-theme-hint-color);
 }
 
+.overlay-settings-intro {
+  margin-bottom: 16px;
+}
+
+.overlay-settings-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.overlay-settings-note-spaced {
+  margin-top: -4px;
+}
+
 .overlay-theme-grid,
 .overlay-settings-fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+  align-items: end;
+}
+
+.overlay-theme-grid > .form-group,
+.overlay-settings-fields > .form-group {
+  margin-bottom: 0;
+}
+
+.overlay-theme-grid .form-checkbox-label,
+.overlay-settings-fields .form-checkbox-label {
+  min-height: 44px;
+  align-items: center;
 }
 
 .overlay-settings-grid {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 12px;
-  margin-top: 12px;
+  align-items: start;
 }
 
 .overlay-settings-card {
@@ -297,6 +323,13 @@
   border: 1px solid var(--pm-card-border);
   border-radius: 14px;
   padding: 14px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.overlay-settings-card--full-width {
+  width: 100%;
 }
 
 .overlay-settings-card__title {
@@ -311,6 +344,16 @@
   font-size: 12px;
   line-height: 1.4;
   color: var(--tg-theme-hint-color);
+}
+
+.overlay-settings-card__section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.overlay-settings-card__note {
+  margin-top: 0;
 }
 
 .overlay-settings-fields__full-width {

@@ -20,6 +20,14 @@ export interface OverlayStackPanelLayout {
 
 export interface OverlayBlockPlacement {
   panel: OverlayPanelSide;
+  isVisible: boolean;
+  dynamicDisplay: OverlayDynamicDisplaySettings;
+}
+
+export interface OverlayDynamicDisplaySettings {
+  enabled: boolean;
+  intervalSeconds: number;
+  visibleDurationSeconds: number;
 }
 
 export interface OverlayThemeSettings {
@@ -58,15 +66,39 @@ export const DEFAULT_TOURNAMENT_OVERLAY_SETTINGS: TournamentOverlaySettings = {
   },
   summaryBlock: {
     panel: 'left',
+    isVisible: true,
+    dynamicDisplay: {
+      enabled: false,
+      intervalSeconds: 30,
+      visibleDurationSeconds: 8,
+    },
   },
   firstVoteBlock: {
     panel: 'right',
+    isVisible: true,
+    dynamicDisplay: {
+      enabled: false,
+      intervalSeconds: 30,
+      visibleDurationSeconds: 8,
+    },
   },
   lastRoundBlock: {
     panel: 'left',
+    isVisible: true,
+    dynamicDisplay: {
+      enabled: false,
+      intervalSeconds: 30,
+      visibleDurationSeconds: 8,
+    },
   },
   footerBlock: {
     panel: 'left',
+    isVisible: true,
+    dynamicDisplay: {
+      enabled: false,
+      intervalSeconds: 30,
+      visibleDurationSeconds: 8,
+    },
   },
 };
 
@@ -83,10 +115,42 @@ export function cloneTournamentOverlaySettings(settings?: TournamentOverlaySetti
     },
     leftPanel: { ...source.leftPanel },
     rightPanel: { ...source.rightPanel },
-    summaryBlock: { ...source.summaryBlock },
-    firstVoteBlock: { ...source.firstVoteBlock },
-    lastRoundBlock: { ...source.lastRoundBlock },
-    footerBlock: { ...source.footerBlock },
+    summaryBlock: {
+      panel: source.summaryBlock?.panel ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.summaryBlock.panel,
+      isVisible: source.summaryBlock?.isVisible ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.summaryBlock.isVisible,
+      dynamicDisplay: {
+        enabled: source.summaryBlock?.dynamicDisplay?.enabled ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.summaryBlock.dynamicDisplay.enabled,
+        intervalSeconds: source.summaryBlock?.dynamicDisplay?.intervalSeconds ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.summaryBlock.dynamicDisplay.intervalSeconds,
+        visibleDurationSeconds: source.summaryBlock?.dynamicDisplay?.visibleDurationSeconds ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.summaryBlock.dynamicDisplay.visibleDurationSeconds,
+      },
+    },
+    firstVoteBlock: {
+      panel: source.firstVoteBlock?.panel ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.firstVoteBlock.panel,
+      isVisible: source.firstVoteBlock?.isVisible ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.firstVoteBlock.isVisible,
+      dynamicDisplay: {
+        enabled: source.firstVoteBlock?.dynamicDisplay?.enabled ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.firstVoteBlock.dynamicDisplay.enabled,
+        intervalSeconds: source.firstVoteBlock?.dynamicDisplay?.intervalSeconds ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.firstVoteBlock.dynamicDisplay.intervalSeconds,
+        visibleDurationSeconds: source.firstVoteBlock?.dynamicDisplay?.visibleDurationSeconds ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.firstVoteBlock.dynamicDisplay.visibleDurationSeconds,
+      },
+    },
+    lastRoundBlock: {
+      panel: source.lastRoundBlock?.panel ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.lastRoundBlock.panel,
+      isVisible: source.lastRoundBlock?.isVisible ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.lastRoundBlock.isVisible,
+      dynamicDisplay: {
+        enabled: source.lastRoundBlock?.dynamicDisplay?.enabled ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.lastRoundBlock.dynamicDisplay.enabled,
+        intervalSeconds: source.lastRoundBlock?.dynamicDisplay?.intervalSeconds ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.lastRoundBlock.dynamicDisplay.intervalSeconds,
+        visibleDurationSeconds: source.lastRoundBlock?.dynamicDisplay?.visibleDurationSeconds ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.lastRoundBlock.dynamicDisplay.visibleDurationSeconds,
+      },
+    },
+    footerBlock: {
+      panel: source.footerBlock?.panel ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.footerBlock.panel,
+      isVisible: source.footerBlock?.isVisible ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.footerBlock.isVisible,
+      dynamicDisplay: {
+        enabled: source.footerBlock?.dynamicDisplay?.enabled ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.footerBlock.dynamicDisplay.enabled,
+        intervalSeconds: source.footerBlock?.dynamicDisplay?.intervalSeconds ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.footerBlock.dynamicDisplay.intervalSeconds,
+        visibleDurationSeconds: source.footerBlock?.dynamicDisplay?.visibleDurationSeconds ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.footerBlock.dynamicDisplay.visibleDurationSeconds,
+      },
+    },
   };
 }
 

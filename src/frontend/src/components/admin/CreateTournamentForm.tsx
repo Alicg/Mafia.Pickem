@@ -43,6 +43,15 @@ const parseNonNegativeNumber = (value: string): number => {
   return parsed;
 };
 
+const parsePositiveNumber = (value: string, fallback: number): number => {
+  const parsed = Number.parseInt(value, 10);
+  if (Number.isNaN(parsed) || parsed < 1) {
+    return fallback;
+  }
+
+  return parsed;
+};
+
 export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({
   tournament,
   overlaySettingsOnly = false,
@@ -97,12 +106,25 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({
     }));
   };
 
-  const updateBlock = (blockKey: OverlayBlockKey, field: keyof OverlayBlockPlacement, value: string) => {
+  const updateBlock = (blockKey: OverlayBlockKey, patch: Partial<OverlayBlockPlacement>) => {
     setOverlaySettings(prev => ({
       ...prev,
       [blockKey]: {
         ...prev[blockKey],
-        [field]: value,
+        ...patch,
+      },
+    }));
+  };
+
+  const updateBlockDynamicDisplay = (blockKey: OverlayBlockKey, field: 'enabled' | 'intervalSeconds' | 'visibleDurationSeconds', value: boolean | number) => {
+    setOverlaySettings(prev => ({
+      ...prev,
+      [blockKey]: {
+        ...prev[blockKey],
+        dynamicDisplay: {
+          ...prev[blockKey].dynamicDisplay,
+          [field]: value,
+        },
       },
     }));
   };
@@ -269,120 +291,139 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({
           )}
 
           {isOverlaySettingsOnly && (
-            <div className="form-section-note" style={{ marginBottom: '16px' }}>
+            <div className="form-section-note overlay-settings-intro">
               Здесь можно менять только расположение и палитру OBS overlay. Остальные параметры турнира остаются под управлением администратора.
             </div>
           )}
 
           <div className="form-section">
             <div className="form-section-title">OBS overlay</div>
-            <div className="form-section-note">
-              Для каждой стек-панели задаются отступ от края и отступ сверху. Каждый блок можно назначить только в левую или правую панель.
-            </div>
-
-            <div className="form-group">
-              <label className="form-checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={overlaySettings.hideBlocksByPhase}
-                  onChange={(e) => setOverlaySettings(prev => ({ ...prev, hideBlocksByPhase: e.target.checked }))}
-                  disabled={isLoading}
-                />
-                <span>Скрывать блоки по фазе игры</span>
-              </label>
-              <div className="form-section-note" style={{ marginTop: '8px' }}>
-                Если галочка включена, блоки «Заголосуют первым» и «Последний круг» будут переключаться автоматически в зависимости от фазы игры. Если выключена, оба блока отображаются одновременно.
+            <div className="overlay-settings-stack">
+              <div className="form-section-note">
+                Для каждой стек-панели задаются отступ от края и отступ сверху. Для каждого блока можно отдельно включить показ и назначить левую или правую панель.
               </div>
-            </div>
 
-            <div className="overlay-theme-grid">
-              <div className="form-group">
-                <label className="form-label">Цвет заливки 1</label>
-                <div className="form-color-row">
-                  <input
-                    type="color"
-                    className="form-color-input"
-                    value={overlaySettings.theme.fillColorStart}
-                    onChange={(e) => setOverlaySettings(prev => ({
-                      ...prev,
-                      theme: { ...prev.theme, fillColorStart: e.target.value.toUpperCase() },
-                    }))}
-                    disabled={isLoading}
-                  />
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={overlaySettings.theme.fillColorStart}
-                    onChange={(e) => setOverlaySettings(prev => ({
-                      ...prev,
-                      theme: { ...prev.theme, fillColorStart: e.target.value },
-                    }))}
-                    disabled={isLoading}
-                    maxLength={7}
-                  />
+              <div className="form-section-note overlay-settings-note-spaced">
+                Динамический показ работает только для блоков, которые вообще разрешены к показу в текущей фазе игры. Если включено скрытие по фазе, скрытый фазой блок не будет выезжать до тех пор, пока не станет доступен.
+              </div>
+
+              <div className="overlay-settings-card overlay-settings-card--full-width">
+                <div className="overlay-settings-card__title">Поведение блоков</div>
+                <div className="overlay-settings-card__hint">
+                  Настройка общей логики показа overlay в зависимости от состояния игры.
+                </div>
+
+                <div className="overlay-settings-card__section">
+                  <label className="form-checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={overlaySettings.hideBlocksByPhase}
+                      onChange={(e) => setOverlaySettings(prev => ({ ...prev, hideBlocksByPhase: e.target.checked }))}
+                      disabled={isLoading}
+                    />
+                    <span>Скрывать блоки по фазе игры</span>
+                  </label>
+                  <div className="form-section-note overlay-settings-card__note">
+                    Если галочка включена, блоки «Заголосуют первым» и «Последний круг» будут переключаться автоматически в зависимости от фазы игры. Если выключена, оба блока отображаются одновременно.
+                  </div>
                 </div>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Цвет заливки 2</label>
-                <div className="form-color-row">
-                  <input
-                    type="color"
-                    className="form-color-input"
-                    value={overlaySettings.theme.fillColorEnd}
-                    onChange={(e) => setOverlaySettings(prev => ({
-                      ...prev,
-                      theme: { ...prev.theme, fillColorEnd: e.target.value.toUpperCase() },
-                    }))}
-                    disabled={isLoading}
-                  />
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={overlaySettings.theme.fillColorEnd}
-                    onChange={(e) => setOverlaySettings(prev => ({
-                      ...prev,
-                      theme: { ...prev.theme, fillColorEnd: e.target.value },
-                    }))}
-                    disabled={isLoading}
-                    maxLength={7}
-                  />
+              <div className="overlay-settings-card overlay-settings-card--full-width">
+                <div className="overlay-settings-card__title">Тема</div>
+                <div className="overlay-settings-card__hint">
+                  Цвета, прозрачность и способ заливки для всех карточек overlay.
+                </div>
+
+                <div className="overlay-theme-grid">
+                  <div className="form-group">
+                    <label className="form-label">Цвет заливки 1</label>
+                    <div className="form-color-row">
+                      <input
+                        type="color"
+                        className="form-color-input"
+                        value={overlaySettings.theme.fillColorStart}
+                        onChange={(e) => setOverlaySettings(prev => ({
+                          ...prev,
+                          theme: { ...prev.theme, fillColorStart: e.target.value.toUpperCase() },
+                        }))}
+                        disabled={isLoading}
+                      />
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={overlaySettings.theme.fillColorStart}
+                        onChange={(e) => setOverlaySettings(prev => ({
+                          ...prev,
+                          theme: { ...prev.theme, fillColorStart: e.target.value },
+                        }))}
+                        disabled={isLoading}
+                        maxLength={7}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Цвет заливки 2</label>
+                    <div className="form-color-row">
+                      <input
+                        type="color"
+                        className="form-color-input"
+                        value={overlaySettings.theme.fillColorEnd}
+                        onChange={(e) => setOverlaySettings(prev => ({
+                          ...prev,
+                          theme: { ...prev.theme, fillColorEnd: e.target.value.toUpperCase() },
+                        }))}
+                        disabled={isLoading}
+                      />
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={overlaySettings.theme.fillColorEnd}
+                        onChange={(e) => setOverlaySettings(prev => ({
+                          ...prev,
+                          theme: { ...prev.theme, fillColorEnd: e.target.value },
+                        }))}
+                        disabled={isLoading}
+                        maxLength={7}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Прозрачность</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      min={0}
+                      max={100}
+                      value={overlaySettings.theme.fillOpacity}
+                      onChange={(e) => setOverlaySettings(prev => ({
+                        ...prev,
+                        theme: { ...prev.theme, fillOpacity: parseNonNegativeNumber(e.target.value) },
+                      }))}
+                      disabled={isLoading}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={overlaySettings.theme.useGradient}
+                        onChange={(e) => setOverlaySettings(prev => ({
+                          ...prev,
+                          theme: { ...prev.theme, useGradient: e.target.checked },
+                        }))}
+                        disabled={isLoading}
+                      />
+                      <span>Использовать градиент</span>
+                    </label>
+                  </div>
                 </div>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Прозрачность</label>
-                <input
-                  type="number"
-                  className="form-input"
-                  min={0}
-                  max={100}
-                  value={overlaySettings.theme.fillOpacity}
-                  onChange={(e) => setOverlaySettings(prev => ({
-                    ...prev,
-                    theme: { ...prev.theme, fillOpacity: parseNonNegativeNumber(e.target.value) },
-                  }))}
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={overlaySettings.theme.useGradient}
-                    onChange={(e) => setOverlaySettings(prev => ({
-                      ...prev,
-                      theme: { ...prev.theme, useGradient: e.target.checked },
-                    }))}
-                    disabled={isLoading}
-                  />
-                  <span>Использовать градиент</span>
-                </label>
-              </div>
-            </div>
-
-            <div className="overlay-settings-grid">
+              <div className="overlay-settings-grid">
               {overlayPanelSections.map((section) => {
                 const panel = overlaySettings[section.key];
 
@@ -422,6 +463,7 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({
 
               {overlayBlockSections.map((section) => {
                 const block = overlaySettings[section.key];
+                const dynamicDisplay = block.dynamicDisplay;
 
                 return (
                   <div key={`${section.key}-placement`} className="overlay-settings-card">
@@ -430,21 +472,87 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({
 
                     <div className="overlay-settings-fields">
                       <div className="form-group">
+                        <label className="form-checkbox-label">
+                          <input
+                            type="checkbox"
+                            checked={block.isVisible}
+                            onChange={(e) => updateBlock(section.key, { isVisible: e.target.checked })}
+                            disabled={isLoading}
+                          />
+                          <span>Показывать блок</span>
+                        </label>
+                      </div>
+
+                      <div className="form-group">
                         <label className="form-label">Панель</label>
                         <select
                           className="form-input"
                           value={block.panel}
-                          onChange={(e) => updateBlock(section.key, 'panel', e.target.value)}
+                          onChange={(e) => updateBlock(section.key, { panel: e.target.value as OverlayBlockPlacement['panel'] })}
                           disabled={isLoading}
                         >
                           <option value="left">Левая</option>
                           <option value="right">Правая</option>
                         </select>
                       </div>
+
+                      <div className="form-group overlay-settings-fields__full-width">
+                        <label className="form-checkbox-label">
+                          <input
+                            type="checkbox"
+                            checked={dynamicDisplay.enabled}
+                            onChange={(e) => updateBlockDynamicDisplay(section.key, 'enabled', e.target.checked)}
+                            disabled={isLoading}
+                          />
+                          <span>Динамический показ</span>
+                        </label>
+                      </div>
+
+                      {dynamicDisplay.enabled && (
+                        <>
+                          <div className="form-group">
+                            <label className="form-label">Интервал между выездами, сек.</label>
+                            <input
+                              type="number"
+                              className="form-input"
+                              min={1}
+                              value={dynamicDisplay.intervalSeconds}
+                              onChange={(e) => updateBlockDynamicDisplay(
+                                section.key,
+                                'intervalSeconds',
+                                parsePositiveNumber(e.target.value, dynamicDisplay.intervalSeconds),
+                              )}
+                              disabled={isLoading}
+                            />
+                          </div>
+
+                          <div className="form-group">
+                            <label className="form-label">Показывать, сек.</label>
+                            <input
+                              type="number"
+                              className="form-input"
+                              min={1}
+                              value={dynamicDisplay.visibleDurationSeconds}
+                              onChange={(e) => updateBlockDynamicDisplay(
+                                section.key,
+                                'visibleDurationSeconds',
+                                parsePositiveNumber(e.target.value, dynamicDisplay.visibleDurationSeconds),
+                              )}
+                              disabled={isLoading}
+                            />
+                          </div>
+
+                          <div className="form-section-note overlay-settings-fields__full-width">
+                            Блок выезжает со своей стороны, остаётся видимым указанное время и затем заезжает обратно.
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 );
               })}
+
+              </div>
             </div>
           </div>
 

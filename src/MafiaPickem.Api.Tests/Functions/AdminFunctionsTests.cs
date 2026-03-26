@@ -482,7 +482,12 @@ public class AdminFunctionsTests
                 true,
                 It.Is<TournamentOverlaySettings>(settings =>
                     settings.HideBlocksByPhase == false &&
+                    settings.SummaryBlock.IsVisible == false &&
+                    settings.SummaryBlock.DynamicDisplay.Enabled == true &&
+                    settings.SummaryBlock.DynamicDisplay.IntervalSeconds == 45 &&
+                    settings.SummaryBlock.DynamicDisplay.VisibleDurationSeconds == 12 &&
                     settings.FirstVoteBlock.Panel == OverlayPanelSide.Left &&
+                    settings.FooterBlock.IsVisible == false &&
                     settings.LeftPanel.EdgeOffset == 48 &&
                     settings.LeftPanel.TopOffset == 222)))
             .ReturnsAsync(updatedTournament);
@@ -502,8 +507,21 @@ public class AdminFunctionsTests
                                     "edgeOffset": 48,
                                     "topOffset": 222
                                 },
+                                "summaryBlock": {
+                                    "panel": "left",
+                                                                        "isVisible": false,
+                                                                        "dynamicDisplay": {
+                                                                            "enabled": true,
+                                                                            "intervalSeconds": 45,
+                                                                            "visibleDurationSeconds": 12
+                                                                        }
+                                },
                 "firstVoteBlock": {
                                     "panel": "left"
+                                },
+                                "footerBlock": {
+                                    "panel": "left",
+                                    "isVisible": false
                 }
               }
             }

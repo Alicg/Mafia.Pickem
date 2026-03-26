@@ -73,6 +73,8 @@ public class OverlayStackPanelLayout
 public class OverlayBlockPlacement
 {
     public string Panel { get; set; } = OverlayPanelSide.Left;
+    public bool IsVisible { get; set; } = true;
+    public OverlayDynamicDisplaySettings DynamicDisplay { get; set; } = new();
 
     // Legacy properties kept for backward compatibility with already stored JSON.
     public string? Side { get; set; }
@@ -87,7 +89,29 @@ public class OverlayBlockPlacement
     {
         return new OverlayBlockPlacement
         {
-            Panel = OverlayPanelSide.Normalize(block?.Panel, OverlayPanelSide.Normalize(block?.Side, defaultPanel))
+            Panel = OverlayPanelSide.Normalize(block?.Panel, OverlayPanelSide.Normalize(block?.Side, defaultPanel)),
+            IsVisible = block?.IsVisible ?? true,
+            DynamicDisplay = OverlayDynamicDisplaySettings.Normalize(block?.DynamicDisplay)
+        };
+    }
+}
+
+public class OverlayDynamicDisplaySettings
+{
+    public bool Enabled { get; set; }
+    public int IntervalSeconds { get; set; } = 30;
+    public int VisibleDurationSeconds { get; set; } = 8;
+
+    public static OverlayDynamicDisplaySettings Normalize(OverlayDynamicDisplaySettings? settings)
+    {
+        var intervalSeconds = Math.Clamp(settings?.IntervalSeconds ?? 30, 1, 3600);
+        var visibleDurationSeconds = Math.Clamp(settings?.VisibleDurationSeconds ?? 8, 1, 3600);
+
+        return new OverlayDynamicDisplaySettings
+        {
+            Enabled = settings?.Enabled ?? false,
+            IntervalSeconds = intervalSeconds,
+            VisibleDurationSeconds = Math.Min(visibleDurationSeconds, intervalSeconds)
         };
     }
 }
