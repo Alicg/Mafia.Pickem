@@ -141,7 +141,7 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({
 
   const updateBlockDynamicDisplay = (
     blockKey: OverlayBlockKey,
-    field: 'enabled' | 'intervalSeconds' | 'visibleDurationSeconds',
+    field: 'enabled' | 'intervalSeconds' | 'visibleDurationSeconds' | 'animationDurationMs',
     value: boolean | number,
   ) => {
     setOverlaySettings(prev => ({
@@ -162,6 +162,22 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({
       viewerSympathyBlock: {
         ...prev.viewerSympathyBlock,
         [field]: value,
+      },
+    }));
+  };
+
+  const updateViewerSympathyDynamicDisplay = (
+    field: 'enabled' | 'intervalSeconds' | 'visibleDurationSeconds' | 'animationDurationMs',
+    value: boolean | number,
+  ) => {
+    setOverlaySettings(prev => ({
+      ...prev,
+      viewerSympathyBlock: {
+        ...prev.viewerSympathyBlock,
+        dynamicDisplay: {
+          ...prev.viewerSympathyBlock.dynamicDisplay,
+          [field]: value,
+        },
       },
     }));
   };
@@ -618,6 +634,24 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({
                                 <div className="form-section-note overlay-settings-fields__full-width">
                                   Блок выезжает со своей стороны, остаётся видимым указанное время и затем заезжает обратно.
                                 </div>
+
+                                <div className="form-group">
+                                  <label className="form-label">Скорость анимации, мс</label>
+                                  <input
+                                    type="number"
+                                    className="form-input"
+                                    min={50}
+                                    max={5000}
+                                    step={10}
+                                    value={dynamicDisplay.animationDurationMs}
+                                    onChange={(e) => updateBlockDynamicDisplay(
+                                      section.key,
+                                      'animationDurationMs',
+                                      Math.max(50, Math.min(5000, parseInt(e.target.value, 10) || 420)),
+                                    )}
+                                    disabled={isLoading}
+                                  />
+                                </div>
                               </>
                             )}
                           </div>
@@ -679,6 +713,73 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({
                       <div className="form-section-note overlay-settings-fields__full-width">
                         Отступ слева и сверху задают положение блока от левого верхнего угла сцены. Масштаб 10 — полный размер, 1 — минимальный.
                       </div>
+
+                      <div className="form-group overlay-settings-fields__full-width">
+                        <label className="form-checkbox-label">
+                          <input
+                            type="checkbox"
+                            checked={overlaySettings.viewerSympathyBlock.dynamicDisplay.enabled}
+                            onChange={(e) => updateViewerSympathyDynamicDisplay('enabled', e.target.checked)}
+                            disabled={isLoading}
+                          />
+                          <span>Динамический показ</span>
+                        </label>
+                      </div>
+
+                      {overlaySettings.viewerSympathyBlock.dynamicDisplay.enabled && (
+                        <>
+                          <div className="form-group">
+                            <label className="form-label">Интервал между выездами, сек.</label>
+                            <input
+                              type="number"
+                              className="form-input"
+                              min={1}
+                              value={overlaySettings.viewerSympathyBlock.dynamicDisplay.intervalSeconds}
+                              onChange={(e) => updateViewerSympathyDynamicDisplay(
+                                'intervalSeconds',
+                                parsePositiveNumber(e.target.value, overlaySettings.viewerSympathyBlock.dynamicDisplay.intervalSeconds),
+                              )}
+                              disabled={isLoading}
+                            />
+                          </div>
+
+                          <div className="form-group">
+                            <label className="form-label">Показывать, сек.</label>
+                            <input
+                              type="number"
+                              className="form-input"
+                              min={1}
+                              value={overlaySettings.viewerSympathyBlock.dynamicDisplay.visibleDurationSeconds}
+                              onChange={(e) => updateViewerSympathyDynamicDisplay(
+                                'visibleDurationSeconds',
+                                parsePositiveNumber(e.target.value, overlaySettings.viewerSympathyBlock.dynamicDisplay.visibleDurationSeconds),
+                              )}
+                              disabled={isLoading}
+                            />
+                          </div>
+
+                          <div className="form-section-note overlay-settings-fields__full-width">
+                            Блок выезжает сверху, остаётся видимым указанное время и затем заезжает обратно наверх.
+                          </div>
+
+                          <div className="form-group">
+                            <label className="form-label">Скорость анимации, мс</label>
+                            <input
+                              type="number"
+                              className="form-input"
+                              min={50}
+                              max={5000}
+                              step={10}
+                              value={overlaySettings.viewerSympathyBlock.dynamicDisplay.animationDurationMs}
+                              onChange={(e) => updateViewerSympathyDynamicDisplay(
+                                'animationDurationMs',
+                                Math.max(50, Math.min(5000, parseInt(e.target.value, 10) || 420)),
+                              )}
+                              disabled={isLoading}
+                            />
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 </>

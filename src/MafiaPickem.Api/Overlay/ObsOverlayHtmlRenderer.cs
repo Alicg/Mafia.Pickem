@@ -103,7 +103,7 @@ public static class ObsOverlayHtmlRenderer
         }
 
         .overlay-block.is-dynamic-managed {
-            transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1), opacity 320ms ease;
+            transition: transform var(--animation-duration, 420ms) cubic-bezier(0.22, 1, 0.36, 1), opacity var(--animation-duration, 420ms) ease;
             will-change: transform, opacity;
         }
 
@@ -525,10 +525,10 @@ public static class ObsOverlayHtmlRenderer
             },
             leftPanel: { edgeOffset: 15, topOffset: 138 },
             rightPanel: { edgeOffset: 15, topOffset: 394 },
-            summaryBlock: { panel: 'left', isVisible: true, dynamicDisplay: { enabled: false, intervalSeconds: 30, visibleDurationSeconds: 8 } },
-            firstVoteBlock: { panel: 'right', isVisible: true, dynamicDisplay: { enabled: false, intervalSeconds: 30, visibleDurationSeconds: 8 } },
-            lastRoundBlock: { panel: 'left', isVisible: true, dynamicDisplay: { enabled: false, intervalSeconds: 30, visibleDurationSeconds: 8 } },
-            footerBlock: { panel: 'left', isVisible: true, dynamicDisplay: { enabled: false, intervalSeconds: 30, visibleDurationSeconds: 8 } },
+            summaryBlock: { panel: 'left', isVisible: true, dynamicDisplay: { enabled: false, intervalSeconds: 30, visibleDurationSeconds: 8, animationDurationMs: 420 } },
+            firstVoteBlock: { panel: 'right', isVisible: true, dynamicDisplay: { enabled: false, intervalSeconds: 30, visibleDurationSeconds: 8, animationDurationMs: 420 } },
+            lastRoundBlock: { panel: 'left', isVisible: true, dynamicDisplay: { enabled: false, intervalSeconds: 30, visibleDurationSeconds: 8, animationDurationMs: 420 } },
+            footerBlock: { panel: 'left', isVisible: true, dynamicDisplay: { enabled: false, intervalSeconds: 30, visibleDurationSeconds: 8, animationDurationMs: 420 } },
         };
 
         const formatPercent = (value) => `${Math.round(Number(value || 0))}%`;
@@ -586,6 +586,7 @@ public static class ObsOverlayHtmlRenderer
                     : fallback.enabled,
                 intervalSeconds,
                 visibleDurationSeconds: Math.min(visibleDurationSeconds, intervalSeconds),
+                animationDurationMs: clamp(Number(dynamicDisplay?.animationDurationMs ?? fallback.animationDurationMs) || 420, 50, 5000),
             };
         };
 
@@ -725,6 +726,9 @@ public static class ObsOverlayHtmlRenderer
                 return;
             }
 
+            const animMs = dynamicDisplay.animationDurationMs || dynamicDisplayAnimationMs;
+            element.style.setProperty('--animation-duration', `${animMs}ms`);
+
             const hiddenClass = getHiddenDirectionClass(panel);
             const oppositeHiddenClass = hiddenClass === 'is-dynamic-hidden-right' ? 'is-dynamic-hidden-left' : 'is-dynamic-hidden-right';
 
@@ -758,7 +762,7 @@ public static class ObsOverlayHtmlRenderer
                         () => runDynamicDisplayCycle(controller, element, panel, dynamicDisplay, token),
                         dynamicDisplay.intervalSeconds * 1000
                     );
-                }, dynamicDisplayAnimationMs);
+                }, animMs);
             }, dynamicDisplay.visibleDurationSeconds * 1000);
         };
 

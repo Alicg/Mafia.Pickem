@@ -90,6 +90,16 @@ public static class ObsViewerSympathyHtmlRenderer
             align-items: center;
         }
 
+        .sympathy-wrap.is-dynamic-managed {
+            transition: transform var(--animation-duration, 420ms) cubic-bezier(0.22, 1, 0.36, 1), opacity var(--animation-duration, 420ms) ease;
+            will-change: transform, opacity;
+        }
+
+        .sympathy-wrap.is-dynamic-hidden-top {
+            transform: scale(var(--overlay-scale, 1)) translateY(calc(-100% - 24px));
+            opacity: 0;
+        }
+
         .sympathy-header {
             display: flex;
             align-items: center;
@@ -300,6 +310,12 @@ public static class ObsViewerSympathyHtmlRenderer
                 horizontalOffset: 0,
                 verticalOffset: 24,
                 scale: 10,
+                dynamicDisplay: {
+                    enabled: false,
+                    intervalSeconds: 30,
+                    visibleDurationSeconds: 8,
+                    animationDurationMs: 420,
+                },
             },
         };
 
@@ -322,11 +338,27 @@ public static class ObsViewerSympathyHtmlRenderer
 
         const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
-        const normalizeViewerSympathyBlock = (settings) => ({
-            horizontalOffset: clamp(Number(settings?.horizontalOffset ?? defaultOverlaySettings.viewerSympathyBlock.horizontalOffset) || 0, -4000, 4000),
-            verticalOffset: clamp(Number(settings?.verticalOffset ?? defaultOverlaySettings.viewerSympathyBlock.verticalOffset) || 0, -4000, 4000),
-            scale: clamp(Number(settings?.scale ?? defaultOverlaySettings.viewerSympathyBlock.scale) || 10, 1, 10),
-        });
+        const normalizeViewerSympathyBlock = (settings) => {
+            const dd = settings?.dynamicDisplay;
+            const ddd = defaultOverlaySettings.viewerSympathyBlock.dynamicDisplay;
+            const intervalSeconds = clamp(Number(dd?.intervalSeconds ?? ddd.intervalSeconds) || 30, 1, 3600);
+            const visibleDurationSeconds = Math.min(
+                clamp(Number(dd?.visibleDurationSeconds ?? ddd.visibleDurationSeconds) || 8, 1, 3600),
+                intervalSeconds
+            );
+
+            return {
+                horizontalOffset: clamp(Number(settings?.horizontalOffset ?? defaultOverlaySettings.viewerSympathyBlock.horizontalOffset) || 0, -4000, 4000),
+                verticalOffset: clamp(Number(settings?.verticalOffset ?? defaultOverlaySettings.viewerSympathyBlock.verticalOffset) || 0, -4000, 4000),
+                scale: clamp(Number(settings?.scale ?? defaultOverlaySettings.viewerSympathyBlock.scale) || 10, 1, 10),
+                dynamicDisplay: {
+                    enabled: typeof dd?.enabled === 'boolean' ? dd.enabled : ddd.enabled,
+                    intervalSeconds,
+                    visibleDurationSeconds,
+                    animationDurationMs: clamp(Number(dd?.animationDurationMs ?? ddd.animationDurationMs) || 420, 50, 5000),
+                },
+            };
+        };
 
         const getDataUrl = () => {
             const url = new URL(window.location.href);
@@ -340,6 +372,7 @@ public static class ObsViewerSympathyHtmlRenderer
             rootStyles.style.setProperty('--offset-x', `${block.horizontalOffset}px`);
             rootStyles.style.setProperty('--offset-y', `${block.verticalOffset}px`);
             rootStyles.style.setProperty('--overlay-scale', `${block.scale / 10}`);
+            return block;
         };
 
         const setSummary = (redSide, blackSide, totalPredictions) => {
@@ -359,11 +392,111 @@ public static class ObsViewerSympathyHtmlRenderer
             setSummary(null, null, 0);
         };
 
+        const dynamicDisplayAnimationMs = 420;
+        const dynamicController = {
+            signature: '',
+            cycleTimerId: 0,
+            hideTimerId: 0,
+            finalizeHideTimerId: 0,
+            animationFrameId: 0,
+            token: 0,
+            active: false,
+        };
+
+        const clearDynamicController = () => {
+            if (dynamicController.cycleTimerId) {
+                window.clearTimeout(dynamicController.cycleTimerId);
+                dynamicController.cycleTimerId = 0;
+            }
+            if (dynamicController.hideTimerId) {
+                window.clearTimeout(dynamicController.hideTimerId);
+                dynamicController.hideTimerId = 0;
+            }
+            if (dynamicController.finalizeHideTimerId) {
+                window.clearTimeout(dynamicController.finalizeHideTimerId);
+                dynamicController.finalizeHideTimerId = 0;
+            }
+            if (dynamicController.animationFrameId) {
+                window.cancelAnimationFrame(dynamicController.animationFrameId);
+                dynamicController.animationFrameId = 0;
+            }
+            dynamicController.token += 1;
+            dynamicController.active = false;
+        };
+
+        const resetDynamicClasses = () => {
+            sympathyWrap.classList.remove('is-dynamic-managed', 'is-dynamic-hidden-top');
+        };
+
+        const runDynamicCycle = (dynamicDisplay, token) => {
+            if (!dynamicController.active || dynamicController.token !== token) {
+                return;
+            }
+
+            const animMs = dynamicDisplay.animationDurationMs || dynamicDisplayAnimationMs;
+            sympathyWrap.style.setProperty('--animation-duration', `${animMs}ms`);
+            sympathyWrap.style.display = '';
+            sympathyWrap.classList.add('is-dynamic-managed');
+            sympathyWrap.classList.add('is-dynamic-hidden-top');
+            void sympathyWrap.offsetWidth;
+
+            dynamicController.animationFrameId = window.requestAnimationFrame(() => {
+                if (!dynamicController.active || dynamicController.token !== token) {
+                    return;
+                }
+                sympathyWrap.classList.remove('is-dynamic-hidden-top');
+            });
+
+            dynamicController.hideTimerId = window.setTimeout(() => {
+                if (!dynamicController.active || dynamicController.token !== token) {
+                    return;
+                }
+                sympathyWrap.classList.add('is-dynamic-hidden-top');
+
+                dynamicController.finalizeHideTimerId = window.setTimeout(() => {
+                    if (!dynamicController.active || dynamicController.token !== token) {
+                        return;
+                    }
+                    sympathyWrap.style.display = 'none';
+
+                    dynamicController.cycleTimerId = window.setTimeout(
+                        () => runDynamicCycle(dynamicDisplay, token),
+                        dynamicDisplay.intervalSeconds * 1000
+                    );
+                }, animMs);
+            }, dynamicDisplay.visibleDurationSeconds * 1000);
+        };
+
+        const syncDynamicDisplay = (dynamicDisplay, shouldBeVisible) => {
+            const signature = JSON.stringify({ shouldBeVisible, dynamicDisplay });
+            if (dynamicController.signature === signature) {
+                return;
+            }
+
+            clearDynamicController();
+            dynamicController.signature = signature;
+            resetDynamicClasses();
+
+            if (!shouldBeVisible) {
+                sympathyWrap.style.display = 'none';
+                return;
+            }
+
+            if (!dynamicDisplay.enabled) {
+                sympathyWrap.style.display = '';
+                return;
+            }
+
+            dynamicController.active = true;
+            runDynamicCycle(dynamicDisplay, dynamicController.token);
+        };
+
         const renderPayload = (payload) => {
-            applyOverlaySettings(payload);
+            const block = applyOverlaySettings(payload);
 
             if (payload?.status === 'no-match') {
                 overlayRoot.classList.add('is-hidden');
+                syncDynamicDisplay(block.dynamicDisplay, false);
                 return;
             }
 
@@ -371,12 +504,14 @@ public static class ObsViewerSympathyHtmlRenderer
 
             if (payload?.status !== 'ready') {
                 setPendingState();
+                syncDynamicDisplay(block.dynamicDisplay, true);
                 return;
             }
 
             sympathyWrap.classList.toggle('is-finished', payload?.matchState === 'Resolved');
             stateBadge.textContent = payload?.matchState === 'Resolved' ? 'ИТОГ' : 'LIVE';
             setSummary(payload?.redSide, payload?.blackSide, payload?.totalPredictions);
+            syncDynamicDisplay(block.dynamicDisplay, true);
         };
 
         const applyDisconnectedState = () => {
@@ -386,6 +521,7 @@ public static class ObsViewerSympathyHtmlRenderer
             stateBadge.textContent = 'OFFLINE';
             setSummary(null, null, 0);
             summaryMeta.textContent = 'Нет связи через';
+            syncDynamicDisplay(defaultOverlaySettings.viewerSympathyBlock.dynamicDisplay, false);
         };
 
         const refreshOverlay = async () => {

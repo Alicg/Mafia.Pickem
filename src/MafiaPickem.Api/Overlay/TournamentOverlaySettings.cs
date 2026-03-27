@@ -44,6 +44,7 @@ public class ViewerSympathyOverlayBlockSettings
     public int HorizontalOffset { get; set; }
     public int VerticalOffset { get; set; } = 24;
     public int Scale { get; set; } = 10;
+    public OverlayDynamicDisplaySettings DynamicDisplay { get; set; } = new();
 
     public static ViewerSympathyOverlayBlockSettings Normalize(ViewerSympathyOverlayBlockSettings? settings)
     {
@@ -51,7 +52,8 @@ public class ViewerSympathyOverlayBlockSettings
         {
             HorizontalOffset = NormalizeOffset(settings?.HorizontalOffset ?? 0),
             VerticalOffset = NormalizeOffset(settings?.VerticalOffset ?? 24),
-            Scale = Math.Clamp(settings?.Scale ?? 10, 1, 10)
+            Scale = Math.Clamp(settings?.Scale ?? 10, 1, 10),
+            DynamicDisplay = OverlayDynamicDisplaySettings.Normalize(settings?.DynamicDisplay)
         };
     }
 
@@ -127,6 +129,7 @@ public class OverlayDynamicDisplaySettings
     public bool Enabled { get; set; }
     public int IntervalSeconds { get; set; } = 30;
     public int VisibleDurationSeconds { get; set; } = 8;
+    public int AnimationDurationMs { get; set; } = 420;
 
     public static OverlayDynamicDisplaySettings Normalize(OverlayDynamicDisplaySettings? settings)
     {
@@ -137,7 +140,8 @@ public class OverlayDynamicDisplaySettings
         {
             Enabled = settings?.Enabled ?? false,
             IntervalSeconds = intervalSeconds,
-            VisibleDurationSeconds = Math.Min(visibleDurationSeconds, intervalSeconds)
+            VisibleDurationSeconds = Math.Min(visibleDurationSeconds, intervalSeconds),
+            AnimationDurationMs = Math.Clamp(settings?.AnimationDurationMs ?? 420, 50, 5000)
         };
     }
 }

@@ -28,6 +28,7 @@ export interface OverlayDynamicDisplaySettings {
   enabled: boolean;
   intervalSeconds: number;
   visibleDurationSeconds: number;
+  animationDurationMs: number;
 }
 
 export interface OverlayThemeSettings {
@@ -43,6 +44,7 @@ export interface ViewerSympathyOverlayBlockSettings {
   horizontalOffset: number;
   verticalOffset: number;
   scale: number;
+  dynamicDisplay: OverlayDynamicDisplaySettings;
 }
 
 export interface TournamentOverlaySettings {
@@ -82,6 +84,7 @@ export const DEFAULT_TOURNAMENT_OVERLAY_SETTINGS: TournamentOverlaySettings = {
       enabled: false,
       intervalSeconds: 30,
       visibleDurationSeconds: 8,
+      animationDurationMs: 420,
     },
   },
   firstVoteBlock: {
@@ -91,6 +94,7 @@ export const DEFAULT_TOURNAMENT_OVERLAY_SETTINGS: TournamentOverlaySettings = {
       enabled: false,
       intervalSeconds: 30,
       visibleDurationSeconds: 8,
+      animationDurationMs: 420,
     },
   },
   lastRoundBlock: {
@@ -100,6 +104,7 @@ export const DEFAULT_TOURNAMENT_OVERLAY_SETTINGS: TournamentOverlaySettings = {
       enabled: false,
       intervalSeconds: 30,
       visibleDurationSeconds: 8,
+      animationDurationMs: 420,
     },
   },
   footerBlock: {
@@ -109,12 +114,19 @@ export const DEFAULT_TOURNAMENT_OVERLAY_SETTINGS: TournamentOverlaySettings = {
       enabled: false,
       intervalSeconds: 30,
       visibleDurationSeconds: 8,
+      animationDurationMs: 420,
     },
   },
   viewerSympathyBlock: {
     horizontalOffset: 0,
     verticalOffset: 24,
     scale: 10,
+    dynamicDisplay: {
+      enabled: false,
+      intervalSeconds: 30,
+      visibleDurationSeconds: 8,
+      animationDurationMs: 420,
+    },
   },
 };
 
@@ -139,6 +151,7 @@ export function cloneTournamentOverlaySettings(settings?: TournamentOverlaySetti
         enabled: source.summaryBlock?.dynamicDisplay?.enabled ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.summaryBlock.dynamicDisplay.enabled,
         intervalSeconds: source.summaryBlock?.dynamicDisplay?.intervalSeconds ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.summaryBlock.dynamicDisplay.intervalSeconds,
         visibleDurationSeconds: source.summaryBlock?.dynamicDisplay?.visibleDurationSeconds ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.summaryBlock.dynamicDisplay.visibleDurationSeconds,
+        animationDurationMs: source.summaryBlock?.dynamicDisplay?.animationDurationMs ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.summaryBlock.dynamicDisplay.animationDurationMs,
       },
     },
     firstVoteBlock: {
@@ -148,6 +161,7 @@ export function cloneTournamentOverlaySettings(settings?: TournamentOverlaySetti
         enabled: source.firstVoteBlock?.dynamicDisplay?.enabled ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.firstVoteBlock.dynamicDisplay.enabled,
         intervalSeconds: source.firstVoteBlock?.dynamicDisplay?.intervalSeconds ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.firstVoteBlock.dynamicDisplay.intervalSeconds,
         visibleDurationSeconds: source.firstVoteBlock?.dynamicDisplay?.visibleDurationSeconds ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.firstVoteBlock.dynamicDisplay.visibleDurationSeconds,
+        animationDurationMs: source.firstVoteBlock?.dynamicDisplay?.animationDurationMs ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.firstVoteBlock.dynamicDisplay.animationDurationMs,
       },
     },
     lastRoundBlock: {
@@ -157,6 +171,7 @@ export function cloneTournamentOverlaySettings(settings?: TournamentOverlaySetti
         enabled: source.lastRoundBlock?.dynamicDisplay?.enabled ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.lastRoundBlock.dynamicDisplay.enabled,
         intervalSeconds: source.lastRoundBlock?.dynamicDisplay?.intervalSeconds ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.lastRoundBlock.dynamicDisplay.intervalSeconds,
         visibleDurationSeconds: source.lastRoundBlock?.dynamicDisplay?.visibleDurationSeconds ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.lastRoundBlock.dynamicDisplay.visibleDurationSeconds,
+        animationDurationMs: source.lastRoundBlock?.dynamicDisplay?.animationDurationMs ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.lastRoundBlock.dynamicDisplay.animationDurationMs,
       },
     },
     footerBlock: {
@@ -166,12 +181,19 @@ export function cloneTournamentOverlaySettings(settings?: TournamentOverlaySetti
         enabled: source.footerBlock?.dynamicDisplay?.enabled ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.footerBlock.dynamicDisplay.enabled,
         intervalSeconds: source.footerBlock?.dynamicDisplay?.intervalSeconds ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.footerBlock.dynamicDisplay.intervalSeconds,
         visibleDurationSeconds: source.footerBlock?.dynamicDisplay?.visibleDurationSeconds ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.footerBlock.dynamicDisplay.visibleDurationSeconds,
+        animationDurationMs: source.footerBlock?.dynamicDisplay?.animationDurationMs ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.footerBlock.dynamicDisplay.animationDurationMs,
       },
     },
     viewerSympathyBlock: {
       horizontalOffset: source.viewerSympathyBlock?.horizontalOffset ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.viewerSympathyBlock.horizontalOffset,
       verticalOffset: source.viewerSympathyBlock?.verticalOffset ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.viewerSympathyBlock.verticalOffset,
       scale: source.viewerSympathyBlock?.scale ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.viewerSympathyBlock.scale,
+      dynamicDisplay: {
+        enabled: source.viewerSympathyBlock?.dynamicDisplay?.enabled ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.viewerSympathyBlock.dynamicDisplay.enabled,
+        intervalSeconds: source.viewerSympathyBlock?.dynamicDisplay?.intervalSeconds ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.viewerSympathyBlock.dynamicDisplay.intervalSeconds,
+        visibleDurationSeconds: source.viewerSympathyBlock?.dynamicDisplay?.visibleDurationSeconds ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.viewerSympathyBlock.dynamicDisplay.visibleDurationSeconds,
+        animationDurationMs: source.viewerSympathyBlock?.dynamicDisplay?.animationDurationMs ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.viewerSympathyBlock.dynamicDisplay.animationDurationMs,
+      },
     },
   };
 }
