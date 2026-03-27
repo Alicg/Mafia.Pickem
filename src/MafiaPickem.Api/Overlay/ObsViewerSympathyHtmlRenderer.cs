@@ -143,7 +143,7 @@ public static class ObsViewerSympathyHtmlRenderer
         .block-footer {
             margin-top: 8px;
             display: flex;
-            align-items: baseline;
+            align-items: center;
             justify-content: center;
             gap: 16px;
             font-size: 17px;
@@ -152,7 +152,26 @@ public static class ObsViewerSympathyHtmlRenderer
         }
 
         .block-handle {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
             color: rgba(218, 218, 222, 0.7);
+        }
+
+        .block-handle__icon {
+            display: inline-flex;
+            width: 1.3em;
+            height: 1.3em;
+            flex: 0 0 1.3em;
+            color: #38bdf8;
+            filter: drop-shadow(0 0 8px rgba(255, 243, 224, 0.22));
+            margin-bottom: 2px;
+        }
+
+        .block-handle__icon svg {
+            width: 100%;
+            height: 100%;
+            display: block;
         }
 
         /* ── shared card ── */
@@ -370,7 +389,7 @@ public static class ObsViewerSympathyHtmlRenderer
 
             <div class="block-footer">
                 <span id="sympathyMeta">0 прогнозов через</span>
-                <span class="block-handle">@mafiapickembot</span>
+                <span class="block-handle"><span class="block-handle__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="currentColor" fill-opacity="0.18"/><path d="M17.94 6.62L5.98 11.23C5.17 11.56 5.18 12.01 5.83 12.21L8.9 13.17L15.99 8.69C16.33 8.48 16.64 8.59 16.39 8.81L10.65 13.99L10.43 17.12C10.75 17.12 10.89 16.97 11.07 16.79L12.56 15.34L15.66 17.63C16.23 17.94 16.64 17.78 16.78 17.12L18.81 7.54C19.02 6.73 18.49 6.36 17.94 6.62Z" fill="currentColor"/></svg></span>@MafiaPickemBot</span>
             </div>
         </div>
 
@@ -378,7 +397,7 @@ public static class ObsViewerSympathyHtmlRenderer
         <div class="block-wrap" id="pollWrap" style="display:none">
             <div class="block-header">
                 <div class="block-badge" id="pollBadge">LIVE-ОПРОС</div>
-                <div class="block-title">Кто уйдёт в девятке?</div>
+                <div class="block-title">Кого заголосуют первым?</div>
             </div>
 
             <section class="poll-card">
@@ -387,7 +406,7 @@ public static class ObsViewerSympathyHtmlRenderer
 
             <div class="block-footer">
                 <span id="pollMeta">0 голосов через</span>
-                <span class="block-handle">@mafiapickembot</span>
+                <span class="block-handle"><span class="block-handle__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="currentColor" fill-opacity="0.18"/><path d="M17.94 6.62L5.98 11.23C5.17 11.56 5.18 12.01 5.83 12.21L8.9 13.17L15.99 8.69C16.33 8.48 16.64 8.59 16.39 8.81L10.65 13.99L10.43 17.12C10.75 17.12 10.89 16.97 11.07 16.79L12.56 15.34L15.66 17.63C16.23 17.94 16.64 17.78 16.78 17.12L18.81 7.54C19.02 6.73 18.49 6.36 17.94 6.62Z" fill="currentColor"/></svg></span>@MafiaPickemBot</span>
             </div>
         </div>
     </div>
