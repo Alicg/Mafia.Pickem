@@ -214,13 +214,13 @@ public static class ObsViewerSympathyHtmlRenderer
         }
 
         .sympathy-track.is-town .sympathy-track__fill {
-            left: 0;
+            right: 0;
             background: var(--town-fill);
             box-shadow: inset 0 0 0 1px rgba(255, 242, 229, 0.28), 0 0 20px rgba(202, 147, 106, 0.24);
         }
 
         .sympathy-track.is-mafia .sympathy-track__fill {
-            right: 0;
+            left: 0;
             background: var(--mafia-fill);
             box-shadow: inset 0 0 0 1px rgba(237, 242, 255, 0.28), 0 0 20px rgba(124, 148, 230, 0.24);
         }
