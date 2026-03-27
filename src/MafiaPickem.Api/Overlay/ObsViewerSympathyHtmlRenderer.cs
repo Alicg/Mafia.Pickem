@@ -78,7 +78,8 @@ public static class ObsViewerSympathyHtmlRenderer
             display: none;
         }
 
-        .sympathy-wrap {
+        /* ── shared block wrapper ── */
+        .block-wrap {
             position: absolute;
             top: calc(var(--offset-y));
             left: calc(var(--offset-x));
@@ -90,17 +91,18 @@ public static class ObsViewerSympathyHtmlRenderer
             align-items: center;
         }
 
-        .sympathy-wrap.is-dynamic-managed {
+        .block-wrap.is-dynamic-managed {
             transition: transform var(--animation-duration, 420ms) cubic-bezier(0.22, 1, 0.36, 1), opacity var(--animation-duration, 420ms) ease;
             will-change: transform, opacity;
         }
 
-        .sympathy-wrap.is-dynamic-hidden-top {
+        .block-wrap.is-dynamic-hidden-top {
             transform: scale(var(--overlay-scale, 1)) translateY(calc(-100% - 24px));
             opacity: 0;
         }
 
-        .sympathy-header {
+        /* ── header (shared) ── */
+        .block-header {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -108,20 +110,7 @@ public static class ObsViewerSympathyHtmlRenderer
             margin-bottom: 8px;
         }
 
-        .sympathy-card {
-            width: 100%;
-            padding: 10px 16px;
-            border-radius: 999px;
-            border: 1px solid var(--card-edge);
-            background:
-                radial-gradient(circle at top left, rgba(255, 255, 255, 0.08), transparent 34%),
-                radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.04), transparent 30%),
-                var(--card-bg);
-            box-shadow: var(--card-shadow);
-            backdrop-filter: blur(12px);
-        }
-
-        .sympathy-badge {
+        .block-badge {
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -139,11 +128,11 @@ public static class ObsViewerSympathyHtmlRenderer
             box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
         }
 
-        .sympathy-wrap.is-finished .sympathy-badge {
+        .block-wrap.is-finished .block-badge {
             background: var(--badge-finish-bg);
         }
 
-        .sympathy-title {
+        .block-title {
             font-size: 24px;
             font-weight: 700;
             letter-spacing: 0.01em;
@@ -151,6 +140,36 @@ public static class ObsViewerSympathyHtmlRenderer
             white-space: nowrap;
         }
 
+        .block-footer {
+            margin-top: 8px;
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 16px;
+            font-size: 17px;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .block-handle {
+            color: rgba(218, 218, 222, 0.7);
+        }
+
+        /* ── shared card ── */
+        .block-card {
+            width: 100%;
+            padding: 10px 16px;
+            border-radius: 999px;
+            border: 1px solid var(--card-edge);
+            background:
+                radial-gradient(circle at top left, rgba(255, 255, 255, 0.08), transparent 34%),
+                radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.04), transparent 30%),
+                var(--card-bg);
+            box-shadow: var(--card-shadow);
+            backdrop-filter: blur(12px);
+        }
+
+        /* ── sympathy block ── */
         .sympathy-row {
             display: flex;
             align-items: center;
@@ -222,28 +241,80 @@ public static class ObsViewerSympathyHtmlRenderer
             margin: 0 2px;
         }
 
-        .sympathy-footer {
-            margin-top: 8px;
-            display: flex;
-            align-items: baseline;
-            justify-content: center;
-            gap: 16px;
-            font-size: 17px;
-            font-weight: 500;
-            color: var(--text-muted);
+        /* ── poll (top-3 vote) block ── */
+        .poll-card {
+            width: 100%;
+            padding: 12px 16px;
+                border-radius: 999px;
+            border: 1px solid var(--card-edge);
+            background:
+                radial-gradient(circle at top left, rgba(255, 255, 255, 0.08), transparent 34%),
+                radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.04), transparent 30%),
+                var(--card-bg);
+            box-shadow: var(--card-shadow);
+            backdrop-filter: blur(12px);
         }
 
-        .sympathy-handle {
-            color: rgba(218, 218, 222, 0.7);
+        .poll-items {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .poll-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px 6px 6px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .poll-item__pct {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 46px;
+            height: 38px;
+            padding: 0 8px;
+            border-radius: 999px;
+            font-size: 20px;
+            font-weight: 700;
+            line-height: 1;
+            color: var(--text-main);
+        }
+
+        .poll-item:nth-child(1) .poll-item__pct {
+            background: linear-gradient(180deg, rgba(184, 135, 99, 0.55) 0%, rgba(184, 135, 99, 0.30) 100%);
+            border: 1.5px solid rgba(219, 170, 128, 0.45);
+        }
+
+        .poll-item:nth-child(2) .poll-item__pct {
+            background: linear-gradient(180deg, rgba(136, 160, 232, 0.50) 0%, rgba(136, 160, 232, 0.28) 100%);
+            border: 1.5px solid rgba(178, 193, 255, 0.40);
+        }
+
+        .poll-item:nth-child(3) .poll-item__pct {
+            background: linear-gradient(180deg, rgba(136, 160, 232, 0.50) 0%, rgba(136, 160, 232, 0.28) 100%);
+            border: 1.5px solid rgba(178, 193, 255, 0.40);
+        }
+
+        .poll-item__name {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-main);
+            white-space: nowrap;
         }
 
         @media (max-width: 720px) {
-            .sympathy-card {
+            .block-card, .poll-card {
                 padding: 8px 14px;
-                border-radius: 999px;
             }
 
-            .sympathy-title {
+            .block-title {
                 font-size: 20px;
             }
 
@@ -257,22 +328,33 @@ public static class ObsViewerSympathyHtmlRenderer
                 font-size: 16px;
             }
 
-            .sympathy-footer {
+            .block-footer {
                 font-size: 14px;
                 gap: 10px;
+            }
+
+            .poll-item__pct {
+                font-size: 17px;
+                min-width: 40px;
+                height: 34px;
+            }
+
+            .poll-item__name {
+                font-size: 17px;
             }
         }
     </style>
 </head>
 <body>
     <div class="overlay-root is-hidden" id="overlayRoot">
-        <div class="sympathy-wrap" id="sympathyWrap">
-            <div class="sympathy-header">
-                <div class="sympathy-badge" id="stateBadge">LIVE</div>
-                <div class="sympathy-title">Зрительские симпатии</div>
+        <!-- Block 1: Viewer sympathy (town vs mafia) -->
+        <div class="block-wrap" id="sympathyWrap">
+            <div class="block-header">
+                <div class="block-badge" id="sympathyBadge">LIVE</div>
+                <div class="block-title">Зрительские симпатии</div>
             </div>
 
-            <section class="sympathy-card">
+            <section class="block-card">
                 <div class="sympathy-row">
                     <div class="sympathy-track is-town">
                         <div class="sympathy-track__fill" id="townFill"></div>
@@ -286,9 +368,26 @@ public static class ObsViewerSympathyHtmlRenderer
                 </div>
             </section>
 
-            <div class="sympathy-footer">
-                <span id="summaryMeta">0 прогнозов через</span>
-                <span class="sympathy-handle">@mafiapickembot</span>
+            <div class="block-footer">
+                <span id="sympathyMeta">0 прогнозов через</span>
+                <span class="block-handle">@mafiapickembot</span>
+            </div>
+        </div>
+
+        <!-- Block 2: Top-3 first-vote poll -->
+        <div class="block-wrap" id="pollWrap" style="display:none">
+            <div class="block-header">
+                <div class="block-badge" id="pollBadge">LIVE-ОПРОС</div>
+                <div class="block-title">Кто уйдёт в девятке?</div>
+            </div>
+
+            <section class="poll-card">
+                <div class="poll-items" id="pollItems"></div>
+            </section>
+
+            <div class="block-footer">
+                <span id="pollMeta">0 голосов через</span>
+                <span class="block-handle">@mafiapickembot</span>
             </div>
         </div>
     </div>
@@ -297,12 +396,16 @@ public static class ObsViewerSympathyHtmlRenderer
         const tournamentId = {{tournamentId}};
         const overlayRoot = document.getElementById('overlayRoot');
         const sympathyWrap = document.getElementById('sympathyWrap');
-        const stateBadge = document.getElementById('stateBadge');
+        const sympathyBadge = document.getElementById('sympathyBadge');
         const townPercent = document.getElementById('townPercent');
         const mafiaPercent = document.getElementById('mafiaPercent');
         const townFill = document.getElementById('townFill');
         const mafiaFill = document.getElementById('mafiaFill');
-        const summaryMeta = document.getElementById('summaryMeta');
+        const sympathyMeta = document.getElementById('sympathyMeta');
+        const pollWrap = document.getElementById('pollWrap');
+        const pollBadge = document.getElementById('pollBadge');
+        const pollItems = document.getElementById('pollItems');
+        const pollMeta = document.getElementById('pollMeta');
         const rootStyles = document.documentElement;
 
         const defaultOverlaySettings = {
@@ -334,6 +437,22 @@ public static class ObsViewerSympathyHtmlRenderer
             }
 
             return `${count} прогнозов`;
+        };
+
+        const formatVotesCount = (value) => {
+            const count = Math.max(0, Math.trunc(Number(value || 0)));
+            const mod10 = count % 10;
+            const mod100 = count % 100;
+
+            if (mod10 === 1 && mod100 !== 11) {
+                return `${count} голос`;
+            }
+
+            if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
+                return `${count} голоса`;
+            }
+
+            return `${count} голосов`;
         };
 
         const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
@@ -375,7 +494,7 @@ public static class ObsViewerSympathyHtmlRenderer
             return block;
         };
 
-        const setSummary = (redSide, blackSide, totalPredictions) => {
+        const setSympathy = (redSide, blackSide, totalPredictions) => {
             const redValue = clamp(Number(redSide?.percent || 0), 0, 100);
             const blackValue = clamp(Number(blackSide?.percent || 0), 0, 100);
 
@@ -383,84 +502,105 @@ public static class ObsViewerSympathyHtmlRenderer
             mafiaPercent.textContent = formatPercent(blackValue);
             townFill.style.width = `${redValue}%`;
             mafiaFill.style.width = `${blackValue}%`;
-            summaryMeta.textContent = formatPredictionsCount(totalPredictions) + ' через';
+            sympathyMeta.textContent = formatPredictionsCount(totalPredictions) + ' через';
         };
 
-        const setPendingState = () => {
-            sympathyWrap.classList.remove('is-finished');
-            stateBadge.textContent = 'LIVE';
-            setSummary(null, null, 0);
+        const setPollData = (seatVotes, matchState) => {
+            const votes = (seatVotes || [])
+                .filter(v => !v.isResolved && v.count > 0)
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 3);
+
+            const totalVotes = votes.reduce((sum, v) => sum + v.count, 0);
+
+            pollItems.innerHTML = '';
+            votes.forEach(v => {
+                const item = document.createElement('div');
+                item.className = 'poll-item';
+
+                const pct = document.createElement('div');
+                pct.className = 'poll-item__pct';
+                pct.textContent = `${Math.round(v.percent)}%`;
+
+                const name = document.createElement('span');
+                name.className = 'poll-item__name';
+                name.textContent = `Игрок ${v.slot}`;
+
+                item.appendChild(pct);
+                item.appendChild(name);
+                pollItems.appendChild(item);
+            });
+
+            pollBadge.textContent = matchState === 'Resolved' ? 'ИТОГ' : 'LIVE-ОПРОС';
+            pollMeta.textContent = formatVotesCount(totalVotes) + ' через';
         };
 
+        /* ── alternating cycle controller ── */
         const dynamicDisplayAnimationMs = 420;
-        const dynamicController = {
+        const blocks = [sympathyWrap, pollWrap];
+        let currentBlockIndex = 0;
+
+        const cycleCtrl = {
             signature: '',
             cycleTimerId: 0,
             hideTimerId: 0,
-            finalizeHideTimerId: 0,
-            animationFrameId: 0,
+            finalizeTimerId: 0,
+            animFrameId: 0,
             token: 0,
             active: false,
         };
 
-        const clearDynamicController = () => {
-            if (dynamicController.cycleTimerId) {
-                window.clearTimeout(dynamicController.cycleTimerId);
-                dynamicController.cycleTimerId = 0;
-            }
-            if (dynamicController.hideTimerId) {
-                window.clearTimeout(dynamicController.hideTimerId);
-                dynamicController.hideTimerId = 0;
-            }
-            if (dynamicController.finalizeHideTimerId) {
-                window.clearTimeout(dynamicController.finalizeHideTimerId);
-                dynamicController.finalizeHideTimerId = 0;
-            }
-            if (dynamicController.animationFrameId) {
-                window.cancelAnimationFrame(dynamicController.animationFrameId);
-                dynamicController.animationFrameId = 0;
-            }
-            dynamicController.token += 1;
-            dynamicController.active = false;
+        const clearCycleCtrl = () => {
+            if (cycleCtrl.cycleTimerId) { window.clearTimeout(cycleCtrl.cycleTimerId); cycleCtrl.cycleTimerId = 0; }
+            if (cycleCtrl.hideTimerId) { window.clearTimeout(cycleCtrl.hideTimerId); cycleCtrl.hideTimerId = 0; }
+            if (cycleCtrl.finalizeTimerId) { window.clearTimeout(cycleCtrl.finalizeTimerId); cycleCtrl.finalizeTimerId = 0; }
+            if (cycleCtrl.animFrameId) { window.cancelAnimationFrame(cycleCtrl.animFrameId); cycleCtrl.animFrameId = 0; }
+            cycleCtrl.token += 1;
+            cycleCtrl.active = false;
         };
 
-        const resetDynamicClasses = () => {
-            sympathyWrap.classList.remove('is-dynamic-managed', 'is-dynamic-hidden-top');
+        const resetAllBlocks = () => {
+            blocks.forEach(el => {
+                el.classList.remove('is-dynamic-managed', 'is-dynamic-hidden-top');
+            });
         };
 
-        const runDynamicCycle = (dynamicDisplay, token) => {
-            if (!dynamicController.active || dynamicController.token !== token) {
-                return;
-            }
+        const showBlock = (element, animMs, token) => {
+            element.style.setProperty('--animation-duration', `${animMs}ms`);
+            element.style.display = '';
+            element.classList.add('is-dynamic-managed');
+            element.classList.add('is-dynamic-hidden-top');
+            void element.offsetWidth;
+
+            cycleCtrl.animFrameId = window.requestAnimationFrame(() => {
+                if (!cycleCtrl.active || cycleCtrl.token !== token) return;
+                element.classList.remove('is-dynamic-hidden-top');
+            });
+        };
+
+        const hideBlock = (element) => {
+            element.classList.add('is-dynamic-hidden-top');
+        };
+
+        const runAlternatingCycle = (dynamicDisplay, token) => {
+            if (!cycleCtrl.active || cycleCtrl.token !== token) return;
 
             const animMs = dynamicDisplay.animationDurationMs || dynamicDisplayAnimationMs;
-            sympathyWrap.style.setProperty('--animation-duration', `${animMs}ms`);
-            sympathyWrap.style.display = '';
-            sympathyWrap.classList.add('is-dynamic-managed');
-            sympathyWrap.classList.add('is-dynamic-hidden-top');
-            void sympathyWrap.offsetWidth;
+            const currentEl = blocks[currentBlockIndex];
 
-            dynamicController.animationFrameId = window.requestAnimationFrame(() => {
-                if (!dynamicController.active || dynamicController.token !== token) {
-                    return;
-                }
-                sympathyWrap.classList.remove('is-dynamic-hidden-top');
-            });
+            showBlock(currentEl, animMs, token);
 
-            dynamicController.hideTimerId = window.setTimeout(() => {
-                if (!dynamicController.active || dynamicController.token !== token) {
-                    return;
-                }
-                sympathyWrap.classList.add('is-dynamic-hidden-top');
+            cycleCtrl.hideTimerId = window.setTimeout(() => {
+                if (!cycleCtrl.active || cycleCtrl.token !== token) return;
+                hideBlock(currentEl);
 
-                dynamicController.finalizeHideTimerId = window.setTimeout(() => {
-                    if (!dynamicController.active || dynamicController.token !== token) {
-                        return;
-                    }
-                    sympathyWrap.style.display = 'none';
+                cycleCtrl.finalizeTimerId = window.setTimeout(() => {
+                    if (!cycleCtrl.active || cycleCtrl.token !== token) return;
+                    currentEl.style.display = 'none';
+                    currentBlockIndex = (currentBlockIndex + 1) % blocks.length;
 
-                    dynamicController.cycleTimerId = window.setTimeout(
-                        () => runDynamicCycle(dynamicDisplay, token),
+                    cycleCtrl.cycleTimerId = window.setTimeout(
+                        () => runAlternatingCycle(dynamicDisplay, token),
                         dynamicDisplay.intervalSeconds * 1000
                     );
                 }, animMs);
@@ -469,26 +609,34 @@ public static class ObsViewerSympathyHtmlRenderer
 
         const syncDynamicDisplay = (dynamicDisplay, shouldBeVisible) => {
             const signature = JSON.stringify({ shouldBeVisible, dynamicDisplay });
-            if (dynamicController.signature === signature) {
-                return;
-            }
+            if (cycleCtrl.signature === signature) return;
 
-            clearDynamicController();
-            dynamicController.signature = signature;
-            resetDynamicClasses();
+            clearCycleCtrl();
+            cycleCtrl.signature = signature;
+            resetAllBlocks();
 
             if (!shouldBeVisible) {
-                sympathyWrap.style.display = 'none';
+                blocks.forEach(el => { el.style.display = 'none'; });
                 return;
             }
 
             if (!dynamicDisplay.enabled) {
                 sympathyWrap.style.display = '';
+                pollWrap.style.display = 'none';
                 return;
             }
 
-            dynamicController.active = true;
-            runDynamicCycle(dynamicDisplay, dynamicController.token);
+            currentBlockIndex = 0;
+            cycleCtrl.active = true;
+            runAlternatingCycle(dynamicDisplay, cycleCtrl.token);
+        };
+
+        const setPendingState = () => {
+            sympathyWrap.classList.remove('is-finished');
+            pollWrap.classList.remove('is-finished');
+            sympathyBadge.textContent = 'LIVE';
+            setSympathy(null, null, 0);
+            setPollData(null, null);
         };
 
         const renderPayload = (payload) => {
@@ -508,19 +656,18 @@ public static class ObsViewerSympathyHtmlRenderer
                 return;
             }
 
-            sympathyWrap.classList.toggle('is-finished', payload?.matchState === 'Resolved');
-            stateBadge.textContent = payload?.matchState === 'Resolved' ? 'ИТОГ' : 'LIVE';
-            setSummary(payload?.redSide, payload?.blackSide, payload?.totalPredictions);
+            const isFinished = payload?.matchState === 'Resolved';
+            sympathyWrap.classList.toggle('is-finished', isFinished);
+            pollWrap.classList.toggle('is-finished', isFinished);
+            sympathyBadge.textContent = isFinished ? 'ИТОГ' : 'LIVE';
+            setSympathy(payload?.redSide, payload?.blackSide, payload?.totalPredictions);
+            setPollData(payload?.seatVotes, payload?.matchState);
             syncDynamicDisplay(block.dynamicDisplay, true);
         };
 
         const applyDisconnectedState = () => {
             applyOverlaySettings(null);
-            overlayRoot.classList.remove('is-hidden');
-            sympathyWrap.classList.remove('is-finished');
-            stateBadge.textContent = 'OFFLINE';
-            setSummary(null, null, 0);
-            summaryMeta.textContent = 'Нет связи через';
+            overlayRoot.classList.add('is-hidden');
             syncDynamicDisplay(defaultOverlaySettings.viewerSympathyBlock.dynamicDisplay, false);
         };
 
