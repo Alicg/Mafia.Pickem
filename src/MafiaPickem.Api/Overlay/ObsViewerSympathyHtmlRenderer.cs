@@ -146,7 +146,7 @@ public static class ObsViewerSympathyHtmlRenderer
             align-items: center;
             justify-content: center;
             gap: 16px;
-            font-size: 17px;
+            font-size: 19px;
             font-weight: 500;
             color: var(--text-muted);
         }
@@ -349,7 +349,7 @@ public static class ObsViewerSympathyHtmlRenderer
             }
 
             .block-footer {
-                font-size: 14px;
+                font-size: 16px;
                 gap: 10px;
             }
 
