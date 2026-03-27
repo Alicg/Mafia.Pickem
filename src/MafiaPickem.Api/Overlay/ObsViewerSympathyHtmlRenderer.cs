@@ -239,7 +239,8 @@ public static class ObsViewerSympathyHtmlRenderer
             letter-spacing: 0;
             text-align: center;
             color: var(--text-main);
-            margin: 0 2px;
+            margin: 0 6px;
+            padding-top: 2px;
         }
 
         .sympathy-circle.is-town {
@@ -257,7 +258,7 @@ public static class ObsViewerSympathyHtmlRenderer
             font-size: 20px;
             font-weight: 600;
             color: var(--text-muted);
-            margin: 0 2px;
+            margin: 0 0px;
         }
 
         /* ── poll (top-3 vote) block ── */
