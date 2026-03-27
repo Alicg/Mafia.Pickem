@@ -148,7 +148,7 @@ public static class ObsViewerSympathyHtmlRenderer
             gap: 16px;
             font-size: 23px;
             font-weight: 700;
-            color: var(--text-muted);
+            color: var(--title-color);
         }
 
         .block-handle {
@@ -351,6 +351,7 @@ public static class ObsViewerSympathyHtmlRenderer
             .block-footer {
                 font-size: 23px;
                 font-weight: 700;
+                color: var(--title-color);
                 gap: 10px;
             }
 
