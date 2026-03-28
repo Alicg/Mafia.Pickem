@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Overlay\Actay-Regular.otf" LogicalName="Actay-Regular.otf" />
+    <EmbeddedResource Include="Overlay\ObsViewerSympathyTemplate.html" LogicalName="ObsViewerSympathyTemplate.html" />
   </ItemGroup>
 
 </Project>
