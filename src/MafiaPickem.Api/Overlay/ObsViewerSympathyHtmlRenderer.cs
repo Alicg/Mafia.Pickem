@@ -206,7 +206,7 @@ public static class ObsViewerSympathyHtmlRenderer
 
         .sympathy-track {
             position: relative;
-            flex: 0 1 120px;
+            flex: 0 1 144px;
             height: 32px;
             border-radius: 999px;
             overflow: hidden;
@@ -248,7 +248,7 @@ public static class ObsViewerSympathyHtmlRenderer
             letter-spacing: 0;
             text-align: center;
             color: var(--text-main);
-            padding-top: 2px;
+            padding-top: 3px;
             padding-right: 2px;
         }
 
