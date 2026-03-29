@@ -85,7 +85,7 @@ public static class ObsViewerSympathyHtmlRenderer
             left: calc(var(--offset-x));
             transform: scale(var(--overlay-scale, 1));
             transform-origin: top left;
-            width: min(640px, calc(100vw - 32px));
+            width: min(680px, calc(100vw - 32px));
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -101,17 +101,8 @@ public static class ObsViewerSympathyHtmlRenderer
             opacity: 0;
         }
 
-        /* ── header (shared) ── */
-        .block-header {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 8px;
-        }
-
         .block-badge {
-            display: inline-flex;
+            display: none;
             align-items: center;
             justify-content: center;
             min-width: 58px;
@@ -132,8 +123,11 @@ public static class ObsViewerSympathyHtmlRenderer
             background: var(--badge-finish-bg);
         }
 
-        .block-title {
-            font-size: 24px;
+        .card-title {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            font-size: 20px;
             font-weight: 700;
             letter-spacing: 0.01em;
             color: var(--title-color);
@@ -142,10 +136,11 @@ public static class ObsViewerSympathyHtmlRenderer
 
         .block-footer {
             margin-top: 8px;
+            width: 100%;
+            padding: 0 16px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 16px;
+            justify-content: space-between;
             font-size: 23px;
             font-weight: 700;
             color: var(--title-color);
@@ -176,29 +171,39 @@ public static class ObsViewerSympathyHtmlRenderer
 
         /* ── shared card ── */
         .block-card {
+            position: relative;
             width: 100%;
-            padding: 10px 16px;
+            display: flex;
+            align-items: stretch;
+            gap: 0;
+            padding: 0;
+            padding-left: 14px;
             border-radius: 999px;
-            border: 1px solid var(--card-edge);
-            background:
-                radial-gradient(circle at top left, rgba(255, 255, 255, 0.08), transparent 34%),
-                radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.04), transparent 30%),
-                var(--card-bg);
-            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(64, 64, 64, 0.7);
+            box-shadow: 0 0 17px rgba(25, 25, 25, 1);
             backdrop-filter: blur(12px);
+            overflow: hidden;
         }
 
         /* ── sympathy block ── */
         .sympathy-row {
+            flex: 1;
+            min-width: 0;
             display: flex;
             align-items: center;
-            gap: 0;
+            gap: 6px;
+            padding: 6px 8px;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            margin: -1px -1px -1px 8px;
         }
 
         .sympathy-track {
             position: relative;
-            flex: 1;
-            height: 16px;
+            flex: 0 1 120px;
+            height: 32px;
             border-radius: 999px;
             overflow: hidden;
             background: var(--track-bg);
@@ -230,8 +235,8 @@ public static class ObsViewerSympathyHtmlRenderer
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 52px;
-            height: 52px;
+            width: 58px;
+            height: 58px;
             border-radius: 50%;
             font-size: 26px;
             font-weight: 700;
@@ -239,8 +244,8 @@ public static class ObsViewerSympathyHtmlRenderer
             letter-spacing: 0;
             text-align: center;
             color: var(--text-main);
-            margin: 0 6px;
             padding-top: 2px;
+            padding-right: 2px;
         }
 
         .sympathy-circle.is-town {
@@ -258,29 +263,61 @@ public static class ObsViewerSympathyHtmlRenderer
             font-size: 20px;
             font-weight: 600;
             color: var(--text-muted);
-            margin: 0 0px;
         }
 
-        /* ── poll (top-3 vote) block ── */
-        .poll-card {
-            width: 100%;
-            padding: 12px 16px;
-                border-radius: 999px;
-            border: 1px solid var(--card-edge);
-            background:
-                radial-gradient(circle at top left, rgba(255, 255, 255, 0.08), transparent 34%),
-                radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.04), transparent 30%),
-                var(--card-bg);
-            box-shadow: var(--card-shadow);
-            backdrop-filter: blur(12px);
-        }
-
-        .poll-items {
+        .sympathy-icon {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1;
             display: flex;
             align-items: center;
             justify-content: center;
+            pointer-events: none;
+        }
+
+        .sympathy-icon svg {
+            display: block;
+            width: 26px;
+            height: 26px;
+        }
+
+        .sympathy-track.is-town .sympathy-icon svg {
+            filter: drop-shadow(0 0 1px currentColor);
+        }
+
+        .sympathy-track.is-mafia .sympathy-icon svg {
+            filter: drop-shadow(0 0 1px rgba(76, 94, 136, 0.28));
+        }
+
+        .sympathy-track.is-town .sympathy-icon {
+            right: 10px;
+        }
+
+        .sympathy-track.is-mafia .sympathy-icon {
+            left: 10px;
+        }
+
+        /* ── poll (top-3 vote) block ── */
+        .poll-row {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 8px;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            margin: -1px -1px -1px 8px;
+        }
+
+        .poll-items {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            align-items: center;
             gap: 10px;
-            flex-wrap: wrap;
         }
 
         .poll-item {
@@ -330,12 +367,12 @@ public static class ObsViewerSympathyHtmlRenderer
         }
 
         @media (max-width: 720px) {
-            .block-card, .poll-card {
-                padding: 8px 14px;
+            .block-card {
+                padding: 8px 10px;
             }
 
-            .block-title {
-                font-size: 20px;
+            .card-title {
+                font-size: 17px;
             }
 
             .sympathy-circle {
@@ -371,45 +408,43 @@ public static class ObsViewerSympathyHtmlRenderer
     <div class="overlay-root is-hidden" id="overlayRoot">
         <!-- Block 1: Viewer sympathy (town vs mafia) -->
         <div class="block-wrap" id="sympathyWrap">
-            <div class="block-header">
-                <div class="block-badge" id="sympathyBadge">LIVE</div>
-                <div class="block-title">Зрительские симпатии</div>
-            </div>
-
+            <div class="block-badge" id="sympathyBadge">LIVE</div>
             <section class="block-card">
+                <div class="card-title">Зрительские симпатии</div>
                 <div class="sympathy-row">
                     <div class="sympathy-track is-town">
                         <div class="sympathy-track__fill" id="townFill"></div>
+                        <span class="sympathy-icon" aria-hidden="true"><svg width="13" height="11" viewBox="0 0 13 11" fill="none"><path d="M6.5 3.4375C6.5 2.52582 6.15759 1.65148 5.5481 1.00682C4.9386 0.362164 4.11195 0 3.25 0C2.38805 0 1.5614 0.362164 0.951903 1.00682C0.34241 1.65148 0 2.52582 0 3.4375C0 4.323 0.118114 5.62493 1.3 6.875L6.5 11C6.5 11 10.5181 8.12507 11.7 6.875C12.8819 5.62493 13 4.323 13 3.4375C13 2.52582 12.6576 1.65148 12.0481 1.00682C11.4386 0.362164 10.612 0 9.75 0C8.88805 0 8.0614 0.362164 7.4519 1.00682C6.84241 1.65148 6.5 2.52582 6.5 3.4375Z" fill="#9A4F4F"/></svg></span>
                     </div>
                     <div class="sympathy-circle is-town" id="townPercent">-</div>
                     <div class="sympathy-percent-sign">%</div>
                     <div class="sympathy-circle is-mafia" id="mafiaPercent">-</div>
                     <div class="sympathy-track is-mafia">
                         <div class="sympathy-track__fill" id="mafiaFill"></div>
+                        <span class="sympathy-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M7 5h16v4h-1v1h-6a1 1 0 0 0-1 1v1a2 2 0 0 1-2 2H9.62c-.38 0-.73.22-.9.56l-2.45 4.89c-.17.34-.51.55-.89.55H2s-3 0 1-6c0 0 3-4-1-4V5h1l.5-1h3zm7 7v-1a1 1 0 0 0-1-1h-1s-1 1 0 2a2 2 0 0 1-2-2a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1" fill="#1C2331" stroke="#1C2331" stroke-width="0.6"/></svg></span>
                     </div>
                 </div>
             </section>
 
             <div class="block-footer">
-                <span id="sympathyMeta">0 прогнозов через</span>
                 <span class="block-handle"><span class="block-handle__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="currentColor" fill-opacity="0.18"/><path d="M17.94 6.62L5.98 11.23C5.17 11.56 5.18 12.01 5.83 12.21L8.9 13.17L15.99 8.69C16.33 8.48 16.64 8.59 16.39 8.81L10.65 13.99L10.43 17.12C10.75 17.12 10.89 16.97 11.07 16.79L12.56 15.34L15.66 17.63C16.23 17.94 16.64 17.78 16.78 17.12L18.81 7.54C19.02 6.73 18.49 6.36 17.94 6.62Z" fill="currentColor"/></svg></span>@MafiaPickemBot</span>
+                <span id="sympathyMeta">0 прогнозов</span>
             </div>
         </div>
 
         <!-- Block 2: Top-3 first-vote poll -->
         <div class="block-wrap" id="pollWrap" style="display:none">
-            <div class="block-header">
-                <div class="block-badge" id="pollBadge">LIVE-ОПРОС</div>
-                <div class="block-title">Кого заголосуют первым?</div>
-            </div>
-
-            <section class="poll-card">
-                <div class="poll-items" id="pollItems"></div>
+            <div class="block-badge" id="pollBadge">LIVE-ОПРОС</div>
+            <section class="block-card">
+                <div class="card-title">Кого заголосуют первым?</div>
+                <div class="poll-row">
+                    <div class="poll-items" id="pollItems"></div>
+                </div>
             </section>
 
             <div class="block-footer">
-                <span id="pollMeta">0 голосов через</span>
                 <span class="block-handle"><span class="block-handle__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="currentColor" fill-opacity="0.18"/><path d="M17.94 6.62L5.98 11.23C5.17 11.56 5.18 12.01 5.83 12.21L8.9 13.17L15.99 8.69C16.33 8.48 16.64 8.59 16.39 8.81L10.65 13.99L10.43 17.12C10.75 17.12 10.89 16.97 11.07 16.79L12.56 15.34L15.66 17.63C16.23 17.94 16.64 17.78 16.78 17.12L18.81 7.54C19.02 6.73 18.49 6.36 17.94 6.62Z" fill="currentColor"/></svg></span>@MafiaPickemBot</span>
+                <span id="pollMeta">0 голосов</span>
             </div>
         </div>
     </div>
@@ -524,7 +559,7 @@ public static class ObsViewerSympathyHtmlRenderer
             mafiaPercent.textContent = formatPercent(blackValue);
             townFill.style.width = `${redValue}%`;
             mafiaFill.style.width = `${blackValue}%`;
-            sympathyMeta.textContent = formatPredictionsCount(totalPredictions) + ' через';
+            sympathyMeta.textContent = formatPredictionsCount(totalPredictions);
         };
 
         const setPollData = (seatVotes, matchState) => {
@@ -554,7 +589,7 @@ public static class ObsViewerSympathyHtmlRenderer
             });
 
             pollBadge.textContent = matchState === 'Resolved' ? 'ИТОГ' : 'LIVE-ОПРОС';
-            pollMeta.textContent = formatVotesCount(totalVotes) + ' через';
+            pollMeta.textContent = formatVotesCount(totalVotes);
         };
 
         /* ── alternating cycle controller ── */
