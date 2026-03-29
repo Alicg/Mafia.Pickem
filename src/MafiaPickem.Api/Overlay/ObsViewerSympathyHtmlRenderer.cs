@@ -92,7 +92,7 @@ public static class ObsViewerSympathyHtmlRenderer
         }
 
         #pollWrap {
-            width: min(920px, calc(100vw - 32px));
+            width: min(880px, calc(100vw - 32px));
         }
 
         .block-wrap.is-dynamic-managed {
