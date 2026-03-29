@@ -91,6 +91,10 @@ public static class ObsViewerSympathyHtmlRenderer
             align-items: center;
         }
 
+        #pollWrap {
+            width: min(980px, calc(100vw - 32px));
+        }
+
         .block-wrap.is-dynamic-managed {
             transition: transform var(--animation-duration, 420ms) cubic-bezier(0.22, 1, 0.36, 1), opacity var(--animation-duration, 420ms) ease;
             will-change: transform, opacity;
@@ -321,6 +325,7 @@ public static class ObsViewerSympathyHtmlRenderer
         }
 
         .poll-item {
+            flex: 0 0 auto;
             display: flex;
             align-items: center;
             gap: 8px;
