@@ -49,6 +49,7 @@ export interface ViewerSympathyOverlayBlockSettings {
 
 export interface TournamentOverlaySettings {
   overlayType: TournamentOverlayType;
+  obsOverlayUrl: string | null;
   hideBlocksByPhase: boolean;
   theme: OverlayThemeSettings;
   leftPanel: OverlayStackPanelLayout;
@@ -62,6 +63,7 @@ export interface TournamentOverlaySettings {
 
 export const DEFAULT_TOURNAMENT_OVERLAY_SETTINGS: TournamentOverlaySettings = {
   overlayType: 'classic',
+  obsOverlayUrl: null,
   hideBlocksByPhase: true,
   theme: {
     fillColorStart: '#163A61',
@@ -135,6 +137,7 @@ export function cloneTournamentOverlaySettings(settings?: TournamentOverlaySetti
 
   return {
     overlayType: source.overlayType ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.overlayType,
+    obsOverlayUrl: source.obsOverlayUrl ?? DEFAULT_TOURNAMENT_OVERLAY_SETTINGS.obsOverlayUrl,
     hideBlocksByPhase: source.hideBlocksByPhase,
     theme: {
       fillColorStart: source.theme.fillColorStart,

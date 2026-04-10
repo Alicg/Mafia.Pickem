@@ -229,6 +229,7 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({
   };
 
   const overlayTypeHint = overlayTypeOptions.find(option => option.value === overlaySettings.overlayType)?.hint;
+  const obsOverlayUrl = overlaySettings.obsOverlayUrl;
 
   return (
     <div className="modal-overlay">
@@ -383,6 +384,35 @@ export const CreateTournamentForm: React.FC<CreateTournamentFormProps> = ({
                   <div className="form-section-note overlay-settings-fields__full-width overlay-type-description">
                     {overlayTypeHint}
                   </div>
+
+                  {tournament && obsOverlayUrl && (
+                    <div className="overlay-settings-fields__full-width overlay-url-panel">
+                      <label className="form-label" htmlFor="obs-overlay-url">OBS URL</label>
+                      <input
+                        id="obs-overlay-url"
+                        type="text"
+                        className="form-input overlay-url-input"
+                        value={obsOverlayUrl}
+                        readOnly
+                        onFocus={(e) => e.currentTarget.select()}
+                      />
+                      <div className="form-section-note overlay-url-note">
+                        Ссылка для Browser Source в OBS. Открывает выбранный выше HTML-оверлей по публичному адресу приложения.
+                      </div>
+                    </div>
+                  )}
+
+                  {tournament && !obsOverlayUrl && (
+                    <div className="form-section-note overlay-settings-fields__full-width overlay-url-note">
+                      OBS URL не показан, потому что backend не вернул публичный адрес оверлея из конфигурации.
+                    </div>
+                  )}
+
+                  {!tournament && (
+                    <div className="form-section-note overlay-settings-fields__full-width overlay-url-note">
+                      После сохранения турнира здесь появится готовая OBS-ссылка для этого оверлея.
+                    </div>
+                  )}
                 </div>
               </div>
 

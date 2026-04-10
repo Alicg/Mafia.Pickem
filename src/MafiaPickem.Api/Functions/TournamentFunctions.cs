@@ -21,6 +21,7 @@ public class TournamentFunctions
     private readonly ITournamentParticipantRepository _tournamentParticipantRepository;
     private readonly ITournamentOperatorRepository _tournamentOperatorRepository;
     private readonly IUserContext _userContext;
+    private readonly ObsOverlayOptions _obsOverlayOptions;
     private readonly ILogger<TournamentFunctions> _logger;
 
     public TournamentFunctions(
@@ -30,6 +31,7 @@ public class TournamentFunctions
         ITournamentParticipantRepository tournamentParticipantRepository,
         ITournamentOperatorRepository tournamentOperatorRepository,
         IUserContext userContext,
+        ObsOverlayOptions obsOverlayOptions,
         ILogger<TournamentFunctions>? logger = null)
     {
         _tournamentRepository = tournamentRepository;
@@ -38,6 +40,7 @@ public class TournamentFunctions
         _tournamentParticipantRepository = tournamentParticipantRepository;
         _tournamentOperatorRepository = tournamentOperatorRepository;
         _userContext = userContext;
+        _obsOverlayOptions = obsOverlayOptions;
         _logger = logger ?? null!;
     }
 
@@ -323,8 +326,11 @@ public class TournamentFunctions
         return await _tournamentOperatorRepository.IsOperatorAsync(tournamentId, _userContext.TelegramUsername);
     }
 
-    private static TournamentDto MapToDto(Tournament tournament, Match? currentMatch, string? selectedTeamName, bool canManage, List<string>? operatorUsernames = null)
+    private TournamentDto MapToDto(Tournament tournament, Match? currentMatch, string? selectedTeamName, bool canManage, List<string>? operatorUsernames = null)
     {
+        var overlaySettings = TournamentOverlaySettingsSerializer.Deserialize(tournament.OverlaySettingsJson);
+        overlaySettings.ObsOverlayUrl = _obsOverlayOptions.BuildTournamentOverlayUrl(tournament.Id);
+
         return new TournamentDto
         {
             Id = tournament.Id,
@@ -336,7 +342,7 @@ public class TournamentFunctions
             SelectedTeamName = selectedTeamName,
             VisibleOnHomePage = tournament.VisibleOnHomePage,
             ShowTeamSelection = tournament.ShowTeamSelection,
-            OverlaySettings = TournamentOverlaySettingsSerializer.Deserialize(tournament.OverlaySettingsJson),
+            OverlaySettings = overlaySettings,
             CanManage = canManage,
             CurrentMatch = currentMatch != null ? MapMatchToDto(currentMatch) : null
         };

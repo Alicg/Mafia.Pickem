@@ -338,6 +338,21 @@
   color: var(--pm-text-primary);
 }
 
+.overlay-url-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.overlay-url-input {
+  font-size: 13px;
+}
+
+.overlay-url-note {
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+}
+
 .overlay-settings-card__hint {
   margin-top: 4px;
   margin-bottom: 12px;

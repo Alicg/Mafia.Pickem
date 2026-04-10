@@ -6,6 +6,7 @@ namespace MafiaPickem.Api.Overlay;
 public class TournamentOverlaySettings
 {
     public string OverlayType { get; set; } = ObsOverlayType.Classic;
+    public string? ObsOverlayUrl { get; set; }
     public bool HideBlocksByPhase { get; set; } = true;
     public OverlayThemeSettings Theme { get; set; } = new();
     public OverlayStackPanelLayout LeftPanel { get; set; } = new() { EdgeOffset = 15, TopOffset = 138 };
@@ -26,6 +27,7 @@ public class TournamentOverlaySettings
         return new TournamentOverlaySettings
         {
             OverlayType = ObsOverlayType.Normalize(settings?.OverlayType),
+            ObsOverlayUrl = null,
             HideBlocksByPhase = settings?.HideBlocksByPhase ?? true,
             Theme = OverlayThemeSettings.Normalize(settings?.Theme),
             LeftPanel = OverlayStackPanelLayout.Normalize(settings?.LeftPanel, 15, 138, settings?.SummaryBlock, settings?.LastRoundBlock, settings?.FooterBlock, settings?.FirstVoteBlock),
@@ -232,6 +234,20 @@ public static class TournamentOverlaySettingsSerializer
 
     public static string Serialize(TournamentOverlaySettings? settings)
     {
-        return JsonSerializer.Serialize(TournamentOverlaySettings.Normalize(settings), SerializerOptions);
+        var normalized = TournamentOverlaySettings.Normalize(settings);
+
+        return JsonSerializer.Serialize(new
+        {
+            normalized.OverlayType,
+            normalized.HideBlocksByPhase,
+            normalized.Theme,
+            normalized.LeftPanel,
+            normalized.RightPanel,
+            normalized.SummaryBlock,
+            normalized.FirstVoteBlock,
+            normalized.LastRoundBlock,
+            normalized.FooterBlock,
+            normalized.ViewerSympathyBlock
+        }, SerializerOptions);
     }
 }

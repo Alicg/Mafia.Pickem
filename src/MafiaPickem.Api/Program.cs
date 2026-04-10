@@ -46,6 +46,7 @@ var host = new HostBuilder()
         // Services
         services.AddHttpClient();
         services.AddSingleton(sp => TelegramBotOptions.Create(sp.GetRequiredService<IConfiguration>()));
+        services.AddSingleton(sp => ObsOverlayOptions.Create(sp.GetRequiredService<IConfiguration>()));
         services.AddSingleton<ITelegramAuthService, TelegramAuthService>();
         services.AddSingleton<ITelegramBotClient, TelegramBotClient>();
         services.AddSingleton<ITelegramWebhookValidator, TelegramWebhookValidator>();

@@ -96,6 +96,7 @@ Env-модель фронтенда разделена на 2 уровня:
 - Browser fetch base (читает runtime-клиент): `VITE_BROWSER_API_BASE_URL`, `VITE_BROWSER_BLOB_BASE_URL`.
 
 Для локалки runtime-клиент должен оставаться на `/api` и `/blob`, чтобы не обходить Vite proxy.
+OBS-ссылка для настроек турнира теперь формируется на backend из `ObsOverlayPublicBaseUrl` (с fallback на `TelegramMiniAppUrl`) и приходит в `overlaySettings.obsOverlayUrl`.
 
 Demo mode:
 - `src/frontend/.env.demo` используется при запуске `npm run dev -- --mode demo`.

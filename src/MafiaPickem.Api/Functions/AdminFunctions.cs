@@ -27,6 +27,7 @@ public class AdminFunctions
     private readonly IMatchStateBlobWriter _blobWriter;
     private readonly ILeaderboardBlobWriter _leaderboardBlobWriter;
     private readonly IUserContext _userContext;
+    private readonly ObsOverlayOptions _obsOverlayOptions;
 
     public AdminFunctions(
         IMatchRepository matchRepository,
@@ -38,7 +39,8 @@ public class AdminFunctions
         IStatePublishService statePublishService,
         IMatchStateBlobWriter blobWriter,
         ILeaderboardBlobWriter leaderboardBlobWriter,
-        IUserContext userContext)
+        IUserContext userContext,
+        ObsOverlayOptions obsOverlayOptions)
     {
         _matchRepository = matchRepository;
         _tournamentRepository = tournamentRepository;
@@ -50,6 +52,7 @@ public class AdminFunctions
         _blobWriter = blobWriter;
         _leaderboardBlobWriter = leaderboardBlobWriter;
         _userContext = userContext;
+        _obsOverlayOptions = obsOverlayOptions;
     }
 
     [Function("AdminCreateTournament")]
@@ -716,8 +719,11 @@ public class AdminFunctions
         return showTeamSelection && teams.Count == 0 ? "At least one team is required when team selection is enabled" : null;
     }
 
-    private static TournamentDto CreateTournamentDto(Tournament tournament, List<string> teams, List<string> operatorUsernames)
+    private TournamentDto CreateTournamentDto(Tournament tournament, List<string> teams, List<string> operatorUsernames)
     {
+        var overlaySettings = TournamentOverlaySettingsSerializer.Deserialize(tournament.OverlaySettingsJson);
+        overlaySettings.ObsOverlayUrl = _obsOverlayOptions.BuildTournamentOverlayUrl(tournament.Id);
+
         return new TournamentDto
         {
             Id = tournament.Id,
@@ -728,7 +734,7 @@ public class AdminFunctions
             OperatorUsernames = operatorUsernames,
             VisibleOnHomePage = tournament.VisibleOnHomePage,
             ShowTeamSelection = tournament.ShowTeamSelection,
-            OverlaySettings = TournamentOverlaySettingsSerializer.Deserialize(tournament.OverlaySettingsJson),
+            OverlaySettings = overlaySettings,
             CanManage = true
         };
     }
